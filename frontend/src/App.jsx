@@ -9,14 +9,18 @@ import CustomerCartPage from "./pages/customer/CustomerCartPage";
 import ProductDetailPage from "./pages/customer/ProductDetailPage";
 import AboutPage from "./pages/customer/About";
 import Footer from "./components/layout/Footer";
+import CustomerSidebar from "./components/layout/CustomerSidebar";
 import { setAdminField } from "./store/adminSlice";
 
 const CustomerLayout = () => {
   return (
-    <>
-      <Outlet />
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f5f5f5]">
+      <CustomerSidebar />
+      <div className="flex-1 flex flex-col">
+        <Outlet />
+      </div>
       <Footer />
-    </>
+    </div>
   );
 };
 
@@ -38,6 +42,7 @@ export default function App() {
 
         <Route element={<CustomerLayout />}>
           <Route path="/customer/shop" element={<CustomerPage />} />
+          <Route path="/customer/inventory" element={<CustomerPage />} />
           <Route path="/customer/cart" element={<CustomerCartPage />} />
           <Route path="/customer/about" element={<AboutPage />} />
         </Route>
@@ -46,7 +51,7 @@ export default function App() {
 
         <Route path="/admin" element={<AdminAuth />} />
         <Route path="/admin/auth" element={<Navigate to="/admin" replace />} />
-        
+
         <Route
           path="/admin/dashboard"
           element={
