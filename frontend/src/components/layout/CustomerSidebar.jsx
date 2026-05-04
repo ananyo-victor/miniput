@@ -9,6 +9,8 @@ const CustomerSidebar = () => {
   const location = useLocation();
 
   const [collapsed, setCollapsed] = useState(false);
+  const cart = useSelector((state) => state.customer.cart);
+  const cartCount = cart.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
 
   const navButtonClass = (isActive) =>
     `w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition flex items-center gap-3 ${
@@ -53,7 +55,7 @@ const CustomerSidebar = () => {
             location.pathname === "/customer/shop"
           )}
         >
-          <span>🏠</span>
+          <span className="inline-flex items-center justify-center w-5 text-lg leading-none">🏠</span>
           {!collapsed && "HOME"}
         </button>
 
@@ -64,8 +66,13 @@ const CustomerSidebar = () => {
               location.pathname === "/customer/cart"
             )}
           >
-            <span>🛒</span>
+            <span className="inline-flex items-center justify-center w-5 text-lg leading-none">🛒</span>
             {!collapsed && "CART"}
+            {!collapsed && cartCount > 0 && (
+              <span className="ml-auto inline-flex min-w-[1.35rem] h-[1.35rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-extrabold leading-none text-white">
+                {cartCount}
+              </span>
+            )}
           </button>
         )}
 
@@ -76,7 +83,7 @@ const CustomerSidebar = () => {
               location.pathname === "/admin/inventory"
             )}
           >
-            <span>📦</span>
+            <span className="inline-flex items-center justify-center w-5 text-lg leading-none">📦</span>
             {!collapsed && "INVENTORY"}
           </button>
         )}
@@ -87,7 +94,7 @@ const CustomerSidebar = () => {
             location.pathname === "/customer/about"
           )}
         >
-          <span>ℹ️</span>
+          <span className="inline-flex items-center justify-center w-5 text-lg leading-none">ℹ️</span>
           {!collapsed && "ABOUT"}
         </button>
       </nav>

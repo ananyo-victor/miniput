@@ -49,16 +49,40 @@ const CustomerPage = () => {
               setActiveBrand(brand);
               setActiveCategory("all"); // ✅ reset category
             }}
-            className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${
-              activeBrand === brand
+            className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${activeBrand === brand
                 ? "border-[var(--mk-yellow)] text-[var(--mk-navy)]"
                 : "border-transparent text-gray-400"
-            }`}
+              }`}
           >
             {brand.toUpperCase()}
           </button>
         ))}
       </div>
+
+      {/* ✅ HERO SECTION */}
+      <section
+        className={`p-8 ${activeBrand === "Miniput"
+            ? "bg-[var(--mk-yellow)]"
+            : "bg-[#5A7A3A]"
+          } text-white transition-colors duration-500`}
+      >
+        <div className="max-w-6xl mx-auto flex justify-between items-end">
+          <div>
+            <h1
+              className={`tracking-tighter leading-none ${activeBrand === "Miniput"
+                  ? "mk-bebas text-[clamp(36px,6vw,72px)] bg-[linear-gradient(90deg,#E85A1D,#FFB800,#3aa34a,#0E2A4A,#c03fa1)] bg-clip-text text-transparent"
+                  : activeBrand === "Kwink"
+                    ? "text-4xl italic font-black text-white [font-family:'Nunito',sans-serif]"
+                    : "mk-bebas text-6xl sm:text-8xl"
+                }`}
+            >
+              {activeBrand}
+            </h1>
+            <p className="text-xs font-black tracking-[0.3em] opacity-80 mt-2">{activeBrand === "Miniput" ? "KIDS" : "YOUR SHIRT, YOUR STORY"}</p>
+          </div>
+          <div className="hidden sm:block text-8xl">{activeBrand === "Miniput" ? "👧🧒" : "👦"}</div>
+        </div>
+      </section>
 
       {/* ✅ CATEGORY FILTER (UNDER BRAND) */}
       <div className="bg-white border-b border-gray-100 sticky top-[113px] z-30">
@@ -70,11 +94,10 @@ const CustomerPage = () => {
               <button
                 key={filter.key}
                 onClick={() => setActiveCategory(filter.key)}
-                className={`flex items-center justify-center min-w-[48px] h-[48px] rounded-full transition ${
-                  isActive
-                    ? "bg-[var(--mk-yellow)] text-black"
+                className={`flex items-center justify-center min-w-[48px] h-[48px] rounded-full transition ${isActive
+                    ? `${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[var(--mk-green)]"} text-black`
                     : "bg-black text-white"
-                }`}
+                  }`}
               >
                 {filter.label ? (
                   <span className="text-xs font-bold">
@@ -88,29 +111,6 @@ const CustomerPage = () => {
           })}
         </div>
       </div>
-
-      {/* ✅ HERO SECTION */}
-      <section
-        className={`p-8 ${
-          activeBrand === "Miniput"
-            ? "bg-[var(--mk-yellow)]"
-            : "bg-[#5A7A3A]"
-        } text-white transition-colors duration-500`}
-      >
-        <div className="max-w-6xl mx-auto flex justify-between items-end">
-          <div>
-            <h1 className="mk-bebas text-6xl sm:text-8xl tracking-tighter leading-none">
-              {activeBrand}
-            </h1>
-            <p className="text-xs font-black tracking-[0.3em] opacity-80 mt-2">
-              PREMIUM WHOLESALE SHOWROOM
-            </p>
-          </div>
-          <div className="hidden sm:block text-8xl grayscale brightness-200 opacity-50">
-            {activeBrand === "Miniput" ? "👕" : "👗"}
-          </div>
-        </div>
-      </section>
 
       {/* ✅ PRODUCT GRID */}
       <main className="p-4 sm:p-8 flex-1 max-w-7xl mx-auto w-full">
