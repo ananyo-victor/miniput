@@ -6,24 +6,53 @@ import { DEMO_PRODUCTS } from "../../data/demoProducts";
 
 const CustomerPage = () => {
   const navigate = useNavigate();
-  const products = DEMO_PRODUCTS;
-  const [activeBrand, setActiveBrand] = useState("Miniput");
 
+  const products = DEMO_PRODUCTS;
+
+  const [activeBrand, setActiveBrand] = useState("Miniput");
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  // ✅ Category Filters
+  const CATEGORY_FILTERS = [
+    { key: "all", label: "ALL" },
+    { key: "tshirt", icon: "👕" },
+    { key: "jeans", icon: "👖" },
+    { key: "jacket", icon: "🧥" },
+    { key: "dress", icon: "👗" },
+    { key: "shorts", icon: "🩳" },
+  ];
+
+  // ✅ Combined Filtering
   const filteredProducts = useMemo(() => {
-    return products.filter((p) => (p.brand || "").toLowerCase() === activeBrand.toLowerCase());
-  }, [products, activeBrand]);
+    return products.filter((p) => {
+      const brandMatch =
+        (p.brand || "").toLowerCase() === activeBrand.toLowerCase();
+
+      const categoryMatch =
+        activeCategory === "all" ||
+        (p.category || "").toLowerCase() === activeCategory;
+
+      return brandMatch && categoryMatch;
+    });
+  }, [products, activeBrand, activeCategory]);
 
   return (
     <div className="flex-1 flex flex-col">
       <Navbar />
 
+      {/* ✅ BRAND TABS (TOP) */}
       <div className="flex bg-white border-b border-gray-100 sticky top-[65px] z-40">
         {["Miniput", "Kwink"].map((brand) => (
           <button
             key={brand}
-            onClick={() => setActiveBrand(brand)}
+            onClick={() => {
+              setActiveBrand(brand);
+              setActiveCategory("all"); // ✅ reset category
+            }}
             className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${
-              activeBrand === brand ? "border-[var(--mk-yellow)] text-[var(--mk-navy)]" : "border-transparent text-gray-400"
+              activeBrand === brand
+                ? "border-[var(--mk-yellow)] text-[var(--mk-navy)]"
+                : "border-transparent text-gray-400"
             }`}
           >
             {brand.toUpperCase()}
@@ -31,28 +60,79 @@ const CustomerPage = () => {
         ))}
       </div>
 
+      {/* ✅ CATEGORY FILTER (UNDER BRAND) */}
+      <div className="bg-white border-b border-gray-100 sticky top-[113px] z-30">
+        <div className="flex gap-3 overflow-x-auto px-4 py-3">
+          {CATEGORY_FILTERS.map((filter) => {
+            const isActive = activeCategory === filter.key;
+
+            return (
+              <button
+                key={filter.key}
+                onClick={() => setActiveCategory(filter.key)}
+                className={`flex items-center justify-center min-w-[48px] h-[48px] rounded-full transition ${
+                  isActive
+                    ? "bg-[var(--mk-yellow)] text-black"
+                    : "bg-black text-white"
+                }`}
+              >
+                {filter.label ? (
+                  <span className="text-xs font-bold">
+                    {filter.label}
+                  </span>
+                ) : (
+                  <span className="text-lg">{filter.icon}</span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ✅ HERO SECTION */}
       <section
-        className={`p-8 ${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"} text-white transition-colors duration-500`}
+        className={`p-8 ${
+          activeBrand === "Miniput"
+            ? "bg-[var(--mk-yellow)]"
+            : "bg-[#5A7A3A]"
+        } text-white transition-colors duration-500`}
       >
         <div className="max-w-6xl mx-auto flex justify-between items-end">
           <div>
-            <h1 className="mk-bebas text-6xl sm:text-8xl tracking-tighter leading-none">{activeBrand}</h1>
-            <p className="text-xs font-black tracking-[0.3em] opacity-80 mt-2">PREMIUM WHOLESALE SHOWROOM</p>
+            <h1 className="mk-bebas text-6xl sm:text-8xl tracking-tighter leading-none">
+              {activeBrand}
+            </h1>
+            <p className="text-xs font-black tracking-[0.3em] opacity-80 mt-2">
+              PREMIUM WHOLESALE SHOWROOM
+            </p>
           </div>
-          <div className="hidden sm:block text-8xl grayscale brightness-200 opacity-50">{activeBrand === "Miniput" ? "??" : "??"}</div>
+          <div className="hidden sm:block text-8xl grayscale brightness-200 opacity-50">
+            {activeBrand === "Miniput" ? "👕" : "👗"}
+          </div>
         </div>
       </section>
 
+      {/* ✅ PRODUCT GRID */}
       <main className="p-4 sm:p-8 flex-1 max-w-7xl mx-auto w-full">
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onClick={() => navigate(`/customer/product/${product.id}`, { state: { product } })}
-            />
-          ))}
-        </div>
+        {filteredProducts.length === 0 ? (
+          <div className="text-center text-gray-400 py-20 font-semibold">
+            No products found
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onClick={() =>
+                  navigate(`/customer/product/${product.id}`, {
+                    state: { product },
+                  })
+                }
+              />
+            ))}
+          </div>
+        )}
       </main>
     </div>
   );
