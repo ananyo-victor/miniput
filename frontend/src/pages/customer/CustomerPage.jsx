@@ -44,7 +44,7 @@ const CustomerPage = () => {
       </section>
 
       <main className="p-4 sm:p-8 flex-1 max-w-7xl mx-auto w-full">
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-6">
           {filteredProducts.map((product) => (
             <ProductCard
               key={product.id}
