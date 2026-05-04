@@ -1,94 +1,105 @@
-import { useEffect, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { ShoppingCart, LogOut } from "lucide-react";
-import { fetchProducts } from "../../store/productsSlice";
-import { addToCart, createOrderThunk, setCustomerField } from "../../store/customerSlice";
+import Navbar from "../../components/layout/Navbar";
+// import { fetchProducts } from "../../store/productsSlice";
+import ProductCard from "../../components/customer/ProductCard";
+import { DEMO_PRODUCTS } from "../../data/demoProducts";
 
-const fallbackImage = "https://images.unsplash.com/photo-1522771917563-ee55471f1b66?w=400";
-
-export default function CustomerPage({ onLogout }) {
-  const dispatch = useDispatch();
+const CustomerPage = () => {
+  // const { items: products, loading } = useSelector((state) => state.products);
   const navigate = useNavigate();
-  const customer = useSelector((s) => s.customer);
-  const products = useSelector((s) => s.products.items);
+  const products = DEMO_PRODUCTS;
+  const [activeBrand, setActiveBrand] = useState("Miniput");
 
-  const total = useMemo(() => customer.cart.reduce((sum, item) => sum + Number(item.price || 0), 0), [customer.cart]);
+  // API disabled for demo mode:
+  // useEffect(() => {
+  //   dispatch(fetchProducts(false));
+  // }, [dispatch]);
 
-  useEffect(() => {
-    dispatch(fetchProducts(false)).unwrap().catch((err) => console.error(`Unable to load products: ${err.message}`));
-  }, [dispatch]);
-
-  const submitOrder = async () => {
-    if (!customer.address.trim()) return alert("Please enter your address");
-    if (!customer.cart.length) return alert("Cart is empty");
-
-    const items = customer.cart.map((i) => ({ _id: i._id, name: i.name, category: i.category, price: i.price, quantity: 1 }));
-    const itemStr = customer.cart.map((i) => `*Product:* ${i.name}\n*ID:* ${i._id}\n*Qty:* 1 @ Rs ${i.price}`).join("\n\n");
-
-    try {
-      await dispatch(createOrderThunk({ customerPhone: customer.phone.trim(), items, totalPrice: total, address: customer.address.trim() })).unwrap();
-      const message = `*NEW ORDER RECEIVED*\n\n*Items:*\n${itemStr}\n\n*Grand Total: Rs ${total}*\n\n*Address:*\n${customer.address.trim()}`;
-      window.open(`https://wa.me/8597903406?text=${encodeURIComponent(message)}`);
-      alert("Order submitted successfully.");
-    } catch (error) {
-      alert(`Order submission failed: ${error.message}`);
-    }
-  };
-
-  const handleLogout = () => {
-    onLogout();
-    navigate("/");
-  };
+  const filteredProducts = useMemo(() => {
+    return products.filter((p) => (p.brand || "").toLowerCase() === activeBrand.toLowerCase());
+  }, [products, activeBrand]);
 
   return (
-    <div className="max-w-md mx-auto min-h-screen bg-stone-50">
-      <header className="flex justify-between items-center px-4 py-4 bg-white border-b border-slate-200">
-        <strong className="text-lg font-bold">MINIPUT x KWINK</strong>
-        <div className="flex items-center gap-2">
-          <button 
-            onClick={() => (customer.cart.length ? dispatch(setCustomerField({ key: "isCheckoutOpen", value: true })) : alert("Cart is empty"))} 
-            className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold hover:bg-blue-200 flex items-center gap-2"
-          >
-            <ShoppingCart size={18} /> Cart ({customer.cart.length})
-          </button>
-          <button 
-            onClick={handleLogout}
-            className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
-            title="Logout"
-          >
-            <LogOut size={20} />
-          </button>
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f5f5f5]">
+      {/* Sidebar - Only visible on Laptop (lg) */}
+      <aside className="hidden lg:flex w-64 bg-white border-r border-gray-200 flex-col sticky top-0 h-screen">
+        <div className="p-6 border-b border-gray-100">
+          <p className="mk-bebas text-2xl text-[var(--mk-navy)]">SHOWROOM</p>
+          <p className="text-[10px] font-bold text-gray-400 tracking-widest">B2B COLLECTIONS</p>
         </div>
-      </header>
+        <nav className="flex-1 p-4 space-y-2">
+          <button
+            onClick={() => navigate("/customer/shop")}
+            className="w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition text-gray-500 hover:bg-gray-50"
+          >
+            HOME
+          </button>
+          <button
+            onClick={() => navigate("/customer/cart")}
+            className="w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition text-gray-500 hover:bg-gray-50"
+          >
+            CART
+          </button>
+          <button
+            onClick={() => navigate("/customer/about")}
+            className="w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition text-gray-500 hover:bg-gray-50"
+          >
+            ABOUT
+          </button>
+        </nav>
+        <div className="p-4 border-t border-gray-100 text-[10px] text-gray-400 font-bold">
+          � 2026 MINIPUT � KWINK
+        </div>
+      </aside>
 
-      <main className="p-4 grid grid-cols-2 gap-3">
-        {products.map((p) => (
-          <div key={p._id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-            <img src={p.imageUrl || fallbackImage} alt={p.name} className="w-full h-40 object-cover" />
-            <div className="p-2.5">
-              <div className="text-sm font-medium">{p.name}</div>
-              <strong className="text-lg text-blue-600">Rs {p.price}</strong>
-              <button onClick={() => dispatch(addToCart(p))} className="w-full mt-2 bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 text-sm">Add to Cart</button>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        <Navbar />
+
+        {/* Mobile Tab Switcher (Hidden on LG) */}
+        <div className="flex bg-white border-b border-gray-100 sticky top-[65px] z-40">
+          {["Miniput", "Kwink"].map((brand) => (
+            <button
+              key={brand}
+              onClick={() => setActiveBrand(brand)}
+              className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${
+                activeBrand === brand ? "border-[var(--mk-yellow)] text-[var(--mk-navy)]" : "border-transparent text-gray-400"
+              }`}
+            >
+              {brand.toUpperCase()}
+            </button>
+          ))}
+        </div>
+
+        {/* Brand Hero Section */}
+        <section className={`p-8 ${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"} text-white transition-colors duration-500`}>
+          <div className="max-w-6xl mx-auto flex justify-between items-end">
+            <div>
+              <h1 className="mk-bebas text-6xl sm:text-8xl tracking-tighter leading-none">{activeBrand}</h1>
+              <p className="text-xs font-black tracking-[0.3em] opacity-80 mt-2">PREMIUM WHOLESALE SHOWROOM</p>
+            </div>
+            <div className="hidden sm:block text-8xl grayscale brightness-200 opacity-50">
+              {activeBrand === "Miniput" ? "??" : "??"}
             </div>
           </div>
-        ))}
-      </main>
+        </section>
 
-      {customer.isCheckoutOpen && (
-        <div className="fixed inset-0 bg-black/30 z-110 p-4">
-          <div className="bg-white mt-32 rounded-2xl p-4">
-            <h2 className="text-lg font-bold mb-4">Checkout</h2>
-            <textarea value={customer.address} onChange={(e) => dispatch(setCustomerField({ key: "address", value: e.target.value }))} rows={3} placeholder="Enter your full shop address" className="w-full px-4 py-2 border border-slate-300 rounded-lg mb-4" />
-            <div className="mb-4 space-y-1">
-              {customer.cart.map((item, idx) => <div key={`${item._id}-${idx}`} className="text-sm">{item.name} - Rs {item.price}</div>)}
-            </div>
-            <h3 className="text-lg font-bold mb-4">Total: Rs {total}</h3>
-            <button onClick={submitOrder} className="w-full bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 mb-2">Buy Now via WhatsApp</button>
-            <button onClick={() => dispatch(setCustomerField({ key: "isCheckoutOpen", value: false }))} className="w-full bg-slate-300 text-slate-700 px-4 py-2 rounded-lg font-semibold hover:bg-slate-400">Close</button>
+        {/* Product Grid */}
+        <main className="p-4 sm:p-8 flex-1 max-w-7xl mx-auto w-full">
+          <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onClick={() => navigate(`/customer/product/${product.id}`, { state: { product } })}
+              />
+            ))}
           </div>
-        </div>
-      )}
+        </main>
+      </div>
     </div>
   );
-}
+};
+
+export default CustomerPage;

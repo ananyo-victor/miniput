@@ -1,14 +1,24 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router";
 import { useDispatch } from "react-redux";
-import HomePage from "./pages/HomePage";
 import AdminAuth from "./pages/admin/AdminAuth";
 import AdminPrivateRoute from "./pages/admin/AdminPrivateRoute";
 import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
-import CustomerAuth from "./pages/customer/CustomerAuth";
-import CustomerPrivateRoute from "./pages/customer/CustomerPrivateRoute";
+import AdminInventory from "./pages/admin/AdminInventory";
 import CustomerPage from "./pages/customer/CustomerPage";
+import CustomerCartPage from "./pages/customer/CustomerCartPage";
+import ProductDetailPage from "./pages/customer/ProductDetailPage";
+import AboutPage from "./pages/customer/About";
+import Footer from "./components/layout/Footer";
 import { setAdminField } from "./store/adminSlice";
-import { setCustomerField } from "./store/customerSlice";
+
+const CustomerLayout = () => {
+  return (
+    <>
+      <Outlet />
+      <Footer />
+    </>
+  );
+};
 
 export default function App() {
   const dispatch = useDispatch();
@@ -21,22 +31,22 @@ export default function App() {
     dispatch(setAdminField({ key: "otp", value: "" }));
   };
 
-  const handleCustomerLogout = () => {
-    dispatch(setCustomerField({ key: "authed", value: false }));
-    dispatch(setCustomerField({ key: "authStep", value: "mobile" }));
-    dispatch(setCustomerField({ key: "phone", value: "" }));
-    dispatch(setCustomerField({ key: "otp", value: "" }));
-    dispatch(setCustomerField({ key: "email", value: "" }));
-  };
-
   return (
     <Router>
       <Routes>
-        {/* Home Page */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<Navigate to="/customer/shop" replace />} />
 
-        {/* Admin Routes */}
-        <Route path="/admin/auth" element={<AdminAuth />} />
+        <Route element={<CustomerLayout />}>
+          <Route path="/customer/shop" element={<CustomerPage />} />
+          <Route path="/customer/cart" element={<CustomerCartPage />} />
+          <Route path="/customer/about" element={<AboutPage />} />
+        </Route>
+
+        <Route path="/customer/product/:productId" element={<ProductDetailPage />} />
+
+        <Route path="/admin" element={<AdminAuth />} />
+        <Route path="/admin/auth" element={<Navigate to="/admin" replace />} />
+        
         <Route
           path="/admin/dashboard"
           element={
@@ -45,20 +55,15 @@ export default function App() {
             </AdminPrivateRoute>
           }
         />
-
-        {/* Customer Routes */}
-        <Route path="/customer/auth" element={<CustomerAuth />} />
         <Route
-          path="/customer/shop"
+          path="/admin/inventory"
           element={
-            <CustomerPrivateRoute>
-              <CustomerPage onLogout={handleCustomerLogout} />
-            </CustomerPrivateRoute>
+            <AdminPrivateRoute>
+              <AdminInventory onLogout={handleAdminLogout} />
+            </AdminPrivateRoute>
           }
         />
-
-        {/* Catch all - redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/customer/shop" replace />} />
       </Routes>
     </Router>
   );
