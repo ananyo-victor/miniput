@@ -202,7 +202,7 @@ app.post('/api/auth/customer/check', async (req, res) => {
         const { code, expiresAt } = upsertOtp("customer", normalizedPhone);
 
         if (process.env.WA_PHONE_NUMBER_ID && process.env.WA_ACCESS_TOKEN) {
-            await sendWhatsAppText(normalizedPhone, `Your OTP is ${code}. It expires in 5 minutes.`);
+            await sendOtpMessage(normalizedPhone, code);
         } else {
             console.log(`[OTP] customer ${normalizedPhone}: ${code}`);
         }
@@ -253,8 +253,8 @@ app.post('/api/auth/admin/step1', async (req, res) => {
 
             if (process.env.WA_PHONE_NUMBER_ID && process.env.WA_ACCESS_TOKEN) {
                 console.log(`Sending OTP to admin ${adminPhone} via WhatsApp`);
-                const data = await sendWhatsAppText(adminPhone, `Admin login OTP: ${code}. It expires in 5 minutes.`);
-                console.log("WhatsApp API response:", data);
+                await sendOtpMessage(adminPhone, code);
+                console.log("WhatsApp OTP request accepted");
             } else {
                 console.log(`[OTP] admin ${adminPhone}: ${code}`);
             }
@@ -343,11 +343,20 @@ app.get('/api/whatsapp/webhook', (req, res) => {
 });
 
 app.post('/api/whatsapp/webhook', async (req, res) => {
+    const status = req.body.entry?.[0]?.changes?.[0]?.value?.statuses?.[0];
+    if (status) {
+        console.log(`[WA STATUS] id=${status.id} status=${status.status} recipient=${status.recipient_id}`);
+        if (status.errors?.length) {
+            console.log("[WA STATUS ERROR]", status.errors);
+        }
+        return res.sendStatus(200);
+    }
+
     const message = req.body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
     if (!message) return res.sendStatus(200);
 
-    const from = message.from;
-    const isAdmin = from === process.env.ADMIN_PHONE;
+    const from = normalizePhone(message.from);
+    const isAdmin = from === normalizePhone(process.env.ADMIN_PHONE || "");
 
     // 1. Forward Customer Payment Screenshots to Seller
     if (!isAdmin && message.type === 'image') {
@@ -381,7 +390,7 @@ async function sendWhatsAppText(to, text) {
     try {
         await axios.post(`https://graph.facebook.com/v25.0/${process.env.WA_PHONE_NUMBER_ID}/messages`, {
             messaging_product: "whatsapp",
-            to: to,
+            to: normalizePhone(to),
             type: "text",
             text: { body: text }
         }, { headers: { 'Authorization': `Bearer ${process.env.WA_ACCESS_TOKEN}` } });
@@ -394,10 +403,46 @@ async function sendWhatsAppText(to, text) {
 async function sendWhatsAppImage(to, url, caption) {
     await axios.post(`https://graph.facebook.com/v25.0/${process.env.WA_PHONE_NUMBER_ID}/messages`, {
         messaging_product: "whatsapp",
-        to: to,
+        to: normalizePhone(to),
         type: "image",
         image: { link: url, caption: caption }
     }, { headers: { 'Authorization': `Bearer ${process.env.WA_ACCESS_TOKEN}` } });
+}
+
+async function sendWhatsAppTemplate(to, templateName, languageCode, bodyValues = []) {
+    const components = bodyValues.length
+        ? [{
+            type: "body",
+            parameters: bodyValues.map(value => ({ type: "text", text: String(value) }))
+        }]
+        : [];
+
+    await axios.post(`https://graph.facebook.com/v25.0/${process.env.WA_PHONE_NUMBER_ID}/messages`, {
+        messaging_product: "whatsapp",
+        to: normalizePhone(to),
+        type: "template",
+        template: {
+            name: templateName,
+            language: { code: languageCode },
+            components
+        }
+    }, { headers: { 'Authorization': `Bearer ${process.env.WA_ACCESS_TOKEN}` } });
+}
+
+async function sendOtpMessage(phone, code) {
+    const templateName = process.env.WA_OTP_TEMPLATE_NAME;
+    const templateLang = process.env.WA_OTP_TEMPLATE_LANG || "en_US";
+    const expiryMins = Math.ceil(OTP_EXPIRY_MS / 60000);
+    const paramCount = Number(process.env.WA_OTP_TEMPLATE_PARAM_COUNT || 1);
+
+    if (templateName) {
+        const templateParams = paramCount >= 2 ? [code, expiryMins] : [code];
+        await sendWhatsAppTemplate(phone, templateName, templateLang, templateParams);
+        return;
+    }
+
+    // Fallback for development only. In production, OTP should be sent via templates.
+    await sendWhatsAppText(phone, `Your OTP is ${code}. It expires in ${expiryMins} minutes.`);
 }
 
 // Reuse your existing logic but make it a function
@@ -416,7 +461,7 @@ async function internalApproveOrder(orderId) {
 async function sendSellerApprovalButton(orderId, customerPhone, total) {
     await axios.post(`https://graph.facebook.com/v25.0/${process.env.WA_PHONE_NUMBER_ID}/messages`, {
         messaging_product: "whatsapp",
-        to: process.env.ADMIN_PHONE, // Add your phone number to .env
+        to: normalizePhone(process.env.ADMIN_PHONE), // Add your phone number to .env
         type: "interactive",
         interactive: {
             type: "button",

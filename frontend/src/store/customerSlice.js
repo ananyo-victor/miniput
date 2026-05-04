@@ -42,7 +42,26 @@ const customerSlice = createSlice({
       Object.assign(state, action.payload);
     },
     addToCart: (state, action) => {
-      state.cart.push(action.payload);
+      const incoming = action.payload || {};
+      const quantityToAdd = Number(incoming.quantity || 1);
+      const existing = state.cart.find((item) => item.id === incoming.id || item._id === incoming._id);
+
+      if (existing) {
+        existing.quantity = Number(existing.quantity || 1) + quantityToAdd;
+      } else {
+        state.cart.push({ ...incoming, quantity: quantityToAdd });
+      }
+    },
+    removeFromCart: (state, action) => {
+      const idToRemove = action.payload;
+      state.cart = state.cart.filter((item) => item.id !== idToRemove && item._id !== idToRemove);
+    },
+    updateQuantity: (state, action) => {
+      const { id, quantity } = action.payload;
+      const item = state.cart.find((cartItem) => cartItem.id === id || cartItem._id === id);
+      if (item && quantity >= 1) {
+        item.quantity = quantity;
+      }
     },
     clearCart: (state) => {
       state.cart = [];
@@ -67,5 +86,5 @@ const customerSlice = createSlice({
   }
 });
 
-export const { setCustomerField, setAuthState, addToCart, clearCart } = customerSlice.actions;
+export const { setCustomerField, setAuthState, addToCart, removeFromCart, updateQuantity, clearCart } = customerSlice.actions;
 export default customerSlice.reducer;

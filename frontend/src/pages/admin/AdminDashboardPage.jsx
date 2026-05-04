@@ -1,85 +1,92 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
+import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router";
-import { LayoutDashboard, Package, Search, LogOut } from 'lucide-react';
-import DashboardStats from "./DashboardStats";
-import InventoryTable from "./InventoryTable";
-import { setAdminField } from "../../store/adminSlice";
 import { fetchProducts } from "../../store/productsSlice";
 
-export default function AdminDashboardPage({ onLogout }) {
+const AdminDashboardPage = ({ onLogout }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const admin = useSelector((s) => s.admin);
-  const products = useSelector((s) => s.products.items);
+  const userId = useSelector((state) => state.admin.userId);
+  const products = useSelector((state) => state.products.items);
 
   useEffect(() => {
-    if (admin.authed) {
-      dispatch(fetchProducts(true));
-    }
-  }, [admin.authed, dispatch]);
+    dispatch(fetchProducts(true));
+  }, [dispatch]);
 
-  const setView = (view) => dispatch(setAdminField({ key: "view", value: view }));
+  const stats = useMemo(() => {
+    const total = products.length;
+    const lowStock = products.filter((item) => Number(item.stock || 0) <= 15).length;
+    const hidden = products.filter((item) => item.isHidden).length;
 
-  const handleLogout = () => {
-    onLogout();
-    navigate("/");
-  };
+    return [
+      { label: "Total Products", value: total },
+      { label: "Low Stock", value: lowStock },
+      { label: "Hidden Products", value: hidden }
+    ];
+  }, [products]);
 
   return (
-    <div className="min-h-screen flex bg-[#f8fafc]">
-      {/* Sidebar */}
-      <aside className="w-72 bg-white border-r border-slate-200 flex flex-col sticky top-0 h-screen">
-        <div className="p-8">
-          <h2 className="text-2xl font-black tracking-tight text-indigo-600">KWINK<span className="text-slate-400">.</span></h2>
+    <div className="mk-shell min-h-screen bg-[var(--mk-bg)]">
+      <header className="bg-[var(--mk-navy)] text-white px-5 sm:px-8 py-5 flex flex-wrap gap-4 items-center justify-between">
+        <div>
+          <p className="mk-bebas text-4xl tracking-[0.08em]">ADMIN PANEL</p>
+          <p className="text-xs text-white/70 font-bold">Signed in as {userId || "Admin"}</p>
         </div>
-        <nav className="flex-1 px-4 space-y-2">
-          <button 
-            onClick={() => setView('dashboard')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold ${admin.view === 'dashboard' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
+
+        <div className="flex gap-2">
+          <Link
+            to="/customer/shop"
+            className="px-4 py-2 rounded-xl text-xs font-black tracking-[0.08em] bg-white/10 text-white"
           >
-            <LayoutDashboard size={20} /> Dashboard
-          </button>
-          <button 
-            onClick={() => setView('inventory')}
-            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold ${admin.view === 'inventory' ? 'bg-indigo-50 text-indigo-600 shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
-          >
-            <Package size={20} /> Inventory
-          </button>
-        </nav>
-        <div className="p-6 mt-auto border-t border-slate-100 space-y-3">
-          <div className="bg-slate-900 rounded-2xl p-4 text-white">
-            <p className="text-xs text-slate-400">Logged in as</p>
-            <p className="font-medium truncate">Admin@kwink.in</p>
-          </div>
+            OPEN SHOP
+          </Link>
           <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl transition-all font-semibold"
+            onClick={onLogout}
+            className="px-4 py-2 rounded-xl text-xs font-black tracking-[0.08em] bg-[var(--mk-red)] text-white"
           >
-            <LogOut size={18} /> Logout
+            LOGOUT
           </button>
         </div>
-      </aside>
+      </header>
 
-      <main className="flex-1 overflow-y-auto">
-        <header className="bg-white/80 backdrop-blur-md sticky top-0 z-10 px-8 py-6 border-b border-slate-200 flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900 capitalize">{admin.view} Overview</h1>
-            <p className="text-slate-500 text-sm">Welcome back, here is what's happening today.</p>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input type="text" placeholder="Search..." className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 w-64" />
-            </div>
-          </div>
-        </header>
+      <main className="p-5 sm:p-8">
+        <div className="grid md:grid-cols-3 gap-4">
+          {stats.map((stat) => (
+            <article key={stat.label} className="mk-card p-5">
+              <p className="text-xs font-black text-gray-500 tracking-[0.08em]">{stat.label.toUpperCase()}</p>
+              <p className="mt-2 text-4xl font-black text-[var(--mk-navy)]">{stat.value}</p>
+            </article>
+          ))}
+        </div>
 
-        <div className="p-8 max-w-7xl mx-auto">
-          {admin.view === "dashboard" && <DashboardStats products={products} />}
-          {admin.view === "inventory" && <InventoryTable products={products} />}
+        <div className="grid md:grid-cols-2 gap-5 mt-6">
+          <article className="mk-card p-6">
+            <h2 className="text-2xl font-black text-[var(--mk-navy)]">Inventory Control</h2>
+            <p className="mt-2 text-sm text-gray-500">Manage stock, hide/unhide products, and clean old listings.</p>
+            <button
+              type="button"
+              onClick={() => navigate("/admin/inventory")}
+              className="mt-5 px-5 py-3 rounded-xl text-xs font-black tracking-[0.08em] bg-[var(--mk-navy)] text-[var(--mk-yellow)]"
+            >
+              GO TO INVENTORY
+            </button>
+          </article>
+
+          <article className="mk-card p-6 bg-[var(--mk-yellow)]/15">
+            <h2 className="text-2xl font-black text-[var(--mk-navy)]">Storefront Check</h2>
+            <p className="mt-2 text-sm text-gray-600">Preview the customer-facing design and product visibility instantly.</p>
+            <button
+              type="button"
+              onClick={() => navigate("/customer/shop")}
+              className="mt-5 px-5 py-3 rounded-xl text-xs font-black tracking-[0.08em] bg-[var(--mk-navy)] text-[var(--mk-yellow)]"
+            >
+              VIEW SHOWROOM
+            </button>
+          </article>
         </div>
       </main>
     </div>
   );
-}
+};
+
+export default AdminDashboardPage;
