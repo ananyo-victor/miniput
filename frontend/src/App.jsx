@@ -2,8 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-
 import { useDispatch } from "react-redux";
 import AdminAuth from "./pages/admin/AdminAuth";
 import AdminPrivateRoute from "./pages/admin/AdminPrivateRoute";
-import AdminDashboardPage from "./pages/admin/AdminDashboardPage";
-import AdminInventory from "./pages/admin/AdminInventory";
+import AdminInventoryPage from "./pages/admin/AdminInventoryPage";
 import CustomerPage from "./pages/customer/CustomerPage";
 import CustomerCartPage from "./pages/customer/CustomerCartPage";
 import ProductDetailPage from "./pages/customer/ProductDetailPage";
@@ -55,7 +54,7 @@ export default function App() {
         <Route element={<AdminPrivateRoute />}>
           <Route path="/admin/shop" element={<CustomerPage />} />
           <Route path="/admin/cart" element={<CustomerCartPage />} />
-          <Route path="/admin/inventory" element={<AdminInventory />} />
+          <Route path="/admin/inventory" element={<AdminInventoryPage />} />
           <Route path="/admin/about" element={<AboutPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/customer/shop" replace />} />

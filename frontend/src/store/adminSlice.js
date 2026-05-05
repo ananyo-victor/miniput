@@ -4,6 +4,15 @@ import { fetchProducts } from "./productsSlice";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const getAdminAuthHeaders = () => {
+  if (typeof window === "undefined") {
+    return {};
+  }
+
+  const token = window.localStorage.getItem("adminToken");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -31,30 +40,30 @@ export const adminLoginThunk = createAsyncThunk(
 
 export const uploadProductImageThunk = createAsyncThunk("admin/uploadImage", async (file) => {
   const imageData = await fileToDataUrl(file);
-  const { data } = await axios.post(`${API_BASE_URL}/api/uploads/product-image`, { imageData });
+  const { data } = await axios.post(`${API_BASE_URL}/api/uploads/product-image`, { imageData }, { headers: getAdminAuthHeaders() });
   return data;
 });
 
 export const createProductThunk = createAsyncThunk("admin/createProduct", async (payload, { dispatch }) => {
-  const { data } = await axios.post(`${API_BASE_URL}/api/products`, payload);
+  const { data } = await axios.post(`${API_BASE_URL}/api/products`, payload, { headers: getAdminAuthHeaders() });
   await dispatch(fetchProducts(true));
   return data;
 });
 
 export const quickAddStockThunk = createAsyncThunk("admin/quickAddStock", async ({ id, stock }, { dispatch }) => {
-  const { data } = await axios.put(`${API_BASE_URL}/api/products/${id}`, { stock: Number(stock || 0) + 10 });
+  const { data } = await axios.put(`${API_BASE_URL}/api/products/${id}`, { stock: Number(stock || 0) + 10 }, { headers: getAdminAuthHeaders() });
   await dispatch(fetchProducts(true));
   return data;
 });
 
 export const toggleProductVisibilityThunk = createAsyncThunk("admin/toggleVisibility", async ({ id, isHidden }, { dispatch }) => {
-  const { data } = await axios.patch(`${API_BASE_URL}/api/products/${id}/visibility`, { isHidden });
+  const { data } = await axios.patch(`${API_BASE_URL}/api/products/${id}/visibility`, { isHidden }, { headers: getAdminAuthHeaders() });
   await dispatch(fetchProducts(true));
   return data;
 });
 
 export const deleteProductThunk = createAsyncThunk("admin/deleteProduct", async (id, { dispatch }) => {
-  const { data } = await axios.delete(`${API_BASE_URL}/api/products/${id}`);
+  const { data } = await axios.delete(`${API_BASE_URL}/api/products/${id}`, { headers: getAdminAuthHeaders() });
   await dispatch(fetchProducts(true));
   return data;
 });
