@@ -1,5 +1,6 @@
 const express = require('express');
 const uploadsService = require('./uploads.service');
+const { authGuard } = require('../../common/middlewares/auth.guard');
 
 const router = express.Router();
 
@@ -23,6 +24,6 @@ const uploadProductImage = async (req, res) => {
     }
 };
 
-router.post('/product-image', uploadProductImage);
+router.post('/product-image', authGuard, uploadProductImage);
 
 module.exports = router;

@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import Navbar from "../../components/layout/Navbar";
 import { deleteProductThunk, quickAddStockThunk, toggleProductVisibilityThunk } from "../../store/adminSlice";
 import { fetchProducts } from "../../store/productsSlice";
 
@@ -53,113 +52,61 @@ const AdminInventory = () => {
     { id: "hidden", label: "HIDDEN" }
   ];
 
-  return (
-    <div className="mk-shell flex flex-col">
-      <Navbar />
+  const inventoryData = [
+  { name: 'Pant Set', brand: 'KWINK', sizes: '26,28,30,32,34,36', price: 499, status: 'in-stock', units: 85, emoji: '👖' },
+  { name: 'Babla Shirt', brand: 'MINIPUTT', sizes: '26,28,30,32,34,36', price: 399, status: 'in-stock', units: 90, emoji: '👔' },
+  { name: 'Lear Shirt', brand: 'MINIPUTT', sizes: '26,28,30,32,34,36', price: 479, status: 'limited', units: 65, emoji: '👕' },
+  { name: 'Pant', brand: 'MINIPUTT', sizes: '26,28,30,32,34,36', price: 479, status: 'limited', units: 37, emoji: '👖' },
+  { name: 'Sweater', brand: 'KWINK', sizes: '26,28,30,32,34,36', price: 499, status: 'low', units: 8, emoji: '🧶' },
+  { name: 'Coat', brand: 'MINIPUTT', sizes: '26,28,30,32,34,36', price: 399, status: 'in-stock', units: 78, emoji: '🧥' },
+];
 
-      <section className="bg-white border-b border-gray-100 px-5 sm:px-7 py-5">
-        <h1 className="mk-bebas text-5xl sm:text-6xl text-[var(--mk-navy)] tracking-[0.08em]">INVENTORY</h1>
-        <p className="text-sm text-gray-500">Track stock, visibility, and quick restocks from one panel.</p>
-      </section>
+return (
+    <div className="flex-col min-h-screen bg-[#f5f5f5]">
 
-      <section className="bg-white border-b border-gray-100 px-4 sm:px-6 py-3">
-        <div className="flex gap-2 overflow-x-auto mk-scroll-hidden">
-          {filters.map((filter) => (
-            <button
-              key={filter.id}
-              type="button"
-              onClick={() => setActiveFilter(filter.id)}
-              className={`px-4 py-2 rounded-full text-[11px] font-black tracking-[0.08em] whitespace-nowrap transition ${
-                activeFilter === filter.id
-                  ? "bg-[var(--mk-navy)] text-[var(--mk-yellow)]"
-                  : "bg-gray-100 text-gray-500 hover:text-[var(--mk-navy)]"
-              }`}
-            >
-              {filter.label} ({counts[filter.id] || 0})
-            </button>
-          ))}
-        </div>
-      </section>
+      {/* Inventory Filtering Tabs (Shown in image) */}
+      <div className="inv-tabs flex px-3.5 pt-2.5 pb-0 gap-5 bg-white border-b border-[#eee]">
+        <div className="inv-tab active in-stock pb-2 text-[13px] font-black tracking-[0.5px] cursor-pointer border-b-3 border-current text-[#2d7d46]">IN STOCK</div>
+        <div className="inv-tab limited pb-2 text-[13px] font-black tracking-[0.5px] cursor-pointer border-b-3 border-transparent text-[#999] hover:text-[#d49000]">LIMITED</div>
+        <div className="inv-tab low pb-2 text-[13px] font-black tracking-[0.5px] cursor-pointer border-b-3 border-transparent text-[#999] hover:text-[#D63031]">LOW/OUT</div>
+      </div>
 
-      <main className="flex-1 bg-[var(--mk-bg)] px-4 sm:px-6 py-5">
-        {loading && <p className="text-sm font-bold text-gray-500">Loading inventory...</p>}
-        {!loading && error && <p className="text-sm font-bold text-[var(--mk-red)]">{error}</p>}
+      {/* Inventory List (Main focus) */}
+      <div className="inv-list flex-1 overflow-y-auto px-4 py-3 pb-[100px] md:px-8 md:py-4">
+        {inventoryData.map((item, index) => (
+          <div key={index} className="inv-item flex items-center gap-3 bg-white rounded-2xl p-3.5 mb-2.5 shadow-md">
+            {/* Image Placeholder */}
+            <div className="inv-img flex items-center justify-center flex-shrink-0 w-16 h-16 rounded-xl bg-[#e8e8e8] text-[28px]">
+              {item.emoji}
+            </div>
 
-        <div className="space-y-3">
-          {!loading && !error && filteredProducts.length === 0 && (
-            <div className="mk-card p-7 text-center text-sm font-black text-gray-500">NO PRODUCTS IN THIS FILTER</div>
-          )}
+            {/* Left Info */}
+            <div className="inv-info flex-1">
+              <div className="inv-name text-sm font-black text-[#1a1a1a] uppercase">{item.name}</div>
+              <div className="inv-brand text-xs font-bold text-[#0E2A4A] mb-1">{item.brand}</div>
+              <div className="inv-sizes text-xs text-[#666] tracking-wide mb-0.5">SIZE {item.sizes}</div>
+            </div>
 
-          {filteredProducts.map((product) => {
-            const stock = Number(product.stock || 0);
-            const status = statusMeta(stock);
-
-            return (
-              <article key={product._id || product.id} className="mk-card p-4 sm:p-5 flex flex-col sm:flex-row gap-4 sm:items-center">
-                <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-200 flex items-center justify-center text-xl">
-                  <img
-                    src={product.imageUrl || "https://via.placeholder.com/120?text=Item"}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-lg font-black truncate">{product.name}</h2>
-                  <p className="text-xs font-bold tracking-[0.08em] text-gray-500">
-                    {String(product.brand || "").toUpperCase()} | {String(product.category || "GENERAL").toUpperCase()}
-                  </p>
-                </div>
-
-                <div className="text-left sm:text-right min-w-[140px]">
-                  <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-black tracking-[0.07em] ${status.tone}`}>
-                    {status.label}
-                  </span>
-                  <p className="mt-2 text-sm font-bold text-gray-500">{stock} units</p>
-                  <p className="text-xl font-black">Rs {Number(product.price || 0).toLocaleString()}</p>
-                </div>
-
-                <div className="flex flex-wrap gap-2 sm:justify-end">
-                  <button
-                    type="button"
-                    onClick={() => dispatch(quickAddStockThunk({ id: product._id, stock }))}
-                    className="px-3 py-2 rounded-xl bg-[var(--mk-navy)] text-[var(--mk-yellow)] text-[10px] font-black tracking-[0.08em]"
-                  >
-                    +10 STOCK
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      dispatch(
-                        toggleProductVisibilityThunk({
-                          id: product._id,
-                          isHidden: !product.isHidden
-                        })
-                      )
-                    }
-                    className="px-3 py-2 rounded-xl bg-gray-100 text-[10px] font-black tracking-[0.08em] text-gray-600"
-                  >
-                    {product.isHidden ? "UNHIDE" : "HIDE"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm(`Delete ${product.name}?`)) {
-                        dispatch(deleteProductThunk(product._id));
-                      }
-                    }}
-                    className="px-3 py-2 rounded-xl bg-red-100 text-[10px] font-black tracking-[0.08em] text-red-700"
-                  >
-                    DELETE
-                  </button>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </main>
+            {/* Right Price/Status */}
+            <div className="inv-price-right flex-col items-end text-right">
+              {/* Status Badge */}
+              <div className={`status-badge text-xs font-black tracking-wide px-2 py-0.75 rounded-full mb-1 inline-block ${
+                  item.status === 'in-stock' ? 'bg-[#e6f4ea] text-[#2d7d46]' :
+                  item.status === 'limited' ? 'bg-[#fff8e1] text-[#d49000]' :
+                  'bg-[#fde8e8] text-[#D63031]'
+                }`}>
+                {item.status.toUpperCase()}
+              </div>
+              
+              {/* Unit Count */}
+              <div className="inv-unit-count text-xs text-[#999] leading-tight">{item.units} UNITS</div>
+              
+              {/* Price */}
+              <div className="inv-price text-lg font-black text-[#1a1a1a]">₹{item.price}/-</div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

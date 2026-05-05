@@ -1,28 +1,30 @@
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
-import { setAdminField } from "../../store/adminSlice";
+import { adminLoginThunk, setAdminField } from "../../store/adminSlice";
 
 const AdminAuth = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { userId, password, otp, authStep } = useSelector((state) => state.admin);
+  const { userId, password, authStep, authLoading, authError } = useSelector((state) => state.admin);
 
   const update = (key, value) => {
     dispatch(setAdminField({ key, value }));
   };
 
-  const handleNext = (event) => {
+  const handleNext = async (event) => {
     event.preventDefault();
 
-    if (authStep < 3) {
+    if (authStep < 2) {
       update("authStep", authStep + 1);
       return;
     }
 
-    update("authed", true);
-    navigate("/admin/inventory");
+    const result = await dispatch(adminLoginThunk({ userId, password }));
+    if (adminLoginThunk.fulfilled.match(result)) {
+      navigate("/admin/inventory");
+    }
   };
 
   const handleBack = () => {
@@ -83,21 +85,6 @@ const AdminAuth = () => {
               </label>
             )}
 
-            {authStep === 3 && (
-              <label className="block">
-                <span className="text-xs font-black tracking-[0.08em] text-gray-500">OTP</span>
-                <input
-                  type="text"
-                  required
-                  maxLength={6}
-                  value={otp}
-                  onChange={(e) => update("otp", e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-gray-200 px-4 py-3 text-center text-2xl tracking-[0.35em] font-black focus:outline-none focus:border-[var(--mk-navy)]"
-                  placeholder="000000"
-                />
-              </label>
-            )}
-
             <div className="pt-2 flex gap-3">
               {authStep > 1 && (
                 <button
@@ -111,20 +98,17 @@ const AdminAuth = () => {
 
               <button
                 type="submit"
-                className="flex-[1.4] rounded-xl bg-[var(--mk-navy)] py-3 text-xs font-black tracking-[0.08em] text-[var(--mk-yellow)]"
+                disabled={authLoading}
+                className="flex-1 rounded-xl bg-[var(--mk-navy)] py-3 text-xs font-black tracking-[0.08em] text-[var(--mk-yellow)]"
               >
-                {authStep === 3 ? "ENTER PANEL" : "CONTINUE"}
+                {authStep === 2 ? (authLoading ? "AUTHENTICATING..." : "ENTER PANEL") : "CONTINUE"}
               </button>
             </div>
-          </form>
 
-          <button
-            type="button"
-            onClick={() => navigate("/customer/shop")}
-            className="mt-6 text-xs font-bold text-gray-500 hover:text-[var(--mk-navy)]"
-          >
-            BACK TO SHOWROOM
-          </button>
+            {authError && authStep === 2 && (
+              <p className="text-xs font-bold text-red-600">{authError}</p>
+            )}
+          </form>
         </div>
       </section>
     </div>

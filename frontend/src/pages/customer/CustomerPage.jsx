@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import Navbar from "../../components/layout/Navbar";
 import ProductCard from "../../components/customer/ProductCard";
 import { DEMO_PRODUCTS } from "../../data/demoProducts";
 
@@ -38,8 +37,6 @@ const CustomerPage = () => {
 
   return (
     <div className="flex-1 flex flex-col">
-      <Navbar />
-
       {/* ✅ BRAND TABS (TOP) */}
       <div className="flex bg-white border-b border-gray-100 sticky top-[65px] z-40">
         {["Miniput", "Kwink"].map((brand) => (

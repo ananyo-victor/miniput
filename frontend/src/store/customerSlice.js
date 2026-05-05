@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const checkCustomerThunk = createAsyncThunk("customer/check", async (phone) => {
   const { data } = await axios.post(`${API_BASE_URL}/api/auth/customer/check`, { phone });

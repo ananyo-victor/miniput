@@ -1,5 +1,6 @@
 const express = require('express');
 const productsService = require('./products.service');
+const { authGuard } = require('../../common/middlewares/auth.guard');
 
 const router = express.Router();
 
@@ -51,9 +52,9 @@ const deleteProduct = async (req, res) => {
 };
 
 router.get('/', getProducts);
-router.post('/', createProduct);
-router.put('/:id', updateProduct);
-router.patch('/:id/visibility', updateVisibility);
-router.delete('/:id', deleteProduct);
+router.post('/', authGuard, createProduct);
+router.put('/:id', authGuard, updateProduct);
+router.patch('/:id/visibility', authGuard, updateVisibility);
+router.delete('/:id', authGuard, deleteProduct);
 
 module.exports = router;

@@ -23,10 +23,96 @@ exports.approveOrder = async (orderId) => {
         const order = orderRows[0];
         if (order.status !== 'pending') throw new Error("Order already processed");
 
+        const touchedProductIds = new Set();
+
         for (let item of order.items) {
+            const quantity = Math.max(1, Number(item.quantity || 1));
+            const productId = item.productId || item.id;
+            const explicitSize = item.size || item.selectedSize || (Array.isArray(item.selectedSizes) ? item.selectedSizes[0] : null);
+            const size = explicitSize ? String(explicitSize) : null;
+            const variantId = item.variantId || null;
+
+            if (variantId) {
+                const { rows: updatedVariantRows } = await client.query(
+                    `
+                    UPDATE product_variants
+                    SET stock = stock - $1
+                    WHERE id = $2 AND stock >= $1
+                    RETURNING product_id
+                    `,
+                    [quantity, variantId]
+                );
+
+                if (!updatedVariantRows.length) {
+                    throw new Error(`Insufficient stock for variant ${variantId}`);
+                }
+
+                touchedProductIds.add(updatedVariantRows[0].product_id);
+                continue;
+            }
+
+            if (productId && size) {
+                const { rows: updatedVariantRows } = await client.query(
+                    `
+                    UPDATE product_variants
+                    SET stock = stock - $1
+                    WHERE product_id = $2 AND size = $3 AND stock >= $1
+                    RETURNING product_id
+                    `,
+                    [quantity, productId, size]
+                );
+
+                if (!updatedVariantRows.length) {
+                    throw new Error(`Insufficient stock for product ${productId} size ${size}`);
+                }
+
+                touchedProductIds.add(updatedVariantRows[0].product_id);
+                continue;
+            }
+
+            const { rows: fallbackVariantRows } = await client.query(
+                `
+                UPDATE product_variants
+                SET stock = stock - $1
+                WHERE product_id = $2 AND size = 'default' AND stock >= $1
+                RETURNING product_id
+                `,
+                [quantity, productId]
+            );
+
+            if (!fallbackVariantRows.length) {
+                const { rows: fallbackProductRows } = await client.query(
+                    `
+                    UPDATE products
+                    SET stock = stock - $1
+                    WHERE id = $2 AND stock >= $1
+                    RETURNING id
+                    `,
+                    [quantity, productId]
+                );
+
+                if (!fallbackProductRows.length) {
+                    throw new Error(`Insufficient stock for product ${productId}`);
+                }
+
+                touchedProductIds.add(fallbackProductRows[0].id);
+            } else {
+                touchedProductIds.add(fallbackVariantRows[0].product_id);
+            }
+        }
+
+        for (const productId of touchedProductIds) {
             await client.query(
-                `UPDATE products SET stock = stock - $1 WHERE id = $2`, 
-                [item.quantity || 1, item.id]
+                `
+                UPDATE products p
+                SET stock = COALESCE((
+                    SELECT SUM(v.stock)
+                    FROM product_variants v
+                    WHERE v.product_id = p.id
+                ), 0)
+                WHERE p.id = $1
+                `,
+                [productId]
             );
         }
 

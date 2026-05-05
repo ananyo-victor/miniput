@@ -9,7 +9,13 @@ const adminLogin = (req, res) => {
         const isValid = authService.verifyAdminCredentials(userId, password);
 
         if (isValid) {
-            return res.json({ success: true, message: 'Admin authenticated' });
+            const token = authService.generateToken(userId);
+            
+            return res.json({ 
+                success: true, 
+                message: 'Admin authenticated',
+                token: token
+            });
         }
 
         res.status(401).json({ success: false, message: 'Invalid credentials' });

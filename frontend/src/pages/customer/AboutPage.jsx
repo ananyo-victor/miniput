@@ -1,15 +1,12 @@
 import React from "react";
-import Navbar from "../../components/layout/Navbar";
 
 const AboutPage = () => {
   return (
     <div className="flex-1 flex flex-col bg-white">
-      <Navbar />
-
       <div className="flex-1 overflow-y-auto bg-gray-50 pb-20 lg:pb-8">
         <div className="p-8 text-center bg-gradient-to-br from-[#f5f0e8] to-[#ede5d0]">
           <h1 className="text-4xl font-black text-gray-800 tracking-tighter uppercase mb-1">OUR SHOWROOM</h1>
-          <p className="text-xs font-semibold text-gray-500 tracking-widest">PREMIUM KIDSWEAR • WHOLESALE ONLY</p>
+          <p className="text-xs font-semibold text-gray-500 tracking-widest">PREMIUM KIDSWEAR ï¿½ WHOLESALE ONLY</p>
         </div>
 
         <div className="p-4 space-y-4 max-w-4xl mx-auto w-full">
@@ -32,10 +29,10 @@ const AboutPage = () => {
             <div className="space-y-1">
               <h3 className="font-bold text-gray-800">MINIPUT</h3>
               <ul className="text-xs text-gray-500 space-y-1">
-                <li>• Size: 12-14-16 (Infant)</li>
-                <li>• 2pc / 3pc baba sets</li>
-                <li>• WSP: Rs 250 - Rs 500</li>
-                <li>• MOQ: 18 units (6 sets)</li>
+                <li>ï¿½ Size: 12-14-16 (Infant)</li>
+                <li>ï¿½ 2pc / 3pc baba sets</li>
+                <li>ï¿½ WSP: Rs 250 - Rs 500</li>
+                <li>ï¿½ MOQ: 18 units (6 sets)</li>
               </ul>
             </div>
           </div>
@@ -45,10 +42,10 @@ const AboutPage = () => {
             <div className="space-y-1">
               <h3 className="font-bold text-gray-800">KWINK</h3>
               <ul className="text-xs text-gray-500 space-y-1">
-                <li>• Size: 22 to 32 (Boys)</li>
-                <li>• Casual & Partywear Shirts</li>
-                <li>• WSP: Rs 220 - Rs 450</li>
-                <li>• MOQ: 12 units (4 sets)</li>
+                <li>ï¿½ Size: 22 to 32 (Boys)</li>
+                <li>ï¿½ Casual & Partywear Shirts</li>
+                <li>ï¿½ WSP: Rs 220 - Rs 450</li>
+                <li>ï¿½ MOQ: 12 units (4 sets)</li>
               </ul>
             </div>
           </div>

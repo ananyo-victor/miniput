@@ -1,24 +1,29 @@
 import React from "react";
-import { useSelector } from "react-redux";
-import { Navigate, useLocation } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
+import Sidebar from "../../components/layout/Sidebar";
+import Navbar from "../../components/layout/Navbar";
+import Footer from "../../components/layout/Footer";
+import { clearAdminToken, getAdminAuthFromStorage } from "../../utils/adminToken";
 
-/**
- * A wrapper component to protect admin routes.
- * Requirement #2: Ensure Inventory/Admin sections are only visible to the admin.
- */
-const AdminPrivateRoute = ({ children }) => {
-  // Access auth state from the adminSlice
-  const { authed } = useSelector((state) => state.admin);
+const AdminPrivateRoute = () => {
   const location = useLocation();
+  const { token, isAdmin } = getAdminAuthFromStorage();
 
-  if (!authed) {
-    // If not authenticated, redirect to the Admin login page
-    // We save the 'from' location so we can redirect them back after login if needed
-    return <Navigate to="/admin" state={{ from: location }} replace />;
+  if (!token || !isAdmin) {
+    clearAdminToken();
+    return <Navigate to="/admin/auth" state={{ from: location }} replace />;
   }
 
-  // If authenticated, render the protected component (e.g., Inventory)
-  return children;
+  return (
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f5f5f5]">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <Navbar />
+        <Outlet />
+      </div>
+      <Footer />
+    </div>
+  );
 };
 
 export default AdminPrivateRoute;

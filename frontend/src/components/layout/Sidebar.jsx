@@ -1,22 +1,21 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router";
 import { Menu } from "lucide-react";
+import { getAdminAuthFromStorage } from "../../utils/adminToken";
 
 const CustomerSidebar = () => {
-  const { authed: isAdmin } = useSelector((state) => state.admin);
+  const { isAdmin } = getAdminAuthFromStorage();
   const navigate = useNavigate();
   const location = useLocation();
-
   const [collapsed, setCollapsed] = useState(false);
   const cart = useSelector((state) => state.customer.cart);
   const cartCount = cart.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
+  const basePath = isAdmin ? "/admin" : "/customer";
 
   const navButtonClass = (isActive) =>
     `w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition flex items-center gap-3 ${
-      isActive
-        ? "bg-yellow-200/50 text-gray-700"
-        : "text-gray-400 hover:bg-gray-50"
+      isActive ? "bg-yellow-200/50 text-gray-700" : "text-gray-400 hover:bg-gray-50"
     }`;
 
   return (
@@ -25,20 +24,14 @@ const CustomerSidebar = () => {
         collapsed ? "w-20" : "w-64"
       } bg-white border-r border-gray-200 flex-col sticky top-0 h-screen transition-all duration-300`}
     >
-      {/* HEADER */}
       <div className="p-4 border-b border-gray-100 flex items-center justify-between">
         {!collapsed && (
           <div>
-            <p className="mk-bebas text-2xl text-[var(--mk-navy)]">
-              SHOWROOM
-            </p>
-            <p className="text-[10px] font-bold text-gray-400 tracking-widest">
-              B2B COLLECTIONS
-            </p>
+            <p className="mk-bebas text-2xl text-[var(--mk-navy)]">SHOWROOM</p>
+            <p className="text-[10px] font-bold text-gray-400 tracking-widest">B2B COLLECTIONS</p>
           </div>
         )}
 
-        {/* 3 BAR TOGGLE */}
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
@@ -47,12 +40,11 @@ const CustomerSidebar = () => {
         </button>
       </div>
 
-      {/* NAV */}
       <nav className="flex-1 p-4 space-y-4">
         <button
-          onClick={() => navigate("/customer/shop")}
+          onClick={() => navigate(`${basePath}/shop`)}
           className={navButtonClass(
-            location.pathname === "/customer/shop"
+            location.pathname === "/customer/shop" || location.pathname === "/admin/shop"
           )}
         >
           <span className="inline-flex items-center justify-center w-5 text-lg leading-none">🏠</span>
@@ -62,9 +54,7 @@ const CustomerSidebar = () => {
         {!isAdmin && (
           <button
             onClick={() => navigate("/customer/cart")}
-            className={navButtonClass(
-              location.pathname === "/customer/cart"
-            )}
+            className={navButtonClass(location.pathname === "/customer/cart")}
           >
             <span className="inline-flex items-center justify-center w-5 text-lg leading-none">🛒</span>
             {!collapsed && "CART"}
@@ -79,9 +69,7 @@ const CustomerSidebar = () => {
         {isAdmin && (
           <button
             onClick={() => navigate("/admin/inventory")}
-            className={navButtonClass(
-              location.pathname === "/admin/inventory"
-            )}
+            className={navButtonClass(location.pathname === "/admin/inventory")}
           >
             <span className="inline-flex items-center justify-center w-5 text-lg leading-none">📦</span>
             {!collapsed && "INVENTORY"}
@@ -89,9 +77,9 @@ const CustomerSidebar = () => {
         )}
 
         <button
-          onClick={() => navigate("/customer/about")}
+          onClick={() => navigate(`${basePath}/about`)}
           className={navButtonClass(
-            location.pathname === "/customer/about"
+            location.pathname === "/customer/about" || location.pathname === "/admin/about"
           )}
         >
           <span className="inline-flex items-center justify-center w-5 text-lg leading-none">ℹ️</span>
@@ -109,3 +97,4 @@ const CustomerSidebar = () => {
 };
 
 export default CustomerSidebar;
+

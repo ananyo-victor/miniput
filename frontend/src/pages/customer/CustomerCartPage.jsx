@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import Navbar from "../../components/layout/Navbar";
 import { clearCart, removeFromCart, updateQuantity } from "../../store/customerSlice";
 
 const CustomerCartPage = () => {
@@ -19,8 +18,6 @@ const CustomerCartPage = () => {
 
   return (
     <div className="mk-shell flex flex-col">
-      <Navbar />
-
       <section className="bg-[var(--mk-green)] px-5 sm:px-8 py-8 sm:py-10 text-center">
         <p className="mk-bebas text-5xl sm:text-7xl text-white tracking-[0.12em]">CART</p>
       </section>

@@ -1,5 +1,6 @@
 const express = require('express');
 const ordersService = require('./orders.service');
+const { authGuard } = require('../../common/middlewares/auth.guard');
 
 const router = express.Router();
 
@@ -46,9 +47,9 @@ const getAdminStats = async (req, res) => {
     }
 };
 
-router.post('/', createOrder);
-router.get('/stats', getAdminStats);
-router.patch('/:id/approve', approveOrder);
-router.patch('/:id/reject', rejectOrder);
+router.post('/', authGuard, createOrder);
+router.get('/stats', authGuard, getAdminStats);
+router.patch('/:id/approve', authGuard, approveOrder);
+router.patch('/:id/reject', authGuard, rejectOrder);
 
 module.exports = router;

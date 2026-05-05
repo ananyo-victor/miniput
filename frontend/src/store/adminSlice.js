@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { fetchProducts } from "./productsSlice";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -16,6 +16,17 @@ function fileToDataUrl(file) {
 export const adminStep1Thunk = createAsyncThunk("admin/step1", async ({ userId, password }) => {
   const { data } = await axios.post(`${API_BASE_URL}/api/auth/admin/step1`, { userId, password });
   return data;
+});
+
+export const adminLoginThunk = createAsyncThunk(
+  "admin/login", 
+  async ({ userId, password }, { rejectWithValue }) => {
+  try {
+    const { data } = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, { userId, password });
+    return data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || "Login failed");
+  }
 });
 
 export const uploadProductImageThunk = createAsyncThunk("admin/uploadImage", async (file) => {
@@ -52,12 +63,13 @@ const initialState = {
   authStep: 1,
   userId: "",
   password: "",
-  otp: "",
   authed: false,
   view: "dashboard",
   showAdd: false,
   uploadStatus: "No image uploaded yet",
-  newProduct: { name: "", category: "Kids Wear", brand: "Miniput", price: "", stock: "", imageUrl: "" }
+  authLoading: false,
+  authError: "",
+  newProduct: { name: "", category: "Kids Wear", brand: "Miniput", price: "", stock: "", imageUrl: "", description: "" }
 };
 
 const adminSlice = createSlice({
@@ -82,6 +94,22 @@ const adminSlice = createSlice({
     builder
       .addCase(adminStep1Thunk.fulfilled, (state) => {
         state.authStep = 2;
+      })
+      .addCase(adminLoginThunk.pending, (state) => {
+        state.authLoading = true;
+        state.authError = "";
+      })
+      .addCase(adminLoginThunk.fulfilled, (state, action) => {
+        state.authLoading = false;
+        state.authError = "";
+        state.authed = true;
+        if (action.payload?.token) {
+          localStorage.setItem("adminToken", action.payload.token);
+        }
+      })
+      .addCase(adminLoginThunk.rejected, (state, action) => {
+        state.authLoading = false;
+        state.authError = action.payload || "Login failed";
       })
       .addCase(uploadProductImageThunk.pending, (state) => {
         state.uploadStatus = "Uploading...";
