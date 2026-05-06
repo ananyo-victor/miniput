@@ -372,7 +372,24 @@ exports.updateVisibility = async (id, isHidden) => {
 };
 
 exports.deleteProduct = async (id) => {
-    const query = `DELETE FROM products WHERE id = $1`;
-    await pool.query(query, [id]);
-    return true;
+    const { rows: productRows } = await pool.query(`SELECT "imageUrl" FROM products WHERE id = $1`, [id]);
+    
+    if (productRows.length > 0) {
+        const product = productRows[0];
+        
+        // 2. Delete the image from S3 if it exists
+        if (product.imageUrl) {
+            // If you change your schema to an array later, you can loop through them like this:
+            // if (Array.isArray(product.imageUrl)) {
+            //     for (const url of product.imageUrl) await uploadsService.deleteImageByUrl(url);
+            // } else {
+            await uploadsService.deleteImageByUrl(product.imageUrl);
+            // }
+        }
+    }
+
+    // 3. Delete the product from the database
+    const query = `DELETE FROM products WHERE id = $1`; //
+    await pool.query(query, [id]); //
+    return true; //
 };

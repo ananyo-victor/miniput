@@ -16,6 +16,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1043.0",
     "axios": "^1.15.2",
     "cloudinary": "^2.10.0",
     "cors": "^2.8.6",

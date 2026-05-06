@@ -24,6 +24,23 @@ const uploadProductImage = async (req, res) => {
     }
 };
 
+const deleteProductImage = async (req, res) => {
+    try {
+        const { publicId } = req.body; 
+        
+        if (!publicId) {
+            return res.status(400).json({ message: 'publicId is required to delete an image' });
+        }
+
+        await uploadsService.deleteProductImage(publicId);
+
+        res.json({ success: true, message: 'Image deleted from bucket' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 router.post('/product-image', authGuard, uploadProductImage);
+router.post('/delete-image', authGuard, deleteProductImage);
 
 module.exports = router;
