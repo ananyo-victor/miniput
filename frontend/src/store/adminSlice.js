@@ -28,19 +28,24 @@ export const adminStep1Thunk = createAsyncThunk("admin/step1", async ({ userId, 
 });
 
 export const adminLoginThunk = createAsyncThunk(
-  "admin/login", 
+  "admin/login",
   async ({ userId, password }, { rejectWithValue }) => {
-  try {
-    const { data } = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, { userId, password });
-    return data;
-  } catch (error) {
-    return rejectWithValue(error.response?.data?.message || "Login failed");
+    try {
+      const { data } = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, { userId, password });
+      return data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Login failed");
+    }
   }
-});
+);
 
 export const uploadProductImageThunk = createAsyncThunk("admin/uploadImage", async (file) => {
   const imageData = await fileToDataUrl(file);
-  const { data } = await axios.post(`${API_BASE_URL}/api/uploads/product-image`, { imageData }, { headers: getAdminAuthHeaders() });
+  const { data } = await axios.post(
+    `${API_BASE_URL}/api/uploads/product-image`,
+    { imageData },
+    { headers: getAdminAuthHeaders() }
+  );
   return data;
 });
 
@@ -50,17 +55,31 @@ export const createProductThunk = createAsyncThunk("admin/createProduct", async 
   return data;
 });
 
-export const quickAddStockThunk = createAsyncThunk("admin/quickAddStock", async ({ id, stock }, { dispatch }) => {
-  const { data } = await axios.put(`${API_BASE_URL}/api/products/${id}`, { stock: Number(stock || 0) + 10 }, { headers: getAdminAuthHeaders() });
-  await dispatch(fetchProducts(true));
-  return data;
-});
+export const quickAddStockThunk = createAsyncThunk(
+  "admin/quickAddStock",
+  async ({ id, stock }, { dispatch }) => {
+    const { data } = await axios.put(
+      `${API_BASE_URL}/api/products/${id}`,
+      { stock: Number(stock || 0) + 10 },
+      { headers: getAdminAuthHeaders() }
+    );
+    await dispatch(fetchProducts(true));
+    return data;
+  }
+);
 
-export const toggleProductVisibilityThunk = createAsyncThunk("admin/toggleVisibility", async ({ id, isHidden }, { dispatch }) => {
-  const { data } = await axios.patch(`${API_BASE_URL}/api/products/${id}/visibility`, { isHidden }, { headers: getAdminAuthHeaders() });
-  await dispatch(fetchProducts(true));
-  return data;
-});
+export const toggleProductVisibilityThunk = createAsyncThunk(
+  "admin/toggleVisibility",
+  async ({ id, isHidden }, { dispatch }) => {
+    const { data } = await axios.patch(
+      `${API_BASE_URL}/api/products/${id}/visibility`,
+      { isHidden },
+      { headers: getAdminAuthHeaders() }
+    );
+    await dispatch(fetchProducts(true));
+    return data;
+  }
+);
 
 export const deleteProductThunk = createAsyncThunk("admin/deleteProduct", async (id, { dispatch }) => {
   const { data } = await axios.delete(`${API_BASE_URL}/api/products/${id}`, { headers: getAdminAuthHeaders() });
@@ -78,7 +97,16 @@ const initialState = {
   uploadStatus: "No image uploaded yet",
   authLoading: false,
   authError: "",
-  newProduct: { name: "", category: "Kids Wear", brand: "Miniput", price: "", stock: "", imageUrl: "", description: "" }
+  newProduct: {
+    name: "",
+    category: "Kids Wear",
+    brand: "Miniput",
+    price: "",
+    stock: "",
+    sizes: [],
+    imageUrl: "",
+    description: ""
+  }
 };
 
 const adminSlice = createSlice({
@@ -140,3 +168,4 @@ const adminSlice = createSlice({
 
 export const { setAdminField, setNewProductField, resetNewProduct } = adminSlice.actions;
 export default adminSlice.reducer;
+

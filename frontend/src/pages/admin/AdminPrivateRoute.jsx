@@ -8,6 +8,10 @@ import { clearAdminToken, getAdminAuthFromStorage } from "../../utils/adminToken
 const AdminPrivateRoute = () => {
   const location = useLocation();
   const { token, isAdmin } = getAdminAuthFromStorage();
+  const layoutHeights = {
+    "--layout-navbar-h": "65px",
+    "--layout-footer-h": "64px",
+  };
 
   if (!token || !isAdmin) {
     clearAdminToken();
@@ -15,11 +19,13 @@ const AdminPrivateRoute = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f5f5f5]">
+    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f5f5f5]" style={layoutHeights}>
       <Sidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0">
         <Navbar />
-        <Outlet />
+        <main className="flex-1 min-h-[calc(100vh-var(--layout-navbar-h)-var(--layout-footer-h))] lg:min-h-[calc(100vh-var(--layout-navbar-h))]">
+          <Outlet />
+        </main>
       </div>
       <Footer />
     </div>

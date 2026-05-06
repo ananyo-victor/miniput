@@ -3,6 +3,15 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
+const loadCartFromStorage = () => {
+  try {
+    const savedCart = localStorage.getItem("cart");
+    return savedCart ? JSON.parse(savedCart) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
 export const checkCustomerThunk = createAsyncThunk("customer/check", async (phone) => {
   const { data } = await axios.post(`${API_BASE_URL}/api/auth/customer/check`, { phone });
   return data;
@@ -27,7 +36,8 @@ const initialState = {
   authed: false,
   cart: [],
   isCheckoutOpen: false,
-  address: ""
+  address: "",
+  cart: loadCartFromStorage(),
 };
 
 const customerSlice = createSlice({
@@ -42,30 +52,30 @@ const customerSlice = createSlice({
       Object.assign(state, action.payload);
     },
     addToCart: (state, action) => {
-      const incoming = action.payload || {};
-      const quantityToAdd = Number(incoming.quantity || 1);
-      const existing = state.cart.find((item) => item.id === incoming.id || item._id === incoming._id);
-
-      if (existing) {
-        existing.quantity = Number(existing.quantity || 1) + quantityToAdd;
-      } else {
-        state.cart.push({ ...incoming, quantity: quantityToAdd });
-      }
+      const newItem = {
+        ...action.payload,
+        cartItemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      };
+      
+      state.cart.push(newItem);
+      localStorage.setItem("cart", JSON.stringify(state.cart));
     },
     removeFromCart: (state, action) => {
-      const idToRemove = action.payload;
-      state.cart = state.cart.filter((item) => item.id !== idToRemove && item._id !== idToRemove);
+      state.cart = state.cart.filter((item) => item.cartItemId !== action.payload);
+      localStorage.setItem("cart", JSON.stringify(state.cart));
     },
     updateQuantity: (state, action) => {
       const { id, quantity } = action.payload;
-      const item = state.cart.find((cartItem) => cartItem.id === id || cartItem._id === id);
-      if (item && quantity >= 1) {
+      const item = state.cart.find((item) => item.cartItemId === id);
+      if (item) {
         item.quantity = quantity;
       }
+      localStorage.setItem("cart", JSON.stringify(state.cart));
     },
     clearCart: (state) => {
       state.cart = [];
-    }
+      localStorage.removeItem("cart");
+    },
   },
   extraReducers: (builder) => {
     builder

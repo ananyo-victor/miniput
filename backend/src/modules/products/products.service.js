@@ -1,5 +1,6 @@
 const pool = require('../../config/database.config');
 const { v4: uuidv4 } = require('uuid');
+const uploadsService = require('../uploads/uploads.service');
 
 const DEFAULT_SIZE = 'default';
 
@@ -118,6 +119,20 @@ const normalizeVariants = (variants, fallbackStock = 0) => {
     return Array.from(dedupedBySize.values());
 };
 
+const normalizeImageUrls = (imageValue) => {
+    if (Array.isArray(imageValue)) {
+        return imageValue
+            .filter((url) => typeof url === 'string' && url.trim() !== '')
+            .map((url) => url.trim());
+    }
+
+    if (typeof imageValue === 'string' && imageValue.trim() !== '') {
+        return [imageValue.trim()];
+    }
+
+    return null;
+};
+
 const upsertVariants = async (client, productId, variants) => {
     for (const variant of variants) {
         await client.query(
@@ -185,11 +200,19 @@ const withVariants = (productRow, variantsByProductId) => {
         ? variants.reduce((sum, variant) => sum + Number(variant.stock || 0), 0)
         : Number(productRow.stock || 0);
 
+    const imageUrls = Array.isArray(productRow.imageUrl)
+        ? productRow.imageUrl
+        : productRow.imageUrl
+            ? [productRow.imageUrl]
+            : [];
+
     return {
         ...productRow,
         stock: computedStock,
         variants,
-        sizes: variants.map((variant) => variant.size)
+        sizes: variants.map((variant) => variant.size),
+        imageUrls,
+        imageUrl: imageUrls[0] || null
     };
 };
 
@@ -212,12 +235,14 @@ exports.createProduct = async (productData) => {
         price,
         stock,
         imageUrl,
+        imageUrls,
         brand,
         description,
         isHidden,
         variants
     } = productData;
     const { candidates: variantCandidates, hasVariantInput } = extractVariantCandidates(productData);
+    const normalizedImageUrls = normalizeImageUrls(imageUrls ?? imageUrl);
 
     const client = await pool.connect();
     try {
@@ -236,7 +261,7 @@ exports.createProduct = async (productData) => {
                 category,
                 price,
                 0,
-                imageUrl || null,
+                normalizedImageUrls,
                 brand,
                 description || '',
                 !!isHidden
@@ -278,7 +303,7 @@ exports.updateProduct = async (id, productData) => {
             name: productData.name ?? current.name,
             category: productData.category ?? current.category,
             price: productData.price ?? current.price,
-            imageUrl: productData.imageUrl ?? current.imageUrl,
+            imageUrls: normalizeImageUrls(productData.imageUrls ?? productData.imageUrl ?? current.imageUrl),
             brand: productData.brand ?? current.brand,
             description: productData.description ?? current.description ?? '',
             isHidden: productData.isHidden === undefined ? current.isHidden : !!productData.isHidden
@@ -301,7 +326,7 @@ exports.updateProduct = async (id, productData) => {
                 merged.name,
                 merged.category,
                 merged.price,
-                merged.imageUrl,
+                merged.imageUrls,
                 merged.brand,
                 merged.description,
                 merged.isHidden,
@@ -376,19 +401,17 @@ exports.deleteProduct = async (id) => {
     
     if (productRows.length > 0) {
         const product = productRows[0];
-        
-        // 2. Delete the image from S3 if it exists
-        if (product.imageUrl) {
-            // If you change your schema to an array later, you can loop through them like this:
-            // if (Array.isArray(product.imageUrl)) {
-            //     for (const url of product.imageUrl) await uploadsService.deleteImageByUrl(url);
-            // } else {
-            await uploadsService.deleteImageByUrl(product.imageUrl);
-            // }
+        const imageUrls = Array.isArray(product.imageUrl)
+            ? product.imageUrl
+            : product.imageUrl
+                ? [product.imageUrl]
+                : [];
+
+        for (const url of imageUrls) {
+            await uploadsService.deleteImageByUrl(url);
         }
     }
 
-    // 3. Delete the product from the database
     const query = `DELETE FROM products WHERE id = $1`; //
     await pool.query(query, [id]); //
     return true; //

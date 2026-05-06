@@ -1,9 +1,10 @@
 import React from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart, removeFromCart, updateQuantity } from "../../store/customerSlice";
 
 const CustomerCartPage = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.customer.cart);
 
@@ -17,7 +18,7 @@ const CustomerCartPage = () => {
   };
 
   return (
-    <div className="mk-shell flex flex-col">
+    <div className="mk-shell flex flex-col h-full">
       <section className="bg-[var(--mk-green)] px-5 sm:px-8 py-8 sm:py-10 text-center">
         <p className="mk-bebas text-5xl sm:text-7xl text-white tracking-[0.12em]">CART</p>
       </section>
@@ -40,12 +41,12 @@ const CustomerCartPage = () => {
         <main className="flex-1 bg-[var(--mk-bg)] px-4 sm:px-6 py-5 grid lg:grid-cols-[1fr_340px] gap-5">
           <section className="mk-scroll-hidden overflow-y-auto max-h-[calc(100vh-260px)] pr-1">
             {cart.map((item) => {
-              const itemId = item.id || item._id;
+              const rowId = item.cartItemId || item.id || item._id;
               const quantity = Number(item.quantity || 1);
               const itemTotal = Number(item.price || 0) * quantity;
 
               return (
-                <article key={itemId} className="mk-card p-4 sm:p-5 mb-4 flex gap-4 items-start">
+                <article key={rowId} className="mk-card p-4 sm:p-5 mb-4 flex gap-4 items-start">
                   <img
                     src={item.imageUrl || item.image || "https://via.placeholder.com/140?text=Item"}
                     alt={item.name}
@@ -63,7 +64,7 @@ const CustomerCartPage = () => {
                       <button
                         type="button"
                         className="w-8 h-8 rounded-lg bg-white font-black text-gray-700"
-                        onClick={() => handleQuantityChange(itemId, quantity - 1)}
+                        onClick={() => handleQuantityChange(rowId, quantity - 1)}
                         disabled={quantity <= 1}
                       >
                         -
@@ -72,7 +73,7 @@ const CustomerCartPage = () => {
                       <button
                         type="button"
                         className="w-8 h-8 rounded-lg bg-white font-black text-gray-700"
-                        onClick={() => handleQuantityChange(itemId, quantity + 1)}
+                        onClick={() => handleQuantityChange(rowId, quantity + 1)}
                       >
                         +
                       </button>
@@ -82,7 +83,7 @@ const CustomerCartPage = () => {
                   <div className="text-right">
                     <button
                       type="button"
-                      onClick={() => dispatch(removeFromCart(itemId))}
+                      onClick={() => dispatch(removeFromCart(rowId))}
                       className="text-[var(--mk-red)] text-sm font-black"
                     >
                       REMOVE
@@ -114,6 +115,7 @@ const CustomerCartPage = () => {
 
             <button
               type="button"
+              onClick={() => navigate("/customer/order")}
               className="w-full mt-5 py-3 rounded-xl bg-[var(--mk-navy)] text-[var(--mk-yellow)] text-xs font-black tracking-[0.09em]"
             >
               PLACE ORDER

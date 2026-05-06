@@ -1,12 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import ProductCard from "../../components/customer/ProductCard";
-import { DEMO_PRODUCTS } from "../../data/demoProducts";
+import { fetchProducts } from "../../store/productsSlice";
 
 const CustomerPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { items: products, loading, error } = useSelector((state) => state.products);
 
-  const products = DEMO_PRODUCTS;
+  useEffect(() => {
+    dispatch(fetchProducts(false));
+  }, [dispatch]);
 
   const [activeBrand, setActiveBrand] = useState("Miniput");
   const [activeCategory, setActiveCategory] = useState("all");
@@ -111,7 +116,15 @@ const CustomerPage = () => {
 
       {/* ✅ PRODUCT GRID */}
       <main className="p-4 sm:p-8 flex-1 max-w-7xl mx-auto w-full">
-        {filteredProducts.length === 0 ? (
+        {loading ? (
+          <div className="text-center text-gray-400 py-20 font-semibold">
+            Loading products...
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-400 py-20 font-semibold">
+            {error}
+          </div>
+        ) : filteredProducts.length === 0 ? (
           <div className="text-center text-gray-400 py-20 font-semibold">
             No products found
           </div>

@@ -1,17 +1,17 @@
 import React, { useEffect, useMemo } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
 import ProductDetail from "../../components/customer/ProductDetail";
-import { DEMO_PRODUCTS } from "../../data/demoProducts";
 import { addToCart } from "../../store/customerSlice";
+import { fetchProducts } from "../../store/productsSlice";
 
 const ProductDetailPage = () => {
   const { productId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { items: products, loading } = useSelector((state) => state.products);
 
-  const products = DEMO_PRODUCTS;
   const selectedProduct = useMemo(
     () => location.state?.product || products.find((item) => item.id === productId),
     [location.state, productId, products]
@@ -29,10 +29,16 @@ const ProductDetailPage = () => {
   };
 
   useEffect(() => {
-    if (!selectedProduct) {
+    if (!products.length) {
+      dispatch(fetchProducts(false));
+    }
+  }, [dispatch, products.length]);
+
+  useEffect(() => {
+    if (!loading && !selectedProduct) {
       navigate("/customer/shop", { replace: true });
     }
-  }, [selectedProduct, navigate]);
+  }, [loading, selectedProduct, navigate]);
 
   if (!selectedProduct) return null;
 

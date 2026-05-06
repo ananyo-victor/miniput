@@ -7,10 +7,15 @@ import { getAdminAuthFromStorage } from "../../utils/adminToken";
 const Footer = () => {
   const { isAdmin } = getAdminAuthFromStorage();
   const location = useLocation();
+  const isOrderPage = location.pathname === "/customer/order";
 
   const isActive = (path) => location.pathname === path;
 
   const iconColor = (path) => isActive(path) ? "text-blue-900" : "text-gray-400";
+
+  if (isOrderPage) {
+    return null;
+  }
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden">

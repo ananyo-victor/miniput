@@ -9,12 +9,17 @@ async function initializeDatabase() {
             category TEXT NOT NULL,
             price NUMERIC(12, 2) NOT NULL CHECK (price >= 0),
             stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
-            "imageUrl" TEXT,
+            "imageUrl" TEXT[],
             brand TEXT NOT NULL CHECK (brand IN ('Miniput', 'Kwink')),
             description TEXT NOT NULL DEFAULT '',
             "isHidden" BOOLEAN NOT NULL DEFAULT false,
             "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
+    `);
+
+    await pool.query(`
+        ALTER TABLE products
+        ALTER COLUMN "imageUrl" TYPE TEXT[] USING ARRAY["imageUrl"]
     `);
 
     await pool.query(`
