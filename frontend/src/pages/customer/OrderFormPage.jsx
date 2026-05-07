@@ -1,5 +1,5 @@
-﻿import React, { useState } from "react";
-import { useNavigate } from "react-router";
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 import { useSelector } from "react-redux";
 
 const PHONE_REGEX = /^[6-9]\d{9}$/;
@@ -28,9 +28,14 @@ const FormField = ({ icon, label, required, optional, className, hasError, child
 
 const OrderFormPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(1);
   const cart = useSelector((state) => state.customer.cart);
-  const subtotal = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 1), 0);
+  const directOrderItem = location.state?.directOrderItem;
+  const isDirectOrder = Boolean(directOrderItem);
+  const orderItems = isDirectOrder ? [directOrderItem] : cart;
+  const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER || "").replace(/\D/g, "");
+  const subtotal = orderItems.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 1), 0);
   const [formData, setFormData] = useState({
     partyName: "",
     phone: "",
@@ -42,6 +47,43 @@ const OrderFormPage = () => {
     remarks: "",
   });
   const [errors, setErrors] = useState({});
+
+  const buildOrderMessage = () => {
+    const itemLines = orderItems.map((item, index) => {
+      const quantity = Number(item.quantity || 1);
+      const unitPrice = Number(item.price || 0);
+      const itemTotal = unitPrice * quantity;
+      const sizes = Array.isArray(item.selectedSizes) && item.selectedSizes.length
+        ? ` | Sizes: ${item.selectedSizes.join(", ")}`
+        : "";
+      return `${index + 1}. ${String(item.name || "PRODUCT")} - ${quantity} x INR ${unitPrice.toLocaleString()} = INR ${itemTotal.toLocaleString()}${sizes}`;
+    });
+
+    return [
+      "Hello, please place this order:",
+      "",
+      `Party Name: ${formData.partyName || "-"}`,
+      `Phone: ${formData.phone || "-"}`,
+      `Address: ${formData.address || "-"}`,
+      `Transport: ${formData.transport || "-"}`,
+      `GST: ${formData.gst || "-"}`,
+      `Agent: ${formData.agent || "-"}`,
+      `Filled By: ${formData.filledBy || "-"}`,
+      `Remarks: ${formData.remarks || "-"}`,
+      "",
+      "Order Items:",
+      ...itemLines,
+      "",
+      `Total Order Value: INR ${subtotal.toLocaleString()}`,
+    ].join("\n");
+  };
+
+  const sendOrderOnWhatsApp = () => {
+    if (!whatsappNumber) return;
+    const message = buildOrderMessage();
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, "_blank");
+  };
 
   const handleNext = () => {
     if (step === 1) {
@@ -62,11 +104,25 @@ const OrderFormPage = () => {
     }
 
     setErrors({});
-    if (step < 3) setStep(step + 1);
+    if (step === 1) {
+      setStep(2);
+      return;
+    }
+    if (step === 2) {
+      sendOrderOnWhatsApp();
+    }
   };
 
-  const handleBack = () => {
+    const handleBack = () => {
     if (step > 1) setStep(step - 1);
+  };
+
+  const handleHeaderBack = () => {
+    if (isDirectOrder) {
+      navigate(-1);
+      return;
+    }
+    navigate("/customer/cart");
   };
 
   const sanitizePhone = (value) => value.replace(/\D/g, "").slice(0, 10);
@@ -87,7 +143,7 @@ const OrderFormPage = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => navigate("/customer/cart")}
+                onClick={handleHeaderBack}
                 className="w-[36px] h-[36px] flex items-center justify-center rounded-full bg-[#f0f0f0] text-[#1a1a1a] hover:bg-[#e0e0e0] transition-colors font-bold"
               >
                 ←
@@ -116,13 +172,6 @@ const OrderFormPage = () => {
             <div className={`flex flex-col items-center gap-1.5 ${step >= 2 ? 'opacity-100' : 'opacity-40'}`}>
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-black tracking-[1px] transition-colors ${step >= 2 ? 'bg-[#0E2A4A] text-white' : 'bg-[#e0e0e0] text-[#666]'}`}>2</div>
               <span className={`text-[10px] font-black tracking-[1px] ${step >= 2 ? 'text-[#0E2A4A]' : 'text-[#888]'}`}>REVIEW</span>
-            </div>
-            <div className={`flex-1 h-[2px] mx-2 transition-colors ${step >= 3 ? 'bg-[#0E2A4A]' : 'bg-[#e0e0e0]'}`}></div>
-
-            {/* Step 3 */}
-            <div className={`flex flex-col items-center gap-1.5 ${step >= 3 ? 'opacity-100' : 'opacity-40'}`}>
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-black tracking-[1px] transition-colors ${step >= 3 ? 'bg-[#2d7d46] text-white' : 'bg-[#e0e0e0] text-[#666]'}`}>3</div>
-              <span className={`text-[10px] font-black tracking-[1px] ${step >= 3 ? 'text-[#2d7d46]' : 'text-[#888]'}`}>CONFIRM</span>
             </div>
           </div>
         </div>
@@ -244,17 +293,17 @@ const OrderFormPage = () => {
             <h2 className="text-[11px] font-black tracking-[1.5px] text-[#888] uppercase mb-2 ml-1">Order Summary</h2>
             <div className="bg-white rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.04)] mb-6 border border-[#f0f0f0]">
               <div className="flex items-center justify-between p-4 border-b border-[#f0f0f0]">
-                <span className="text-[13px] font-black tracking-[1px] text-[#0E2A4A]">ITEMS IN CART</span>
-                <span className="bg-[#f5f5f5] text-[#555] px-3 py-1 rounded-full text-[11px] font-black">{cart.length} ITEM{cart.length !== 1 ? 'S' : ''}</span>
+                <span className="text-[13px] font-black tracking-[1px] text-[#0E2A4A]">ORDER ITEMS</span>
+                <span className="bg-[#f5f5f5] text-[#555] px-3 py-1 rounded-full text-[11px] font-black">{orderItems.length} ITEM{orderItems.length !== 1 ? 'S' : ''}</span>
               </div>
 
-              {/* Dynamic items from cart */}
+              {/* Dynamic items from selected order flow */}
               <div className="p-4 space-y-3">
-                {cart.map((item) => {
+                {orderItems.map((item, index) => {
                   const quantity = Number(item.quantity || 1);
                   const itemTotal = Number(item.price || 0) * quantity;
                   return (
-                    <div key={item.cartItemId || item.id || item._id} className="flex justify-between items-center text-sm">
+                    <div key={item.cartItemId || item.id || item._id || `${item.name}-${index}`} className="flex justify-between items-center text-sm">
                       <div>
                         <p className="font-bold text-[#1a1a1a]">{String(item.name || 'PRODUCT').toUpperCase()}</p>
                         <p className="text-[11px] text-[#888]">{quantity} UNIT{quantity !== 1 ? 'S' : ''} × ₹{Number(item.price || 0).toLocaleString()}</p>
@@ -311,39 +360,10 @@ const OrderFormPage = () => {
           </div>
         )}
 
-        {/* ================= STEP 3: SUCCESS ================= */}
-        {step === 3 && (
-          <div className="flex flex-col items-center justify-center py-10 animate-[sfadeUp_0.4s_ease]">
-            <div className="w-[80px] h-[80px] md:w-[100px] md:h-[100px] bg-[#e6f4ea] text-[#2d7d46] rounded-full flex items-center justify-center text-[40px] md:text-[50px] mb-6 shadow-sm">
-              ✅
-            </div>
-            <h2 className="text-[32px] md:text-[40px] text-[#0E2A4A] tracking-[2px] font-['Bebas_Neue',_sans-serif] leading-none mb-2">
-              ORDER PLACED!
-            </h2>
-            <p className="text-[13px] md:text-[15px] font-bold text-[#666] text-center mb-6 leading-relaxed">
-              Your order has been submitted.<br />We'll confirm it via WhatsApp shortly.
-            </p>
-            <div className="bg-white border border-[#eee] rounded-full px-6 py-2 mb-8 shadow-sm">
-              <span className="text-[14px] font-black text-[#1a1a1a] tracking-[1px]">ORDER #MK-0000</span>
-            </div>
-
-            <div className="w-full max-w-sm space-y-3">
-              <button className="w-full bg-[#25D366] text-white rounded-[14px] py-4 text-[14px] font-black tracking-[1px] hover:bg-[#20bd5a] transition-all hover:scale-[1.02] shadow-[0_4px_14px_rgba(37,211,102,0.3)]">
-                💬 SEND ORDER ON WHATSAPP
-              </button>
-              <button
-                onClick={() => navigate("/customer/shop")}
-                className="w-full bg-[#f0f0f0] text-[#555] rounded-[14px] py-4 text-[13px] font-extrabold hover:bg-[#e8e8e8] transition-colors"
-              >
-                BACK TO SHOWROOM
-              </button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* FOOTER (Sticky Bottom Actions) */}
-      {step < 3 && (
+      {step <= 2 && (
         <div className="sticky bottom-0 bg-white border-t border-[#eee] px-4 py-5 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] z-20">
           <div className="w-full max-w-4xl mx-auto flex flex-col lg:flex-row gap-3">
             {step === 2 && (

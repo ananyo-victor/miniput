@@ -42,7 +42,17 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
   };
 
   const handleQtyChange = (delta) => {
-    setQuantity((prev) => Math.max(1, prev + delta));
+    setQuantity((prev) => Math.max(1, Math.min(currentProduct.stock || 999, prev + delta)));
+  };
+
+  const handleQuantityInput = (e) => {
+    const value = e.target.value.replace(/[^0-9]/g, "");
+    if (value === "") {
+      setQuantity(1);
+      return;
+    }
+    const numValue = parseInt(value, 10);
+    setQuantity(Math.max(1, Math.min(currentProduct.stock || 999, numValue)));
   };
 
   const toggleSize = (size) => {
@@ -126,7 +136,12 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
               >
                 <Minus size={16} />
               </button>
-              <span className="text-[22px] font-black">{quantity}</span>
+              <input
+                type="text"
+                value={quantity}
+                onChange={handleQuantityInput}
+                className="w-16 text-center text-[22px] font-black border-b border-gray-300 focus:outline-none focus:border-gray-600 transition-colors"
+              />
               <button
                 onClick={() => handleQtyChange(1)}
                 className="w-8 h-8 bg-gray-900 hover:bg-gray-700 text-white rounded-full text-lg flex items-center justify-center transition-colors"

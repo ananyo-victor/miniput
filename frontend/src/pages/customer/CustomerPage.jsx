@@ -4,6 +4,22 @@ import { useNavigate } from "react-router";
 import ProductCard from "../../components/customer/ProductCard";
 import { fetchProducts } from "../../store/productsSlice";
 
+const normalizeText = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase();
+
+const normalizeCategory = (value) =>
+  normalizeText(value).replace(/[\s_-]+/g, "");
+
+const CATEGORY_ALIASES = {
+  tshirt: ["tshirt", "shirt", "tee"],
+  jeans: ["jeans", "pant", "pants", "trouser", "trousers"],
+  jacket: ["jacket", "hoodie", "coat"],
+  set: ["set", "sets", "dress", "combo"],
+  shorts: ["short", "shorts"]
+};
+
 const CustomerPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -22,19 +38,25 @@ const CustomerPage = () => {
     { key: "tshirt", icon: "👕" },
     { key: "jeans", icon: "👖" },
     { key: "jacket", icon: "🧥" },
-    { key: "dress", icon: "👗" },
+    { key: "set", icon: "👗" },
     { key: "shorts", icon: "🩳" },
   ];
 
   // ✅ Combined Filtering
   const filteredProducts = useMemo(() => {
+    const normalizedActiveCategory = normalizeCategory(activeCategory);
+    const acceptedCategories = new Set(
+      (CATEGORY_ALIASES[normalizedActiveCategory] || [normalizedActiveCategory]).map((item) =>
+        normalizeCategory(item)
+      )
+    );
+
     return products.filter((p) => {
-      const brandMatch =
-        (p.brand || "").toLowerCase() === activeBrand.toLowerCase();
+      const brandMatch = normalizeText(p.brand) === normalizeText(activeBrand);
 
       const categoryMatch =
-        activeCategory === "all" ||
-        (p.category || "").toLowerCase() === activeCategory;
+        normalizedActiveCategory === "all" ||
+        acceptedCategories.has(normalizeCategory(p.category));
 
       return brandMatch && categoryMatch;
     });

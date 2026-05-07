@@ -50,8 +50,11 @@ const ProductDetailPage = () => {
       onNext={() => goToIndex(currentIndex + 1)}
       onAddToCart={(payload) => dispatch(addToCart(payload))}
       onOrderNow={(payload) => {
-        dispatch(addToCart(payload));
-        navigate("/customer/cart");
+        navigate("/customer/order", {
+          state: {
+            directOrderItem: payload,
+          },
+        });
       }}
     />
   );
