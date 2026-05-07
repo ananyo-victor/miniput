@@ -18,16 +18,6 @@ async function initializeDatabase() {
     `);
 
     await pool.query(`
-        ALTER TABLE products
-        ALTER COLUMN "imageUrl" TYPE TEXT[] USING ARRAY["imageUrl"]
-    `);
-
-    await pool.query(`
-        ALTER TABLE products
-        ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT ''
-    `);
-
-    await pool.query(`
         CREATE TABLE IF NOT EXISTS product_variants (
             id UUID PRIMARY KEY,
             product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,

@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
 
-const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNow }) => {
+const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
   const currentProduct = useMemo(
     () =>
       product || {
@@ -17,7 +18,28 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
 
   const [quantity, setQuantity] = useState(1);
   const [selectedSizes, setSelectedSizes] = useState([currentProduct.sizes?.[0] || "26"]);
-  const [isLiked, setIsLiked] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const productImages = useMemo(() => {
+    if (Array.isArray(currentProduct.imageUrls) && currentProduct.imageUrls.length) {
+      return currentProduct.imageUrls;
+    }
+    return [currentProduct.imageUrl];
+  }, [currentProduct.imageUrls, currentProduct.imageUrl]);
+
+  useEffect(() => {
+    setQuantity(1);
+    setSelectedSizes([currentProduct.sizes?.[0] || "26"]);
+    setCurrentImageIndex(0);
+  }, [currentProduct.id, currentProduct.sizes]);
+
+  const onPrevImage = () => {
+    setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
+  };
+
+  const onNextImage = () => {
+    setCurrentImageIndex((prev) => (prev + 1) % productImages.length);
+  };
 
   const handleQtyChange = (delta) => {
     setQuantity((prev) => Math.max(1, prev + delta));
@@ -45,44 +67,38 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
       <div className="relative h-[clamp(280px,40vw,480px)] bg-[#e8e8e8] shrink-0 overflow-hidden">
         <button
           onClick={onBack}
-          className="absolute top-3.5 left-3.5 w-9 h-9 bg-white/90 rounded-full flex items-center justify-center text-lg cursor-pointer z-20 shadow-md border-none"
+          className="absolute top-3.5 left-3.5 w-9 h-9 bg-white/50 rounded-full flex items-center justify-center text-lg cursor-pointer z-20 shadow-md border-none"
+          aria-label="Go back"
         >
-          ?
+          <ArrowLeft size={18} />
         </button>
 
         <img
-          src={currentProduct.imageUrl}
+          src={productImages[currentImageIndex]}
           alt={currentProduct.name}
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
         />
 
         <button
-          onClick={() => setIsLiked((prev) => !prev)}
-          className={`absolute top-3.5 right-3.5 w-11 h-11 rounded-full flex items-center justify-center text-xl cursor-pointer transition-colors ${
-            isLiked ? "bg-[#D63031] text-white" : "bg-white/80 text-gray-400"
-          }`}
+          onClick={onPrevImage}
+          className="absolute top-1/2 -translate-y-1/2 left-2.5 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
+          aria-label="Previous image"
         >
-          {isLiked ? "?" : "?"}
+          <ChevronLeft size={22} />
         </button>
 
         <button
-          onClick={onPrev}
-          className="absolute top-1/2 -translate-y-1/2 left-2.5 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
+          onClick={onNextImage}
+          className="absolute top-1/2 -translate-y-1/2 right-2.5 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
+          aria-label="Next image"
         >
-          ‹
-        </button>
-
-        <button
-          onClick={onNext}
-          className="absolute top-1/2 -translate-y-1/2 right-2.5 w-10 h-10 bg-white/90 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
-        >
-          ›
+          <ChevronRight size={22} />
         </button>
       </div>
 
-      <div className="bg-[#f5f5f5] rounded-t-3xl -mt-5 flex-1 p-5 md:max-w-[600px] md:mx-auto md:w-full z-10 relative flex flex-col">
+      <div className="bg-[#f5f5f5]/50 rounded-t-3xl -mt-5 flex-1 p-5 md:max-w-[600px] md:mx-auto md:w-full z-10 relative flex flex-col">
         <h1 className="text-xl font-black text-gray-900 mb-1 uppercase tracking-wide">{currentProduct.name}</h1>
-        <p className="text-sm text-gray-500 mb-4">Premium quality kidswear. Perfect for wholesale retail.</p>
+        <p className="text-sm text-gray-500 mb-4">{currentProduct.description}</p>
 
         <div className="text-xs font-bold text-gray-600 mb-2">Size</div>
         <div className="flex gap-2 mb-4 flex-wrap">
@@ -99,22 +115,24 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
           ))}
         </div>
 
-        <div className="flex items-center justify-between mb-2.5 mt-auto">
+        <div className="flex items-center justify-between mb-2.5">
           <div>
             <div className="text-[13px] font-bold text-gray-600 mb-1.5">Quantity</div>
             <div className="flex items-center gap-4">
               <button
                 onClick={() => handleQtyChange(-1)}
                 className="w-8 h-8 bg-gray-900 hover:bg-gray-700 text-white rounded-full text-lg flex items-center justify-center transition-colors"
+                aria-label="Decrease quantity"
               >
-                -
+                <Minus size={16} />
               </button>
               <span className="text-[22px] font-black">{quantity}</span>
               <button
                 onClick={() => handleQtyChange(1)}
                 className="w-8 h-8 bg-gray-900 hover:bg-gray-700 text-white rounded-full text-lg flex items-center justify-center transition-colors"
+                aria-label="Increase quantity"
               >
-                +
+                <Plus size={16} />
               </button>
             </div>
           </div>
