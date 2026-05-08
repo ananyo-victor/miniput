@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { fetchProducts } from "./productsSlice";
+import { getAdminAccessToken, setAdminTokens, clearAdminToken } from "../utils/adminToken";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -9,7 +10,7 @@ const getAdminAuthHeaders = () => {
     return {};
   }
 
-  const token = window.localStorage.getItem("adminToken");
+  const token = getAdminAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -32,6 +33,9 @@ export const adminLoginThunk = createAsyncThunk(
   async ({ userId, password }, { rejectWithValue }) => {
     try {
       const { data } = await axios.post(`${API_BASE_URL}/api/auth/admin/login`, { userId, password });
+      if (data.success && data.accessToken) {
+        setAdminTokens(data.accessToken, data.refreshToken);
+      }
       return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Login failed");
@@ -48,6 +52,18 @@ export const uploadProductImageThunk = createAsyncThunk("admin/uploadImage", asy
   );
   return data;
 });
+
+export const deleteUploadedProductImageThunk = createAsyncThunk(
+  "admin/deleteUploadedImage",
+  async (publicId) => {
+    const { data } = await axios.post(
+      `${API_BASE_URL}/api/uploads/delete-image`,
+      { publicId },
+      { headers: getAdminAuthHeaders() }
+    );
+    return data;
+  }
+);
 
 export const createProductThunk = createAsyncThunk("admin/createProduct", async (payload, { dispatch }) => {
   const { data } = await axios.post(`${API_BASE_URL}/api/products`, payload, { headers: getAdminAuthHeaders() });
@@ -87,6 +103,13 @@ export const deleteProductThunk = createAsyncThunk("admin/deleteProduct", async 
   return data;
 });
 
+export const updateProductThunk = createAsyncThunk("admin/updateProduct", async (payload, { dispatch }) => {
+  const { id, ...updateData } = payload;
+  const { data } = await axios.put(`${API_BASE_URL}/api/products/${id}`, updateData, { headers: getAdminAuthHeaders() });
+  await dispatch(fetchProducts(true));
+  return data;
+});
+
 const initialState = {
   authStep: 1,
   userId: "",
@@ -97,16 +120,18 @@ const initialState = {
   uploadStatus: "No image uploaded yet",
   authLoading: false,
   authError: "",
-  newProduct: {
-    name: "",
-    category: "Kids Wear",
-    brand: "Miniput",
-    price: "",
-    stock: "",
-    sizes: [],
-    imageUrl: "",
-    description: ""
-  }
+  editingProductId: null,
+    newProduct: {
+      name: "",
+      category: "Kids Wear",
+      brand: "Miniput",
+      price: "",
+      stock: "",
+      sizes: [],
+      imageUrl: "",
+      imageUrls: [],
+      description: ""
+    }
 };
 
 const adminSlice = createSlice({
@@ -121,10 +146,24 @@ const adminSlice = createSlice({
       const { key, value } = action.payload;
       state.newProduct[key] = value;
     },
+    setEditingProductId: (state, action) => {
+      state.editingProductId = action.payload;
+    },
     resetNewProduct: (state) => {
       state.newProduct = initialState.newProduct;
       state.uploadStatus = "No image uploaded yet";
       state.showAdd = false;
+      state.editingProductId = null;
+    },
+    setTokens: (state, action) => {
+      // Tokens are stored in localStorage via setAdminTokens
+      // This reducer is called by axios interceptor for state consistency
+    },
+    logout: (state) => {
+      clearAdminToken();
+      state.authed = false;
+      state.userId = "";
+      state.password = "";
     }
   },
   extraReducers: (builder) => {
@@ -140,9 +179,6 @@ const adminSlice = createSlice({
         state.authLoading = false;
         state.authError = "";
         state.authed = true;
-        if (action.payload?.token) {
-          localStorage.setItem("adminToken", action.payload.token);
-        }
       })
       .addCase(adminLoginThunk.rejected, (state, action) => {
         state.authLoading = false;
@@ -152,7 +188,11 @@ const adminSlice = createSlice({
         state.uploadStatus = "Uploading...";
       })
       .addCase(uploadProductImageThunk.fulfilled, (state, action) => {
-        state.newProduct.imageUrl = action.payload.imageUrl;
+        const uploadedUrl = action.payload.imageUrl || "";
+        if (uploadedUrl) {
+          state.newProduct.imageUrls = [...(state.newProduct.imageUrls || []), uploadedUrl];
+          state.newProduct.imageUrl = state.newProduct.imageUrls[0] || uploadedUrl;
+        }
         state.uploadStatus = "Uploaded successfully";
       })
       .addCase(uploadProductImageThunk.rejected, (state) => {
@@ -162,10 +202,15 @@ const adminSlice = createSlice({
         state.newProduct = initialState.newProduct;
         state.uploadStatus = "No image uploaded yet";
         state.showAdd = false;
+      })
+      .addCase(updateProductThunk.fulfilled, (state) => {
+        state.newProduct = initialState.newProduct;
+        state.uploadStatus = "No image uploaded yet";
+        state.showAdd = false;
+        state.editingProductId = null;
       });
   }
 });
 
-export const { setAdminField, setNewProductField, resetNewProduct } = adminSlice.actions;
+export const { setAdminField, setNewProductField, resetNewProduct, setEditingProductId, logout, setTokens } = adminSlice.actions;
 export default adminSlice.reducer;
-

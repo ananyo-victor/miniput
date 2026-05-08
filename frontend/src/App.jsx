@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router";
 import { useDispatch } from "react-redux";
+import { useEffect } from "react";
 import AdminAuth from "./pages/admin/AdminAuth";
 import AdminPrivateRoute from "./pages/admin/AdminPrivateRoute";
 import AdminInventoryPage from "./pages/admin/AdminInventoryPage";
@@ -12,6 +13,7 @@ import Footer from "./components/layout/Footer";
 import Sidebar from "./components/layout/Sidebar";
 import Navbar from "./components/layout/Navbar";
 import { setAdminField } from "./store/adminSlice";
+import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
 
 const Layout = () => {
   const layoutHeights = {
@@ -35,6 +37,11 @@ const Layout = () => {
 
 export default function App() {
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Setup axios interceptors for auto token refresh on app mount
+    setupAxiosInterceptors(dispatch);
+  }, [dispatch]);
 
   const handleAdminLogout = () => {
     dispatch(setAdminField({ key: "authed", value: false }));
