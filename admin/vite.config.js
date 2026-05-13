@@ -7,14 +7,14 @@ export default defineConfig({
 
   server: {
     host: true,
-    port: 5173,
+    port: 5174,
     strictPort: true,
     allowedHosts: ["miniputkwink.com", "www.miniputkwink.com"]
   },
 
   preview: {
     host: true,
-    port: 5173,
+    port: 5174,
     allowedHosts: ["miniputkwink.com", "www.miniputkwink.com"]
   }
 });

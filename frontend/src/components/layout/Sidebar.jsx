@@ -2,16 +2,13 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router";
 import { Menu } from "lucide-react";
-import { getAdminAuthFromStorage } from "../../utils/adminToken";
 
 const CustomerSidebar = () => {
-  const { isAdmin } = getAdminAuthFromStorage();
   const navigate = useNavigate();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const cart = useSelector((state) => state.customer.cart);
   const cartCount = cart.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
-  const basePath = isAdmin ? "/admin" : "/customer";
 
   const navButtonClass = (isActive) =>
     `w-full text-left px-4 py-3 rounded-xl font-bold text-sm transition flex items-center gap-3 ${
@@ -42,47 +39,31 @@ const CustomerSidebar = () => {
 
       <nav className="flex-1 p-4 space-y-4">
         <button
-          onClick={() => navigate(`${basePath}/shop`)}
-          className={navButtonClass(
-            location.pathname === "/customer/shop" || location.pathname === "/admin/shop"
-          )}
+          onClick={() => navigate("/customer/shop")}
+          className={navButtonClass(location.pathname === "/customer/shop")}
         >
-          <span className="inline-flex items-center justify-center w-5 text-lg leading-none">🏠</span>
+          <span className="inline-flex items-center justify-center w-12 text-xs leading-none font-black">HOME</span>
           {!collapsed && "HOME"}
         </button>
 
-        {!isAdmin && (
-          <button
-            onClick={() => navigate("/customer/cart")}
-            className={navButtonClass(location.pathname === "/customer/cart")}
-          >
-            <span className="inline-flex items-center justify-center w-5 text-lg leading-none">🛒</span>
-            {!collapsed && "CART"}
-            {!collapsed && cartCount > 0 && (
-              <span className="ml-auto inline-flex min-w-[1.35rem] h-[1.35rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-extrabold leading-none text-white">
-                {cartCount}
-              </span>
-            )}
-          </button>
-        )}
-
-        {isAdmin && (
-          <button
-            onClick={() => navigate("/admin/inventory")}
-            className={navButtonClass(location.pathname === "/admin/inventory")}
-          >
-            <span className="inline-flex items-center justify-center w-5 text-lg leading-none">📦</span>
-            {!collapsed && "INVENTORY"}
-          </button>
-        )}
+        <button
+          onClick={() => navigate("/customer/cart")}
+          className={navButtonClass(location.pathname === "/customer/cart")}
+        >
+          <span className="inline-flex items-center justify-center w-12 text-xs leading-none font-black">CART</span>
+          {!collapsed && "CART"}
+          {!collapsed && cartCount > 0 && (
+            <span className="ml-auto inline-flex min-w-[1.35rem] h-[1.35rem] items-center justify-center rounded-full bg-red-500 px-1.5 text-[11px] font-extrabold leading-none text-white">
+              {cartCount}
+            </span>
+          )}
+        </button>
 
         <button
-          onClick={() => navigate(`${basePath}/about`)}
-          className={navButtonClass(
-            location.pathname === "/customer/about" || location.pathname === "/admin/about"
-          )}
+          onClick={() => navigate("/customer/about")}
+          className={navButtonClass(location.pathname === "/customer/about")}
         >
-          <span className="inline-flex items-center justify-center w-5 text-lg leading-none">ℹ️</span>
+          <span className="inline-flex items-center justify-center w-12 text-xs leading-none font-black">INFO</span>
           {!collapsed && "ABOUT"}
         </button>
       </nav>
@@ -97,4 +78,3 @@ const CustomerSidebar = () => {
 };
 
 export default CustomerSidebar;
-

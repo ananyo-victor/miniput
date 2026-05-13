@@ -3,18 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchProducts } from "../../store/productsSlice";
 import {
   createProductThunk,
-  deleteUploadedProductImageThunk,
   deleteProductThunk,
   quickAddStockThunk,
   resetNewProduct,
   setNewProductField,
   toggleProductVisibilityThunk,
-  uploadProductImageThunk,
-  updateProductThunk,
-  setEditingProductId
+  uploadProductImageThunk
 } from "../../store/adminSlice";
 import AddProductModal from "../../components/admin/AddProductModal";
-import DeleteProductModal from "../../components/admin/DeleteProductModal";
 
 const statusMeta = (stock) => {
   if (stock > 50) return { key: "in-stock", label: "IN STOCK" };
@@ -58,45 +54,15 @@ const buildSizeVariants = (sizes, totalStock) => {
   });
 };
 
-const toImageUrlList = (value) => {
-  if (Array.isArray(value)) {
-    return value.filter((item) => typeof item === "string" && item.trim());
-  }
-
-  if (typeof value === "string" && value.trim()) {
-    return [value];
-  }
-
-  return [];
-};
-
-const getPublicIdFromImageUrl = (url) => {
-  if (typeof url !== "string" || !url.trim()) {
-    return "";
-  }
-
-  try {
-    const parsed = new URL(url);
-    return parsed.pathname.replace(/^\/+/, "");
-  } catch {
-    return "";
-  }
-};
-
 const AdminInventoryPage = () => {
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { newProduct, editingProductId } = useSelector((state) => state.admin);
+  const { newProduct } = useSelector((state) => state.admin);
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [imageUploads, setImageUploads] = useState([]);
-  const [removingImageId, setRemovingImageId] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [productToDelete, setProductToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const maxImages = 9;
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   useEffect(() => {
     dispatch(fetchProducts(true));
@@ -134,54 +100,11 @@ const AdminInventoryPage = () => {
     setActiveFilter(filterId);
   };
 
-  const handleOpenModal = () => {
-    setShowAddModal(true);
-  };
-
-  const handleEditProduct = (product) => {
-    dispatch(setNewProductField({ key: "name", value: product.name }));
-    dispatch(setNewProductField({ key: "category", value: product.category || "Kids Wear" }));
-    dispatch(setNewProductField({ key: "brand", value: product.brand || "Miniput" }));
-    dispatch(setNewProductField({ key: "price", value: product.price }));
-    dispatch(setNewProductField({ key: "stock", value: product.stock }));
-    
-    const sizes = Array.isArray(product.sizes) 
-      ? product.sizes.map(s => typeof s === 'object' ? s.size : s)
-      : (product.sizes ? String(product.sizes).split(",").map(s => s.trim()) : []);
-    dispatch(setNewProductField({ key: "sizes", value: sizes }));
-    
-    const imageUrlsFromList = toImageUrlList(product.imageUrls);
-    const existingImageUrls = imageUrlsFromList.length
-      ? imageUrlsFromList
-      : toImageUrlList(product.imageUrl);
-
-    dispatch(setNewProductField({ key: "imageUrl", value: existingImageUrls[0] || "" }));
-    dispatch(setNewProductField({ key: "imageUrls", value: existingImageUrls }));
-    dispatch(setNewProductField({ key: "description", value: product.description || "" }));
-    
-    const newImageUploads = existingImageUrls.map((url, idx) => ({
-      localId: `existing-${product.id}-${idx}`,
-      previewUrl: url,
-      uploading: false,
-      imageUrl: url,
-      publicId: getPublicIdFromImageUrl(url)
-    }));
-    setImageUploads(newImageUploads);
-    
-    dispatch(setEditingProductId(product.id));
-    setShowAddModal(true);
-  };
+  const handleOpenModal = () => setShowAddModal(true);
 
   const handleCloseModal = () => {
-    imageUploads.forEach((item) => {
-      if (item.previewUrl && item.previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(item.previewUrl);
-      }
-    });
     setShowAddModal(false);
     setSubmitting(false);
-    setImageUploads([]);
-    setRemovingImageId("");
     dispatch(resetNewProduct());
   };
 
@@ -191,140 +114,46 @@ const AdminInventoryPage = () => {
 
   const handleCreateProduct = async (event) => {
     event.preventDefault();
-
-    if (imageUploads.some((item) => item.uploading)) {
-      window.alert("Please wait for all images to finish uploading.");
-      return;
-    }
-
     setSubmitting(true);
 
     const stock = Number(newProduct.stock);
     const sizeVariants = buildSizeVariants(newProduct.sizes, stock);
-    
-    // Filter out existing images from imageUploads (those with localId starting with "existing-")
-    const newImages = imageUploads.filter(item => !item.localId.startsWith('existing-'));
-    
-    // For edit mode, include existing images as well
-    const allImageUrls = editingProductId 
-      ? imageUploads.filter((item) => !item.uploading && item.imageUrl).map((item) => item.imageUrl)
-      : newImages.filter((item) => !item.uploading && item.imageUrl).map((item) => item.imageUrl);
-
     const payload = {
       ...newProduct,
       price: Number(newProduct.price),
       stock,
-      imageUrls: allImageUrls,
       sizes: sizeVariants
     };
-
-    payload.imageUrl = payload.imageUrls[0] || "";
 
     if (!sizeVariants.length) {
       delete payload.sizes;
     }
 
-    let result;
-    if (editingProductId) {
-      result = await dispatch(updateProductThunk({ id: editingProductId, ...payload }));
-    } else {
-      result = await dispatch(createProductThunk(payload));
-    }
-    
+    const result = await dispatch(createProductThunk(payload));
     setSubmitting(false);
-    
-    if ((editingProductId && updateProductThunk.fulfilled.match(result)) || 
-        (!editingProductId && createProductThunk.fulfilled.match(result))) {
+    if (createProductThunk.fulfilled.match(result)) {
       handleCloseModal();
     }
   };
 
   const handleImageUpload = async (event) => {
-    const files = Array.from(event.target.files || []);
-    if (!files.length) {
+    const file = event.target.files?.[0];
+    if (!file) {
       return;
     }
 
-    const availableSlots = Math.max(0, maxImages - imageUploads.length);
-    const selectedFiles = files.slice(0, availableSlots);
-    if (!selectedFiles.length) {
-      event.target.value = "";
-      window.alert(`You can upload up to ${maxImages} images only.`);
-      return;
-    }
-
-    if (files.length > availableSlots) {
-      window.alert(`Only ${availableSlots} image slot(s) were available. Extra files were ignored.`);
-    }
-
-    const pendingItems = selectedFiles.map((file) => {
-      const localId = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-      return {
-        localId,
-        previewUrl: URL.createObjectURL(file),
-        uploading: true,
-        imageUrl: "",
-        publicId: ""
-      };
-    });
-
-    setImageUploads((prev) => [...prev, ...pendingItems]);
+    setUploadingImage(true);
+    const result = await dispatch(uploadProductImageThunk(file));
+    setUploadingImage(false);
     event.target.value = "";
 
-    await Promise.all(
-      pendingItems.map(async (item, index) => {
-        const result = await dispatch(uploadProductImageThunk(selectedFiles[index]));
-
-        if (uploadProductImageThunk.fulfilled.match(result)) {
-          const { imageUrl, publicId } = result.payload;
-          setImageUploads((prev) =>
-            prev.map((upload) =>
-              upload.localId === item.localId
-                ? { ...upload, uploading: false, imageUrl: imageUrl || "", publicId: publicId || "" }
-                : upload
-            )
-          );
-        } else {
-          setImageUploads((prev) => {
-            const target = prev.find((upload) => upload.localId === item.localId);
-            if (target?.previewUrl) {
-              URL.revokeObjectURL(target.previewUrl);
-            }
-            return prev.filter((upload) => upload.localId !== item.localId);
-          });
-          window.alert("One image upload failed. Please try again.");
-        }
-      })
-    );
+    if (!uploadProductImageThunk.fulfilled.match(result)) {
+      window.alert("Image upload failed. Please try again.");
+    }
   };
 
-  const handleDeleteImage = async (uploadItem) => {
-    if (!uploadItem || uploadItem.uploading) {
-      return;
-    }
-
-    const publicId = uploadItem.publicId || getPublicIdFromImageUrl(uploadItem.imageUrl || uploadItem.previewUrl);
-    if (!publicId) {
-      window.alert("This image cannot be deleted because its storage key could not be resolved.");
-      return;
-    }
-
-    setRemovingImageId(uploadItem.localId);
-    const result = await dispatch(deleteUploadedProductImageThunk(publicId));
-    setRemovingImageId("");
-
-    if (!deleteUploadedProductImageThunk.fulfilled.match(result)) {
-      window.alert("Failed to remove image from bucket. Please try again.");
-      return;
-    }
-
-    setImageUploads((prev) => {
-      const target = prev.find((item) => item.localId === uploadItem.localId);
-      if (target?.previewUrl && target.previewUrl.startsWith("blob:")) {
-        URL.revokeObjectURL(target.previewUrl);
-      }
-      return prev.filter((item) => item.localId !== uploadItem.localId);
-    });
+  const handleDeleteImage = () => {
+    dispatch(setNewProductField({ key: "imageUrl", value: "" }));
   };
 
   const handleQuickAdd = (product) =>
@@ -332,34 +161,8 @@ const AdminInventoryPage = () => {
   const handleToggleVisibility = (product) =>
     dispatch(toggleProductVisibilityThunk({ id: product.id, isHidden: !product.isHidden }));
   const handleDelete = (product) => {
-    setProductToDelete(product);
-    setShowDeleteModal(true);
+    if (window.confirm(`Delete ${product.name}?`)) dispatch(deleteProductThunk(product.id));
   };
-
-  const handleConfirmDelete = async () => {
-    if (!productToDelete) return;
-    setIsDeleting(true);
-    await dispatch(deleteProductThunk(productToDelete.id));
-    setIsDeleting(false);
-    setShowDeleteModal(false);
-    setProductToDelete(null);
-  };
-
-  const handleCancelDelete = () => {
-    setShowDeleteModal(false);
-    setProductToDelete(null);
-  };
-
-  useEffect(
-    () => () => {
-      imageUploads.forEach((item) => {
-        if (item.previewUrl && item.previewUrl.startsWith("blob:")) {
-          URL.revokeObjectURL(item.previewUrl);
-        }
-      });
-    },
-    [imageUploads]
-  );
 
   const getStatusTone = (stock) => {
     const status = statusMeta(Number(stock || 0)).key;
@@ -500,13 +303,6 @@ const AdminInventoryPage = () => {
                   <div className="flex flex-wrap gap-2 justify-end border-t border-[#f0f0f0] pt-2 mt-2">
                     <button
                       type="button"
-                      onClick={() => handleEditProduct(product)}
-                      className="rounded-lg bg-[#e3f2fd] px-3 py-1.5 text-[11px] font-black text-[#1976d2] hover:bg-[#bbdefb] transition-colors"
-                    >
-                      EDIT
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => handleQuickAdd(product)}
                       className="rounded-lg bg-[#f0f0f0] px-3 py-1.5 text-[11px] font-black text-[#555] hover:bg-[#e8e8e8] transition-colors"
                     >
@@ -537,26 +333,16 @@ const AdminInventoryPage = () => {
         show={showAddModal}
         newProduct={newProduct}
         submitting={submitting}
+        uploadingImage={uploadingImage}
         onClose={handleCloseModal}
         onSubmit={handleCreateProduct}
         onFieldChange={handleFieldChange}
         onImageUpload={handleImageUpload}
-        imageUploads={imageUploads}
-        maxImages={maxImages}
-        removingImageId={removingImageId}
         onDeleteImage={handleDeleteImage}
-        isEditing={!!editingProductId}
-      />
-
-      <DeleteProductModal
-        show={showDeleteModal}
-        product={productToDelete}
-        onConfirm={handleConfirmDelete}
-        onCancel={handleCancelDelete}
-        isDeleting={isDeleting}
       />
     </div>
   );
 };
 
 export default AdminInventoryPage;
+

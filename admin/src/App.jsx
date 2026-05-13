@@ -1,9 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router";
-import CustomerPage from "./pages/customer/CustomerPage";
-import CustomerCartPage from "./pages/customer/CustomerCartPage";
-import OrderFormPage from "./pages/customer/OrderFormPage";
-import ProductDetailPage from "./pages/customer/ProductDetailPage";
-import AboutPage from "./pages/customer/AboutPage";
+import AdminAuth from "./pages/admin/AdminAuth";
+import AdminPrivateRoute from "./pages/admin/AdminPrivateRoute";
+import AdminInventoryPage from "./pages/admin/AdminInventoryPage";
 import Footer from "./components/layout/Footer";
 import Sidebar from "./components/layout/Sidebar";
 import Navbar from "./components/layout/Navbar";
@@ -32,17 +30,16 @@ export default function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Navigate to="/customer/shop" replace />} />
+        <Route path="/" element={<Navigate to="/admin" replace />} />
 
-        <Route element={<Layout />}>
-          <Route path="/customer/shop" element={<CustomerPage />} />
-          <Route path="/customer/product/:productId" element={<ProductDetailPage />} />
-          <Route path="/customer/cart" element={<CustomerCartPage />} />
-          <Route path="/customer/order" element={<OrderFormPage />} />
-          <Route path="/customer/about" element={<AboutPage />} />
+        <Route path="/admin" element={<AdminAuth />} />
+        <Route path="/admin/auth" element={<Navigate to="/admin" replace />} />
+
+        <Route element={<AdminPrivateRoute />}>
+            <Route path="/admin/inventory" element={<AdminInventoryPage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/customer/shop" replace />} />
+        <Route path="*" element={<Navigate to="/admin" replace />} />
       </Routes>
     </Router>
   );

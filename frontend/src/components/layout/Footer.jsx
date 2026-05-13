@@ -1,17 +1,13 @@
 import React from "react";
 import { Link, useLocation } from "react-router";
-import { useSelector } from "react-redux";
-import { Home, Package, ShoppingCart, Info } from "lucide-react";
-import { getAdminAuthFromStorage } from "../../utils/adminToken";
+import { Home, ShoppingCart, Info } from "lucide-react";
 
 const Footer = () => {
-  const { isAdmin } = getAdminAuthFromStorage();
   const location = useLocation();
   const isOrderPage = location.pathname === "/customer/order";
 
   const isActive = (path) => location.pathname === path;
-
-  const iconColor = (path) => isActive(path) ? "text-blue-900" : "text-gray-400";
+  const iconColor = (path) => (isActive(path) ? "text-blue-900" : "text-gray-400");
 
   if (isOrderPage) {
     return null;
@@ -29,23 +25,13 @@ const Footer = () => {
             {isActive("/customer/shop") && <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full mt-0.5"></div>}
           </Link>
 
-          {isAdmin && (
-            <Link to="/admin/inventory" className="flex flex-col items-center group">
-              <Package size={18} className={`transition-colors ${iconColor("/admin/inventory")}`} />
-              <span className={`text-xs font-bold mt-1 ${isActive("/admin/inventory") ? "text-blue-900" : "text-gray-400"}`}>
-                Inventory
-              </span>
-              {isActive("/admin/inventory") && <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full mt-0.5"></div>}
-            </Link>
-          )}
-
-          {!isAdmin && <Link to="/customer/cart" className="flex flex-col items-center group">
+          <Link to="/customer/cart" className="flex flex-col items-center group">
             <ShoppingCart size={18} className={`transition-colors ${iconColor("/customer/cart")}`} />
             <span className={`text-xs font-bold mt-1 ${isActive("/customer/cart") ? "text-blue-900" : "text-gray-400"}`}>
               Cart
             </span>
             {isActive("/customer/cart") && <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full mt-0.5"></div>}
-          </Link>}
+          </Link>
 
           <Link to="/customer/about" className="flex flex-col items-center group">
             <Info size={18} className={`transition-colors ${iconColor("/customer/about")}`} />

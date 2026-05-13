@@ -11,6 +11,7 @@ node_modules/
 # build artifacts
 frontend/dist/
 backend/dist/
+admin/dist/
 
 # logs
 npm-debug.log*
