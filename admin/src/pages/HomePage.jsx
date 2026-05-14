@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
-import ProductCard from "../../components/customer/ProductCard";
-import { fetchProducts } from "../../store/productsSlice";
+import ProductCard from "../components/customer/ProductCard";
+import { fetchProducts } from "../store/productsSlice";
 
 const normalizeText = (value) =>
   String(value || "")
@@ -20,7 +20,7 @@ const CATEGORY_ALIASES = {
   shorts: ["short", "shorts"]
 };
 
-const CustomerPage = () => {
+const HomePage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
@@ -66,7 +66,7 @@ const CustomerPage = () => {
     <div className="flex-1 flex flex-col">
       {/* ✅ BRAND TABS (TOP) */}
       <div className="flex bg-white border-b border-gray-100 sticky top-[65px] z-40">
-        {["Miniput", "Kwink"].map((brand) => (
+        {["Miniput", "Kwink", "Inventory", "About"].map((brand) => (
           <button
             key={brand}
             onClick={() => {
@@ -170,4 +170,4 @@ const CustomerPage = () => {
   );
 };
 
-export default CustomerPage;
+export default HomePage;

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProducts } from "../../store/productsSlice";
+import { fetchProducts } from "../store/productsSlice";
 import {
   createProductThunk,
   deleteProductThunk,
@@ -9,8 +9,8 @@ import {
   setNewProductField,
   toggleProductVisibilityThunk,
   uploadProductImageThunk
-} from "../../store/adminSlice";
-import AddProductModal from "../../components/admin/AddProductModal";
+} from "../store/adminSlice";
+import AddProductModal from "../components/admin/AddProductModal";
 
 const statusMeta = (stock) => {
   if (stock > 50) return { key: "in-stock", label: "IN STOCK" };
@@ -54,7 +54,7 @@ const buildSizeVariants = (sizes, totalStock) => {
   });
 };
 
-const AdminInventoryPage = () => {
+const InventoryPage = () => {
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
   const { newProduct } = useSelector((state) => state.admin);
@@ -178,9 +178,6 @@ const AdminInventoryPage = () => {
           <h1 className="text-3xl md:text-4xl text-[#0E2A4A] tracking-[2px] font-['Bebas_Neue',_sans-serif] leading-none">
             MANAGE PRODUCTS
           </h1>
-          <p className="text-[10px] md:text-[11px] font-bold text-[#888] tracking-[1.5px] mt-1 uppercase">
-            Admin Inventory Dashboard
-          </p>
         </div>
 
         <button
@@ -344,5 +341,4 @@ const AdminInventoryPage = () => {
   );
 };
 
-export default AdminInventoryPage;
-
+export default InventoryPage;

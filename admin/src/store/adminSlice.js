@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
 import { fetchProducts } from "./productsSlice";
+import { getAdminAccessToken, setAdminTokens } from "../utils/adminToken";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -9,7 +10,7 @@ const getAdminAuthHeaders = () => {
     return {};
   }
 
-  const token = window.localStorage.getItem("adminToken");
+  const token = getAdminAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
@@ -140,9 +141,9 @@ const adminSlice = createSlice({
         state.authLoading = false;
         state.authError = "";
         state.authed = true;
-        if (action.payload?.token) {
-          localStorage.setItem("adminToken", action.payload.token);
-        }
+        const accessToken = action.payload?.accessToken || action.payload?.token || null;
+        const refreshToken = action.payload?.refreshToken || null;
+        if (accessToken) setAdminTokens(accessToken, refreshToken);
       })
       .addCase(adminLoginThunk.rejected, (state, action) => {
         state.authLoading = false;
@@ -168,4 +169,3 @@ const adminSlice = createSlice({
 
 export const { setAdminField, setNewProductField, resetNewProduct } = adminSlice.actions;
 export default adminSlice.reducer;
-

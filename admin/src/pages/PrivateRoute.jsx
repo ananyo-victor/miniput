@@ -1,11 +1,11 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
-import Sidebar from "../../components/layout/Sidebar";
-import Navbar from "../../components/layout/Navbar";
-import Footer from "../../components/layout/Footer";
-import { clearAdminToken, getAdminAuthFromStorage } from "../../utils/adminToken";
+import Sidebar from "../components/layout/Sidebar";
+import Navbar from "../components/layout/Navbar";
+import Footer from "../components/layout/Footer";
+import { clearAdminToken, getAdminAuthFromStorage } from "../utils/adminToken";
 
-const AdminPrivateRoute = () => {
+const PrivateRoute = () => {
   const location = useLocation();
   const { token, isAdmin } = getAdminAuthFromStorage();
   const layoutHeights = {
@@ -15,7 +15,7 @@ const AdminPrivateRoute = () => {
 
   if (!token || !isAdmin) {
     clearAdminToken();
-    return <Navigate to="/admin/auth" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   return (
@@ -27,9 +27,9 @@ const AdminPrivateRoute = () => {
           <Outlet />
         </main>
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </div>
   );
 };
 
-export default AdminPrivateRoute;
+export default PrivateRoute;

@@ -16,7 +16,7 @@ const Footer = () => {
             <span className={`text-xs font-bold mt-1 ${isActive("/admin/inventory") ? "text-blue-900" : "text-gray-400"}`}>
               Inventory
             </span>
-            {isActive("/admin/inventory") && <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full mt-0.5"></div>}
+            {isActive("/inventory") && <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full mt-0.5"></div>}
           </Link>
         </div>
       </div>

@@ -42,6 +42,27 @@ async function initializeDatabase() {
         )
     `);
 
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS brand_home_content (
+            brand TEXT PRIMARY KEY CHECK (brand IN ('Miniput', 'Kwink')),
+            hero_image_urls TEXT[] NOT NULL DEFAULT '{}',
+            promo_tags TEXT[] NOT NULL DEFAULT '{}',
+            "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    `);
+
+    await pool.query(`
+        CREATE TABLE IF NOT EXISTS about_content (
+            id SMALLINT PRIMARY KEY CHECK (id = 1),
+            miniput_details TEXT NOT NULL DEFAULT '',
+            kwink_details TEXT NOT NULL DEFAULT '',
+            address TEXT NOT NULL DEFAULT '',
+            whatsapp_number TEXT NOT NULL DEFAULT '',
+            phone_number TEXT NOT NULL DEFAULT '',
+            "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+    `);
+
     // Backfill one default variant for existing products that have none yet.
     const { rows: products } = await pool.query(`SELECT id, stock FROM products`);
     for (const product of products) {
@@ -63,6 +84,18 @@ async function initializeDatabase() {
             FROM product_variants v
             WHERE v.product_id = p.id
         ), 0)
+    `);
+
+    await pool.query(`
+        INSERT INTO brand_home_content (brand)
+        VALUES ('Miniput'), ('Kwink')
+        ON CONFLICT (brand) DO NOTHING
+    `);
+
+    await pool.query(`
+        INSERT INTO about_content (id)
+        VALUES (1)
+        ON CONFLICT (id) DO NOTHING
     `);
 }
 
