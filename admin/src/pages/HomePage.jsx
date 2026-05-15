@@ -23,15 +23,6 @@ const CATEGORY_ALIASES = {
   shorts: ["short", "shorts"]
 };
 
-const CATEGORY_FILTERS = [
-  { key: "all", label: "ALL" },
-  { key: "tshirt", label: "TSHIRT" },
-  { key: "jeans", label: "JEANS" },
-  { key: "jacket", label: "JACKET" },
-  { key: "set", label: "SETS" },
-  { key: "shorts", label: "SHORTS" }
-];
-
 const emptyBrandContent = {
   heroImageUrls: [],
   promoTags: []
@@ -219,81 +210,38 @@ const HomePage = () => {
 
   return (
     <div className="flex-1 flex flex-col">
-      <section
-        className={`relative overflow-hidden p-8 ${
-          activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
-        } text-white transition-colors duration-500`}
-      >
+      <section className={`relative overflow-hidden h-[150px] text-white transition-colors duration-500`}>
         {activeHeroImage ? (
           <img
             src={activeHeroImage}
             alt={`${activeBrand} hero`}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
-        ) : null}
-
-        <div className={`absolute inset-0 ${activeHeroImage ? "bg-black/35" : "bg-transparent"}`} />
-
-        <div className="relative max-w-6xl mx-auto flex justify-between items-end gap-4">
-          <div>
-            <h1
-              className={`tracking-tighter leading-none ${
-                activeBrand === "Miniput"
-                  ? "mk-bebas text-[clamp(36px,6vw,72px)] bg-[linear-gradient(90deg,#E85A1D,#FFB800,#3aa34a,#0E2A4A,#c03fa1)] bg-clip-text text-transparent"
-                  : "text-4xl italic font-black text-white [font-family:'Nunito',sans-serif]"
-              }`}
-            >
-              {activeBrand}
-            </h1>
-            <p className="text-xs font-black tracking-[0.3em] opacity-90 mt-2">
-              {activeBrand === "Miniput" ? "KIDS" : "YOUR SHIRT, YOUR STORY"}
-            </p>
-          </div>
-
-          {heroImages.length > 1 ? (
-            <div className="flex items-center gap-2 rounded-full bg-black/35 px-3 py-2">
-              {heroImages.map((_, index) => {
-                const isActive = index === (heroIndexByBrand[activeBrand] || 0);
-                return (
-                  <button
-                    key={`${activeBrand}-hero-dot-${index}`}
-                    type="button"
-                    onClick={() =>
-                      setHeroIndexByBrand((prev) => ({
-                        ...prev,
-                        [activeBrand]: index
-                      }))
-                    }
-                    className={`h-2.5 w-2.5 rounded-full transition ${isActive ? "bg-white" : "bg-white/45"}`}
-                    aria-label={`Show hero image ${index + 1}`}
-                  />
-                );
-              })}
+        ) : (
+          <div
+            className={`relative max-w-6xl h-full mx-auto flex justify-between items-end gap-4 ${
+              activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
+            }`}
+          >
+            <div className="p-8 pb-12">
+              <h1
+                className={`tracking-tighter leading-none ${
+                  activeBrand === "Miniput"
+                    ? "mk-bebas text-[clamp(36px,6vw,72px)] bg-[linear-gradient(90deg,#E85A1D,#FFB800,#3aa34a,#0E2A4A,#c03fa1)] bg-clip-text text-transparent"
+                    : "text-4xl italic font-black text-white [font-family:'Nunito',sans-serif]"
+                }`}
+              >
+                {activeBrand}
+              </h1>
+              <p className="text-xs font-black tracking-[0.3em] opacity-90 mt-2">
+                {activeBrand === "Miniput" ? "KIDS" : "YOUR SHIRT, YOUR STORY"}
+              </p>
             </div>
-          ) : null}
-        </div>
+          </div>
+        )}
       </section>
 
       <div className="bg-white border-b border-gray-100 sticky top-[113px] z-30">
-        <div className="flex gap-3 overflow-x-auto px-4 py-3">
-          {CATEGORY_FILTERS.map((filter) => {
-            const isActive = activeCategory === filter.key;
-
-            return (
-              <button
-                key={filter.key}
-                onClick={() => dispatch(setActiveCategory(filter.key))}
-                className={`flex items-center justify-center min-w-[72px] h-[44px] rounded-full px-3 transition ${
-                  isActive
-                    ? `${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[var(--mk-green)]"} text-black`
-                    : "bg-black text-white"
-                }`}
-              >
-                <span className="text-[11px] font-bold tracking-wide">{filter.label}</span>
-              </button>
-            );
-          })}
-        </div>
 
         <div className="flex gap-2 overflow-x-auto px-4 pb-3">
           <button

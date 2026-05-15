@@ -30,7 +30,7 @@ const CartPage = () => {
             <h2 className="text-xl font-black text-[var(--mk-navy)]">Your cart is empty</h2>
             <p className="mt-2 text-sm text-gray-500">Pick products from the showroom to start a bulk order.</p>
             <Link
-              to="/customer/shop"
+              to="/home"
               className="inline-block mt-5 px-5 py-3 rounded-xl text-xs font-black tracking-[0.08em] bg-[var(--mk-navy)] text-[var(--mk-yellow)]"
             >
               BACK TO SHOWROOM
@@ -115,7 +115,7 @@ const CartPage = () => {
 
             <button
               type="button"
-              onClick={() => navigate("/customer/order")}
+              onClick={() => navigate("/order")}
               className="w-full mt-5 py-3 rounded-xl bg-[var(--mk-navy)] text-[var(--mk-yellow)] text-xs font-black tracking-[0.09em]"
             >
               PLACE ORDER
@@ -129,7 +129,7 @@ const CartPage = () => {
               CLEAR CART
             </button>
 
-            <Link to="/customer/shop" className="block text-center mt-4 text-xs font-bold text-gray-500">
+            <Link to="/home" className="block text-center mt-4 text-xs font-bold text-gray-500">
               CONTINUE SHOPPING
             </Link>
           </aside>

@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate } from "react-router";
-import ProductCard from "../components/customer/ProductCard";
+import { useLocation, useNavigate, useParams } from "react-router";
+import ProductCard from "../components/products/ProductCard";
 import { fetchProducts } from "../store/productsSlice";
+import { setActiveBrand, setActiveCategory } from "../store/homeSlice";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -21,15 +22,6 @@ const CATEGORY_ALIASES = {
   set: ["set", "sets", "dress", "combo"],
   shorts: ["short", "shorts"]
 };
-
-const CATEGORY_FILTERS = [
-  { key: "all", label: "ALL" },
-  { key: "tshirt", label: "TSHIRT" },
-  { key: "jeans", label: "JEANS" },
-  { key: "jacket", label: "JACKET" },
-  { key: "set", label: "SETS" },
-  { key: "shorts", label: "SHORTS" }
-];
 
 const emptyBrandContent = {
   heroImageUrls: [],
@@ -85,12 +77,13 @@ const productMatchesPromoTag = (product, tag) => {
 };
 
 const HomePage = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+  const { brand } = useParams();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
+  const { activeBrand, activeCategory } = useSelector((state) => state.home);
 
-  const [activeBrand, setActiveBrand] = useState("Miniput");
-  const [activeCategory, setActiveCategory] = useState("all");
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
     Miniput: "all",
     Kwink: "all"
@@ -141,6 +134,32 @@ const HomePage = () => {
     loadHomeContent();
   }, []);
 
+  const urlBrand = useMemo(() => {
+    const pathParts = location.pathname.split("/").filter(Boolean);
+    const possibleBrand = normalizeText(brand || pathParts[pathParts.length - 1]);
+
+    if (possibleBrand === "miniput") {
+      return "Miniput";
+    }
+
+    if (possibleBrand === "kwink") {
+      return "Kwink";
+    }
+
+    return null;
+  }, [brand, location.pathname]);
+
+  useEffect(() => {
+    if (urlBrand && urlBrand !== activeBrand) {
+      dispatch(setActiveBrand(urlBrand));
+      dispatch(setActiveCategory("all"));
+    }
+  }, [urlBrand, activeBrand, dispatch]);
+
+  useEffect(() => {
+    dispatch(setActiveCategory("all"));
+  }, [activeBrand, dispatch]);
+
   const currentBrandContent = homeContentByBrand[activeBrand] || emptyBrandContent;
   const heroImages = Array.isArray(currentBrandContent.heroImageUrls)
     ? currentBrandContent.heroImageUrls.slice(0, 4)
@@ -148,11 +167,8 @@ const HomePage = () => {
   const promoTags = Array.isArray(currentBrandContent.promoTags) ? currentBrandContent.promoTags : [];
 
   useEffect(() => {
-    setActiveCategory("all");
-  }, [activeBrand]);
-
-  useEffect(() => {
     const currentIndex = Number(heroIndexByBrand[activeBrand] || 0);
+
     if (!heroImages.length) {
       if (currentIndex !== 0) {
         setHeroIndexByBrand((prev) => ({ ...prev, [activeBrand]: 0 }));
@@ -194,97 +210,38 @@ const HomePage = () => {
 
   return (
     <div className="flex-1 flex flex-col">
-      <div className="flex bg-white border-b border-gray-100 sticky top-[65px] z-40">
-        {["Miniput", "Kwink"].map((brand) => (
-          <button
-            key={brand}
-            onClick={() => setActiveBrand(brand)}
-            className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${
-              activeBrand === brand
-                ? "border-[var(--mk-yellow)] text-[var(--mk-navy)]"
-                : "border-transparent text-gray-400"
-            }`}
-          >
-            {brand.toUpperCase()}
-          </button>
-        ))}
-      </div>
-
-      <section
-        className={`relative overflow-hidden p-8 ${
-          activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
-        } text-white transition-colors duration-500`}
-      >
+      <section className={`relative overflow-hidden h-[150px] text-white transition-colors duration-500`}>
         {activeHeroImage ? (
           <img
             src={activeHeroImage}
             alt={`${activeBrand} hero`}
-            className="absolute inset-0 h-full w-full object-cover"
+            className="absolute inset-0 h-full w-full object-cover object-center"
           />
-        ) : null}
-
-        <div className={`absolute inset-0 ${activeHeroImage ? "bg-black/35" : "bg-transparent"}`} />
-
-        <div className="relative max-w-6xl mx-auto flex justify-between items-end gap-4">
-          <div>
-            <h1
-              className={`tracking-tighter leading-none ${
-                activeBrand === "Miniput"
-                  ? "mk-bebas text-[clamp(36px,6vw,72px)] bg-[linear-gradient(90deg,#E85A1D,#FFB800,#3aa34a,#0E2A4A,#c03fa1)] bg-clip-text text-transparent"
-                  : "text-4xl italic font-black text-white [font-family:'Nunito',sans-serif]"
-              }`}
-            >
-              {activeBrand}
-            </h1>
-            <p className="text-xs font-black tracking-[0.3em] opacity-90 mt-2">
-              {activeBrand === "Miniput" ? "KIDS" : "YOUR SHIRT, YOUR STORY"}
-            </p>
-          </div>
-
-          {heroImages.length > 1 ? (
-            <div className="flex items-center gap-2 rounded-full bg-black/35 px-3 py-2">
-              {heroImages.map((_, index) => {
-                const isActive = index === (heroIndexByBrand[activeBrand] || 0);
-                return (
-                  <button
-                    key={`${activeBrand}-hero-dot-${index}`}
-                    type="button"
-                    onClick={() =>
-                      setHeroIndexByBrand((prev) => ({
-                        ...prev,
-                        [activeBrand]: index
-                      }))
-                    }
-                    className={`h-2.5 w-2.5 rounded-full transition ${isActive ? "bg-white" : "bg-white/45"}`}
-                    aria-label={`Show hero image ${index + 1}`}
-                  />
-                );
-              })}
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <div className="bg-white border-b border-gray-100 sticky top-[113px] z-30">
-        <div className="flex gap-3 overflow-x-auto px-4 py-3">
-          {CATEGORY_FILTERS.map((filter) => {
-            const isActive = activeCategory === filter.key;
-
-            return (
-              <button
-                key={filter.key}
-                onClick={() => setActiveCategory(filter.key)}
-                className={`flex items-center justify-center min-w-[72px] h-[44px] rounded-full px-3 transition ${
-                  isActive
-                    ? `${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[var(--mk-green)]"} text-black`
-                    : "bg-black text-white"
+        ) : (
+          <div
+            className={`relative max-w-6xl h-full mx-auto flex justify-between items-end gap-4 ${
+              activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
+            }`}
+          >
+            <div className="p-8 pb-12">
+              <h1
+                className={`tracking-tighter leading-none ${
+                  activeBrand === "Miniput"
+                    ? "mk-bebas text-[clamp(36px,6vw,72px)] bg-[linear-gradient(90deg,#E85A1D,#FFB800,#3aa34a,#0E2A4A,#c03fa1)] bg-clip-text text-transparent"
+                    : "text-4xl italic font-black text-white [font-family:'Nunito',sans-serif]"
                 }`}
               >
-                <span className="text-[11px] font-bold tracking-wide">{filter.label}</span>
-              </button>
-            );
-          })}
-        </div>
+                {activeBrand}
+              </h1>
+              <p className="text-xs font-black tracking-[0.3em] opacity-90 mt-2">
+                {activeBrand === "Miniput" ? "KIDS" : "YOUR SHIRT, YOUR STORY"}
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      <div className="bg-white border-b border-gray-100 sticky top-[100px] z-30 ">
 
         <div className="flex gap-2 overflow-x-auto px-4 pb-3">
           <button
@@ -345,7 +302,7 @@ const HomePage = () => {
                 key={product.id}
                 product={product}
                 onClick={() =>
-                  navigate(`/customer/product/${product.id}`, {
+                  navigate(`/product/${product.id}`, {
                     state: { product }
                   })
                 }

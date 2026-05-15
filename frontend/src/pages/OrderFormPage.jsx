@@ -122,7 +122,7 @@ const OrderFormPage = () => {
       navigate(-1);
       return;
     }
-    navigate("/customer/cart");
+    navigate("/cart");
   };
 
   const sanitizePhone = (value) => value.replace(/\D/g, "").slice(0, 10);

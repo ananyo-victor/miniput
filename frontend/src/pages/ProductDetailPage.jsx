@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
-import ProductDetail from "../components/customer/ProductDetail";
+import ProductDetail from "../components/products/ProductDetail";
 import { addToCart } from "../store/customerSlice";
 import { fetchProducts } from "../store/productsSlice";
 
@@ -25,7 +25,7 @@ const ProductDetailPage = () => {
   const goToIndex = (index) => {
     if (index < 0 || index >= products.length) return;
     const nextProduct = products[index];
-    navigate(`/customer/product/${nextProduct.id}`, { state: { product: nextProduct } });
+    navigate(`/product/${nextProduct.id}`, { state: { product: nextProduct } });
   };
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     if (!loading && !selectedProduct) {
-      navigate("/customer/shop", { replace: true });
+      navigate("/home", { replace: true });
     }
   }, [loading, selectedProduct, navigate]);
 
@@ -45,12 +45,12 @@ const ProductDetailPage = () => {
   return (
     <ProductDetail
       product={selectedProduct}
-      onBack={() => navigate("/customer/shop")}
+      onBack={() => navigate("/home")}
       onPrev={() => goToIndex(currentIndex - 1)}
       onNext={() => goToIndex(currentIndex + 1)}
       onAddToCart={(payload) => dispatch(addToCart(payload))}
       onOrderNow={(payload) => {
-        navigate("/customer/order", {
+        navigate("/order", {
           state: {
             directOrderItem: payload,
           },

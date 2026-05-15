@@ -18,6 +18,8 @@ const parseMultiline = (value) =>
     .filter(Boolean);
 
 const joinMultiline = (items) => (Array.isArray(items) ? items.join("\n") : "");
+const splitMultilineRaw = (value) => String(value || "").split(/\r?\n/);
+const ensureAtLeastOneRow = (items) => (items.length ? items : [""]);
 
 const toPublicIdFromImageUrl = (url) => {
   if (!url || typeof url !== "string") {
@@ -133,6 +135,40 @@ const AboutPage = () => {
       }
     }));
     setSuccess("");
+  };
+
+  const handleMultilineRowChange = (field, index, value) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(aboutForm[field]));
+    rows[index] = value;
+    handleAboutFieldChange(field, rows.join("\n"));
+  };
+
+  const handleBrandMultilineRowChange = (brand, field, index, value) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(brandForm[brand]?.[field]));
+    rows[index] = value;
+    handleBrandFieldChange(brand, field, rows.join("\n"));
+  };
+
+  const handleAddMultilineRow = (field) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(aboutForm[field]));
+    handleAboutFieldChange(field, [...rows, ""].join("\n"));
+  };
+
+  const handleAddBrandMultilineRow = (brand, field) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(brandForm[brand]?.[field]));
+    handleBrandFieldChange(brand, field, [...rows, ""].join("\n"));
+  };
+
+  const handleDeleteMultilineRow = (field, index) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(aboutForm[field]));
+    const nextRows = rows.filter((_, rowIndex) => rowIndex !== index);
+    handleAboutFieldChange(field, ensureAtLeastOneRow(nextRows).join("\n"));
+  };
+
+  const handleDeleteBrandMultilineRow = (brand, field, index) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(brandForm[brand]?.[field]));
+    const nextRows = rows.filter((_, rowIndex) => rowIndex !== index);
+    handleBrandFieldChange(brand, field, ensureAtLeastOneRow(nextRows).join("\n"));
   };
 
   const handleUploadHeroImages = async (brand, files) => {
@@ -362,6 +398,8 @@ const AboutPage = () => {
             const detailsValue = aboutForm[detailsField] || "";
             const heroImages = brandForm[brand]?.heroImageUrls || [];
             const promoTagsText = brandForm[brand]?.promoTagsText || "";
+            const detailRows = ensureAtLeastOneRow(splitMultilineRaw(detailsValue));
+            const promoTagRows = ensureAtLeastOneRow(splitMultilineRaw(promoTagsText));
             const isUploading = Number(uploadingCountByBrand[brand] || 0) > 0;
 
             return (
@@ -374,27 +412,67 @@ const AboutPage = () => {
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-                  <label className="block">
+                  <div className="block">
                     <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Brand Points (one line = one bullet)</span>
-                    <textarea
-                      rows={7}
-                      value={detailsValue}
-                      onChange={(event) => handleAboutFieldChange(detailsField, event.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#0E2A4A]"
-                      placeholder="Size range: 1 to 8&#10;2-piece sets: pant + shirt"
-                    />
-                  </label>
+                    <div className="mt-1 space-y-2">
+                      {detailRows.map((rowValue, rowIndex) => (
+                        <div key={`${detailsField}-row-${rowIndex}`} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={rowValue}
+                            onChange={(event) => handleMultilineRowChange(detailsField, rowIndex, event.target.value)}
+                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#0E2A4A]"
+                            placeholder={rowIndex === 0 ? "Size range: 1 to 8" : "2-piece sets: pant + shirt"}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMultilineRow(detailsField, rowIndex)}
+                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => handleAddMultilineRow(detailsField)}
+                        className="rounded-lg border border-[#0E2A4A] px-3 py-2 text-xs font-bold text-[#0E2A4A] hover:bg-[#0E2A4A] hover:text-white"
+                      >
+                        More Points
+                      </button>
+                    </div>
+                  </div>
 
-                  <label className="block">
+                  <div className="block">
                     <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Homepage Filter Tags (one line = one button)</span>
-                    <textarea
-                      rows={7}
-                      value={promoTagsText}
-                      onChange={(event) => handleBrandFieldChange(brand, "promoTagsText", event.target.value)}
-                      className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#0E2A4A]"
-                      placeholder="Below 499&#10;Below 699&#10;50% off"
-                    />
-                  </label>
+                    <div className="mt-1 space-y-2">
+                      {promoTagRows.map((rowValue, rowIndex) => (
+                        <div key={`${brand}-promo-row-${rowIndex}`} className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={rowValue}
+                            onChange={(event) => handleBrandMultilineRowChange(brand, "promoTagsText", rowIndex, event.target.value)}
+                            className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#0E2A4A]"
+                            placeholder={rowIndex === 0 ? "Below 499" : rowIndex === 1 ? "Below 699" : "50% off"}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBrandMultilineRow(brand, "promoTagsText", rowIndex)}
+                            className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => handleAddBrandMultilineRow(brand, "promoTagsText")}
+                        className="rounded-lg border border-[#0E2A4A] px-3 py-2 text-xs font-bold text-[#0E2A4A] hover:bg-[#0E2A4A] hover:text-white"
+                      >
+                        More Tags
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4">
