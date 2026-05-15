@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart, removeFromCart, updateQuantity } from "../store/customerSlice";
 
-const CustomerCartPage = () => {
+const CartPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.customer.cart);
@@ -139,4 +139,4 @@ const CustomerCartPage = () => {
   );
 };
 
-export default CustomerCartPage;
+export default CartPage;

@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router";
-import CustomerPage from "./pages/CustomerPage";
-import CustomerCartPage from "./pages/CustomerCartPage";
+import HomePage from "./pages/HomePage";
+import CartPage from "./pages/CartPage";
 import OrderFormPage from "./pages/OrderFormPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AboutPage from "./pages/AboutPage";
@@ -35,9 +35,9 @@ export default function App() {
         <Route path="/" element={<Navigate to="/customer/shop" replace />} />
 
         <Route element={<Layout />}>
-          <Route path="/customer/shop" element={<CustomerPage />} />
+          <Route path="/customer/shop" element={<HomePage />} />
           <Route path="/customer/product/:productId" element={<ProductDetailPage />} />
-          <Route path="/customer/cart" element={<CustomerCartPage />} />
+          <Route path="/customer/cart" element={<CartPage />} />
           <Route path="/customer/order" element={<OrderFormPage />} />
           <Route path="/customer/about" element={<AboutPage />} />
         </Route>

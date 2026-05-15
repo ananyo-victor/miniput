@@ -84,7 +84,7 @@ const productMatchesPromoTag = (product, tag) => {
   return searchableText.includes(normalizedTag);
 };
 
-const CustomerPage = () => {
+const HomePage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
@@ -358,4 +358,4 @@ const CustomerPage = () => {
   );
 };
 
-export default CustomerPage;
+export default HomePage;
