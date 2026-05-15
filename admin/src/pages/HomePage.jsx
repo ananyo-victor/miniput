@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
-import ProductCard from "../components/customer/ProductCard";
+import ProductCard from "../components/products/ProductCard";
 import { fetchProducts } from "../store/productsSlice";
 import { setActiveBrand, setActiveCategory } from "../store/homeSlice";
 

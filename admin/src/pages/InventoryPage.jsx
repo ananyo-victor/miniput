@@ -13,8 +13,8 @@ import {
   updateProductThunk,
   setEditingProductId
 } from "../store/adminSlice";
-import AddProductModal from "../components/admin/AddProductModal";
-import DeleteProductModal from "../components/admin/DeleteProductModal";
+import AddProductModal from "../components/products/AddProductModal";
+import DeleteProductModal from "../components/products/DeleteProductModal";
 
 const statusMeta = (stock) => {
   if (stock > 50) return { key: "in-stock", label: "IN STOCK" };
@@ -373,9 +373,6 @@ const InventoryPage = () => {
           <h1 className="text-3xl md:text-4xl text-[#0E2A4A] tracking-[2px] font-['Bebas_Neue',_sans-serif] leading-none">
             MANAGE PRODUCTS
           </h1>
-          <p className="text-[10px] md:text-[11px] font-bold text-[#888] tracking-[1.5px] mt-1 uppercase">
-            Admin Inventory Dashboard
-          </p>
         </div>
 
         <button
