@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router";
-import CustomerPage from "./pages/customer/CustomerPage";
-import CustomerCartPage from "./pages/customer/CustomerCartPage";
-import OrderFormPage from "./pages/customer/OrderFormPage";
-import ProductDetailPage from "./pages/customer/ProductDetailPage";
-import AboutPage from "./pages/customer/AboutPage";
+import CustomerPage from "./pages/CustomerPage";
+import CustomerCartPage from "./pages/CustomerCartPage";
+import OrderFormPage from "./pages/OrderFormPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import AboutPage from "./pages/AboutPage";
 import Footer from "./components/layout/Footer";
 import Sidebar from "./components/layout/Sidebar";
 import Navbar from "./components/layout/Navbar";

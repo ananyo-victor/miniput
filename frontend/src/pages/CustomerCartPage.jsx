@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { clearCart, removeFromCart, updateQuantity } from "../../store/customerSlice";
+import { clearCart, removeFromCart, updateQuantity } from "../store/customerSlice";
 
 const CustomerCartPage = () => {
   const navigate = useNavigate();

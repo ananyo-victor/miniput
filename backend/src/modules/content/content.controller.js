@@ -19,7 +19,7 @@ router.put('/home/:brand', authGuard, async (req, res) => {
         const result = await contentService.upsertHomeContentByBrand(req.params.brand, req.body || {});
         res.json(result);
     } catch (error) {
-        const status = error.message.includes('Invalid brand') ? 400 : 500;
+        const status = error.message.includes('Invalid brand') || error.message.includes('cannot exceed 4') ? 400 : 500;
         res.status(status).json({ error: error.message });
     }
 });

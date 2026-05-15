@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
-import ProductDetail from "../../components/customer/ProductDetail";
-import { addToCart } from "../../store/customerSlice";
-import { fetchProducts } from "../../store/productsSlice";
+import ProductDetail from "../components/customer/ProductDetail";
+import { addToCart } from "../store/customerSlice";
+import { fetchProducts } from "../store/productsSlice";
 
 const ProductDetailPage = () => {
   const { productId } = useParams();

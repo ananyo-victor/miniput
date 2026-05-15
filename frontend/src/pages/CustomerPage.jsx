@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useNavigate } from "react-router";
 import ProductCard from "../components/customer/ProductCard";
 import { fetchProducts } from "../store/productsSlice";
-import { setActiveBrand, setActiveCategory } from "../store/homeSlice";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -85,14 +84,13 @@ const productMatchesPromoTag = (product, tag) => {
   return searchableText.includes(normalizedTag);
 };
 
-const HomePage = () => {
-  const location = useLocation();
+const CustomerPage = () => {
   const navigate = useNavigate();
-  const { brand } = useParams();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { activeBrand, activeCategory } = useSelector((state) => state.home);
 
+  const [activeBrand, setActiveBrand] = useState("Miniput");
+  const [activeCategory, setActiveCategory] = useState("all");
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
     Miniput: "all",
     Kwink: "all"
@@ -143,32 +141,6 @@ const HomePage = () => {
     loadHomeContent();
   }, []);
 
-  const urlBrand = useMemo(() => {
-    const pathParts = location.pathname.split("/").filter(Boolean);
-    const possibleBrand = normalizeText(brand || pathParts[pathParts.length - 1]);
-
-    if (possibleBrand === "miniput") {
-      return "Miniput";
-    }
-
-    if (possibleBrand === "kwink") {
-      return "Kwink";
-    }
-
-    return null;
-  }, [brand, location.pathname]);
-
-  useEffect(() => {
-    if (urlBrand && urlBrand !== activeBrand) {
-      dispatch(setActiveBrand(urlBrand));
-      dispatch(setActiveCategory("all"));
-    }
-  }, [urlBrand, activeBrand, dispatch]);
-
-  useEffect(() => {
-    dispatch(setActiveCategory("all"));
-  }, [activeBrand, dispatch]);
-
   const currentBrandContent = homeContentByBrand[activeBrand] || emptyBrandContent;
   const heroImages = Array.isArray(currentBrandContent.heroImageUrls)
     ? currentBrandContent.heroImageUrls.slice(0, 4)
@@ -176,8 +148,11 @@ const HomePage = () => {
   const promoTags = Array.isArray(currentBrandContent.promoTags) ? currentBrandContent.promoTags : [];
 
   useEffect(() => {
-    const currentIndex = Number(heroIndexByBrand[activeBrand] || 0);
+    setActiveCategory("all");
+  }, [activeBrand]);
 
+  useEffect(() => {
+    const currentIndex = Number(heroIndexByBrand[activeBrand] || 0);
     if (!heroImages.length) {
       if (currentIndex !== 0) {
         setHeroIndexByBrand((prev) => ({ ...prev, [activeBrand]: 0 }));
@@ -219,6 +194,22 @@ const HomePage = () => {
 
   return (
     <div className="flex-1 flex flex-col">
+      <div className="flex bg-white border-b border-gray-100 sticky top-[65px] z-40">
+        {["Miniput", "Kwink"].map((brand) => (
+          <button
+            key={brand}
+            onClick={() => setActiveBrand(brand)}
+            className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${
+              activeBrand === brand
+                ? "border-[var(--mk-yellow)] text-[var(--mk-navy)]"
+                : "border-transparent text-gray-400"
+            }`}
+          >
+            {brand.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
       <section
         className={`relative overflow-hidden p-8 ${
           activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
@@ -282,7 +273,7 @@ const HomePage = () => {
             return (
               <button
                 key={filter.key}
-                onClick={() => dispatch(setActiveCategory(filter.key))}
+                onClick={() => setActiveCategory(filter.key)}
                 className={`flex items-center justify-center min-w-[72px] h-[44px] rounded-full px-3 transition ${
                   isActive
                     ? `${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[var(--mk-green)]"} text-black`
@@ -354,7 +345,7 @@ const HomePage = () => {
                 key={product.id}
                 product={product}
                 onClick={() =>
-                  navigate(`/product/${product.id}`, {
+                  navigate(`/customer/product/${product.id}`, {
                     state: { product }
                   })
                 }
@@ -367,4 +358,4 @@ const HomePage = () => {
   );
 };
 
-export default HomePage;
+export default CustomerPage;

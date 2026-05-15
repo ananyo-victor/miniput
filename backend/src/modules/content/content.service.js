@@ -14,6 +14,18 @@ const normalizeStringArray = (value) => {
         .filter((item) => item.length > 0);
 };
 
+const validateHeroImages = (items) => {
+    if (!Array.isArray(items)) {
+        return items;
+    }
+
+    if (items.length > 4) {
+        throw new Error('Hero images cannot exceed 4 per brand');
+    }
+
+    return items;
+};
+
 exports.getHomeContentByBrand = async (brandInput) => {
     const brand = normalizeBrand(brandInput);
     const { rows } = await pool.query(
@@ -52,7 +64,7 @@ exports.upsertHomeContentByBrand = async (brandInput, payload) => {
     );
 
     const current = existingRows[0] || { hero_image_urls: [], promo_tags: [] };
-    const mergedHero = heroImageUrls === null ? current.hero_image_urls : heroImageUrls;
+    const mergedHero = validateHeroImages(heroImageUrls === null ? current.hero_image_urls : heroImageUrls);
     const mergedTags = promoTags === null ? current.promo_tags : promoTags;
 
     const { rows } = await pool.query(
