@@ -210,12 +210,12 @@ const HomePage = () => {
 
   return (
     <div className="flex-1 flex flex-col">
-      <section className={`relative overflow-hidden h-[150px] text-white transition-colors duration-500`}>
+      <section className={`relative overflow-hidden h-[200px] sm:h-[300px]`}>
         {activeHeroImage ? (
           <img
             src={activeHeroImage}
             alt={`${activeBrand} hero`}
-            className="absolute inset-0 h-full w-full object-cover object-center"
+            className="w-full h-full object-fill sm:object-contain object-center transition-opacity duration-1000"
           />
         ) : (
           <div
@@ -243,7 +243,7 @@ const HomePage = () => {
 
       <div className="bg-white border-b border-gray-100 sticky top-[100px] z-30 ">
 
-        <div className="flex gap-2 overflow-x-auto px-4 pb-3">
+        <div className="flex gap-2 overflow-x-auto px-4 py-3">
           <button
             type="button"
             onClick={() =>
@@ -252,7 +252,7 @@ const HomePage = () => {
                 [activeBrand]: "all"
               }))
             }
-            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-black tracking-wide transition ${
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wide transition text ${
               activePromoTag === "all"
                 ? "border-[#0E2A4A] bg-[#0E2A4A] text-white"
                 : "border-gray-300 bg-white text-gray-600"

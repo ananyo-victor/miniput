@@ -12,7 +12,7 @@ const navItems = [
   { label: "Miniput", path: "/home/miniput", brand: "Miniput" },
   { label: "Kwink", path: "/home/kwink", brand: "Kwink" },
   { label: "Cart", path: "/cart" },
-  { label: "About", path: "/about" },
+  { label: "About Us", path: "/about" },
 ];
 
 const Navbar = () => {
@@ -52,13 +52,21 @@ const Navbar = () => {
     return false;
   };
 
+  const getActiveBorderClass = (item) => {
+    if (item.brand === "Miniput") return "border-[var(--mk-sky)]";
+    if (item.brand === "Kwink") return "border-[var(--mk-green)]";
+    if (item.path === "/cart") return "border-black";
+    if (item.path === "/about") return "border-gray-200";
+    return "border-[var(--mk-yellow)]";
+  };
+
   return (
     <div className="sticky top-0 z-50">
       <header className="border-b border-gray-100 bg-white/95 backdrop-blur px-4 sm:px-6 py-1 flex items-center justify-between">
         <Link to="/home/miniput" className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            {!location.pathname.includes("kwink") && <img src={MiniputSign} alt="Miniput sign" className="h-10 w-auto object-contain" />}
-            {!location.pathname.includes("miniput") && <img src={KwinkSign} alt="Kwink sign" className="h-10 w-auto object-contain" />}
+            {!location.pathname.includes("kwink") && <img src={MiniputSign} alt="Miniput sign" className="h-10 sm:h-15 w-auto object-contain" />}
+            {!location.pathname.includes("miniput") && <img src={KwinkSign} alt="Kwink sign" className="h-10 sm:h-15 w-auto object-contain" />}
           </div>
         </Link>
 
@@ -78,8 +86,8 @@ const Navbar = () => {
           <button
             key={item.label}
             onClick={() => handleNavClick(item)}
-            className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${isActive(item)
-              ? "border-[var(--mk-yellow)] text-[var(--mk-navy)]"
+            className={`flex-1 py-4 text-xs font-black tracking-widest border-b-[3px] transition ${isActive(item)
+              ? `${getActiveBorderClass(item)} text-[var(--mk-navy)]`
               : "border-transparent text-gray-400"
               }`}
           >

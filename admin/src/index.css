@@ -5,13 +5,14 @@
 :root {
   --mk-yellow: #ffb800;
   --mk-navy: #0e2a4a;
-  --mk-green: #5a7a3a;
+  --mk-green: #83a963;
   --mk-orange: #e85a1d;
   --mk-red: #d63031;
   --mk-bg: #f5f5f5;
   --mk-card: #ffffff;
   --mk-text: #1a1a1a;
   --mk-muted: #888888;
+  --mk-sky: #7dc1ca;
   --mk-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
 }
 

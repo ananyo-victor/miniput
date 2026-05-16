@@ -54,6 +54,15 @@ const Navbar = () => {
     return false;
   };
 
+  
+  const getActiveBorderClass = (item) => {
+    if (item.brand === "Miniput") return "border-[var(--mk-sky)]";
+    if (item.brand === "Kwink") return "border-[var(--mk-green)]";
+    if (item.path === "/cart") return "border-black";
+    if (item.path === "/about") return "border-gray-200";
+    return "border-[var(--mk-yellow)]";
+  };
+
   return (
     <div className="sticky top-0 z-50">
       <header className="border-b border-gray-100 bg-white/95 backdrop-blur px-4 sm:px-6 py-3 flex items-center justify-between">
@@ -76,7 +85,7 @@ const Navbar = () => {
             key={item.label}
             onClick={() => handleNavClick(item)}
             className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${isActive(item)
-                ? "border-[var(--mk-yellow)] text-[var(--mk-navy)]"
+                ? `${getActiveBorderClass(item)} text-[var(--mk-navy)]`
                 : "border-transparent text-gray-400"
               }`}
           >
