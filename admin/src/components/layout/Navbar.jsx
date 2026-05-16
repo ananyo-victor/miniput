@@ -54,7 +54,7 @@ const Navbar = () => {
     return false;
   };
 
-  
+
   const getActiveBorderClass = (item) => {
     if (item.brand === "Miniput") return "border-[var(--mk-sky)]";
     if (item.brand === "Kwink") return "border-[var(--mk-green)]";
@@ -66,12 +66,18 @@ const Navbar = () => {
   return (
     <div className="sticky top-0 z-50">
       <header className="border-b border-gray-100 bg-white/95 backdrop-blur px-4 sm:px-6 py-3 flex items-center justify-between">
-        <Link to="/home/miniput" className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            {!location.pathname.includes("kwink") && <img src={MiniputSign} alt="Miniput sign" className="h-10 w-auto object-contain" />}
-            {!location.pathname.includes("miniput") && <img src={KwinkSign} alt="Kwink sign" className="h-10 w-auto object-contain" />}
-          </div>
-        </Link>
+        <div className="flex items-center">
+          {!location.pathname.includes("kwink") && <Link to="/home/miniput" className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <img src={MiniputSign} alt="Miniput sign" className="h-10 sm:h-15 w-auto object-contain" />
+            </div>
+          </Link>}
+          {!location.pathname.includes("miniput") && <Link to="/home/kwink" className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <img src={KwinkSign} alt="Kwink sign" className="h-10 sm:h-15 w-auto object-contain" />
+            </div>
+          </Link>}
+        </div>
 
         <div className="flex items-center gap-4">
           <button onClick={handleLogout} className="mk-pill bg-[var(--mk-navy)] text-white px-4 py-2 text-xs font-bold">
@@ -85,8 +91,8 @@ const Navbar = () => {
             key={item.label}
             onClick={() => handleNavClick(item)}
             className={`flex-1 py-4 text-xs font-black tracking-widest border-b-2 transition ${isActive(item)
-                ? `${getActiveBorderClass(item)} text-[var(--mk-navy)]`
-                : "border-transparent text-gray-400"
+              ? `${getActiveBorderClass(item)} text-[var(--mk-navy)]`
+              : "border-transparent text-gray-400"
               }`}
           >
             {item.label.toUpperCase()}
