@@ -23,6 +23,53 @@ function fileToDataUrl(file) {
   });
 }
 
+const normalizeImageUrlList = (imageUrls, imageUrl) => {
+  const source = Array.isArray(imageUrls) && imageUrls.length ? imageUrls : imageUrl;
+
+  if (Array.isArray(source)) {
+    return source.filter((url) => typeof url === "string" && url.trim()).map((url) => url.trim());
+  }
+
+  if (typeof source === "string" && source.trim()) {
+    return [source.trim()];
+  }
+
+  return [];
+};
+
+const normalizeSizeList = (sizeValue) => {
+  if (!Array.isArray(sizeValue)) {
+    return [];
+  }
+
+  return sizeValue
+    .map((item) => {
+      if (item && typeof item === "object") {
+        return Number(item.size);
+      }
+
+      return Number(item);
+    })
+    .filter((value) => Number.isFinite(value) && value >= 0);
+};
+
+const buildCreateProductPayload = (payload = {}) => {
+  const normalizedSizes = normalizeSizeList(payload.size ?? payload.sizes);
+
+  return {
+    articleId: typeof payload.articleId === "string" ? payload.articleId.trim() : "",
+    name: typeof payload.name === "string" ? payload.name.trim() : "",
+    category: typeof payload.category === "string" ? payload.category : "",
+    price: Number(payload.price) || 0,
+    stock: Number(payload.stock) || 0,
+    brand: typeof payload.brand === "string" && payload.brand ? payload.brand : "Miniput",
+    description: typeof payload.description === "string" ? payload.description : "",
+    isHidden: Boolean(payload.isHidden),
+    size: normalizedSizes,
+    imageUrls: normalizeImageUrlList(payload.imageUrls, payload.imageUrl)
+  };
+};
+
 // --- AUTH & PRODUCTS THUNKS ---
 export const adminStep1Thunk = createAsyncThunk("admin/step1", async ({ userId, password }) => {
   const { data } = await axios.post(`${API_BASE_URL}/api/auth/admin/step1`, { userId, password });
@@ -67,7 +114,8 @@ export const deleteUploadedProductImageThunk = createAsyncThunk(
 );
 
 export const createProductThunk = createAsyncThunk("admin/createProduct", async (payload, { dispatch }) => {
-  const { data } = await axios.post(`${API_BASE_URL}/api/products`, payload, { headers: getAdminAuthHeaders() });
+  const requestBody = buildCreateProductPayload(payload);
+  const { data } = await axios.post(`${API_BASE_URL}/api/products`, requestBody, { headers: getAdminAuthHeaders() });
   await dispatch(fetchProducts(true));
   return data;
 });
@@ -143,8 +191,10 @@ const initialState = {
   uploadStatus: "No image uploaded yet",
   authLoading: false,
   authError: "",
+  productSaveLoading: false,
   editingProductId: null,
   newProduct: {
+    articleId: "",
     name: "",
     category: "Kids Wear",
     brand: "Miniput",
@@ -218,16 +268,30 @@ const adminSlice = createSlice({
       .addCase(uploadProductImageThunk.rejected, (state) => {
         state.uploadStatus = "Upload failed";
       })
+      .addCase(createProductThunk.pending, (state) => {
+        state.productSaveLoading = true;
+      })
       .addCase(createProductThunk.fulfilled, (state) => {
+        state.productSaveLoading = false;
         state.newProduct = initialState.newProduct;
         state.uploadStatus = "No image uploaded yet";
         state.showAdd = false;
       })
+      .addCase(createProductThunk.rejected, (state) => {
+        state.productSaveLoading = false;
+      })
+      .addCase(updateProductThunk.pending, (state) => {
+        state.productSaveLoading = true;
+      })
       .addCase(updateProductThunk.fulfilled, (state) => {
+        state.productSaveLoading = false;
         state.newProduct = initialState.newProduct;
         state.uploadStatus = "No image uploaded yet";
         state.showAdd = false;
         state.editingProductId = null;
+      })
+      .addCase(updateProductThunk.rejected, (state) => {
+        state.productSaveLoading = false;
       });
   }
 });

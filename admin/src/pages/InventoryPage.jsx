@@ -86,11 +86,10 @@ const getPublicIdFromImageUrl = (url) => {
 const InventoryPage = () => {
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { newProduct, editingProductId } = useSelector((state) => state.admin);
+  const { newProduct, editingProductId, productSaveLoading } = useSelector((state) => state.admin);
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
   const [imageUploads, setImageUploads] = useState([]);
   const [removingImageId, setRemovingImageId] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -139,17 +138,17 @@ const InventoryPage = () => {
   };
 
   const handleEditProduct = (product) => {
+    dispatch(setNewProductField({ key: "articleId", value: product.articleId || "" }));
     dispatch(setNewProductField({ key: "name", value: product.name }));
     dispatch(setNewProductField({ key: "category", value: product.category || "Kids Wear" }));
     dispatch(setNewProductField({ key: "brand", value: product.brand || "Miniput" }));
     dispatch(setNewProductField({ key: "price", value: product.price }));
     dispatch(setNewProductField({ key: "stock", value: product.stock }));
-    
-    const sizes = Array.isArray(product.sizes) 
-      ? product.sizes.map(s => typeof s === 'object' ? s.size : s)
+
+    const sizes = Array.isArray(product.sizes)
+      ? product.sizes.map(s => typeof s === 'object' ? String(s.size) : String(s))
       : (product.sizes ? String(product.sizes).split(",").map(s => s.trim()) : []);
     dispatch(setNewProductField({ key: "sizes", value: sizes }));
-    
     const imageUrlsFromList = toImageUrlList(product.imageUrls);
     const existingImageUrls = imageUrlsFromList.length
       ? imageUrlsFromList
@@ -158,7 +157,7 @@ const InventoryPage = () => {
     dispatch(setNewProductField({ key: "imageUrl", value: existingImageUrls[0] || "" }));
     dispatch(setNewProductField({ key: "imageUrls", value: existingImageUrls }));
     dispatch(setNewProductField({ key: "description", value: product.description || "" }));
-    
+
     const newImageUploads = existingImageUrls.map((url, idx) => ({
       localId: `existing-${product.id}-${idx}`,
       previewUrl: url,
@@ -167,7 +166,7 @@ const InventoryPage = () => {
       publicId: getPublicIdFromImageUrl(url)
     }));
     setImageUploads(newImageUploads);
-    
+
     dispatch(setEditingProductId(product.id));
     setShowAddModal(true);
   };
@@ -179,7 +178,6 @@ const InventoryPage = () => {
       }
     });
     setShowAddModal(false);
-    setSubmitting(false);
     setImageUploads([]);
     setRemovingImageId("");
     dispatch(resetNewProduct());
@@ -197,24 +195,28 @@ const InventoryPage = () => {
       return;
     }
 
-    setSubmitting(true);
-
     const stock = Number(newProduct.stock);
-    const sizeVariants = buildSizeVariants(newProduct.sizes, stock);
-    
+    const numericalSizesArray = Array.isArray(newProduct.sizes)
+      ? newProduct.sizes.map((s) => Number(s)).filter((n) => !isNaN(n))
+      : [];
+    const sizeVariants = buildSizeVariants(numericalSizesArray, stock);
+
     const newImages = imageUploads.filter(item => !item.localId.startsWith('existing-'));
-    
-    const allImageUrls = editingProductId 
+
+    const allImageUrls = editingProductId
       ? imageUploads.filter((item) => !item.uploading && item.imageUrl).map((item) => item.imageUrl)
       : newImages.filter((item) => !item.uploading && item.imageUrl).map((item) => item.imageUrl);
 
     const payload = {
       ...newProduct,
-      price: Number(newProduct.price),
+      price: Number(newProduct.price),  
       stock,
-      imageUrls: allImageUrls,
-      sizes: sizeVariants
+      imageUrls: allImageUrls
     };
+
+    if (sizeVariants.length) {
+      payload.sizes = sizeVariants;
+    }
 
     payload.imageUrl = payload.imageUrls[0] || "";
 
@@ -228,11 +230,9 @@ const InventoryPage = () => {
     } else {
       result = await dispatch(createProductThunk(payload));
     }
-    
-    setSubmitting(false);
-    
-    if ((editingProductId && updateProductThunk.fulfilled.match(result)) || 
-        (!editingProductId && createProductThunk.fulfilled.match(result))) {
+
+    if ((editingProductId && updateProductThunk.fulfilled.match(result)) ||
+      (!editingProductId && createProductThunk.fulfilled.match(result))) {
       handleCloseModal();
     }
   };
@@ -406,11 +406,10 @@ const InventoryPage = () => {
             <div
               key={filter.id}
               onClick={() => handleFilterChange(filter.id)}
-              className={`inv-tab pb-2 text-[13px] font-black tracking-[0.5px] cursor-pointer whitespace-nowrap border-b-[3px] transition-colors ${
-                active
-                  ? `border-current ${colorClass}`
-                  : `border-transparent text-[#999] ${hoverClass}`
-              }`}
+              className={`inv-tab pb-2 text-[13px] font-black tracking-[0.5px] cursor-pointer whitespace-nowrap border-b-[3px] transition-colors ${active
+                ? `border-current ${colorClass}`
+                : `border-transparent text-[#999] ${hoverClass}`
+                }`}
             >
               {filter.label} ({counts[filter.id] ?? 0})
             </div>
@@ -531,7 +530,7 @@ const InventoryPage = () => {
       <AddProductModal
         show={showAddModal}
         newProduct={newProduct}
-        submitting={submitting}
+        submitting={productSaveLoading}
         onClose={handleCloseModal}
         onSubmit={handleCreateProduct}
         onFieldChange={handleFieldChange}

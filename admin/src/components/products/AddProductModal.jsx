@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   X,
   Tag,
@@ -11,7 +11,8 @@ import {
   Trash2,
   FileText,
   Save,
-  Loader2
+  Loader2,
+  Hash
 } from "lucide-react";
 
 const AddProductModal = ({
@@ -32,17 +33,42 @@ const AddProductModal = ({
     return null;
   }
 
-  const sizesValue = Array.isArray(newProduct.sizes)
-    ? newProduct.sizes.join(", ")
-    : newProduct.sizes || "";
+  const selectedBrand = newProduct.brand || "Miniput";
 
-  const handleSizesChange = (value) => {
-    const parsedSizes = value
-      .split(",")
-      .map((size) => size.trim())
-      .filter(Boolean);
+  const currentSizes = Array.isArray(newProduct.sizes)
+    ? newProduct.sizes.map((s) => (typeof s === "object" ? String(s.size) : String(s)))
+    : [];
 
-    onFieldChange("sizes", parsedSizes);
+  const miniputOptions = [
+    { id: "group-1-10", label: "Sizes 1 to 10", values: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] }
+  ];
+
+  const kwinkOptions = [
+    { id: "group-10-16", label: "Sizes 10 to 16", values: ["10", "11", "12", "13", "14", "15", "16"] },
+    { id: "group-6-16", label: "Sizes 6 to 16", values: ["6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"] }
+  ];
+
+  useEffect(() => {
+    if (show && currentSizes.length === 0) {
+      if (selectedBrand === "Miniput") {
+        onFieldChange("sizes", miniputOptions[0].values);
+      } else if (selectedBrand === "Kwink") {
+        onFieldChange("sizes", kwinkOptions[0].values);
+      }
+    }
+  }, [show, selectedBrand, currentSizes.length]);
+
+  const handleGroupChange = (targetValues, isChecked) => {
+    if (isChecked) {
+      onFieldChange("sizes", targetValues);
+    } else {
+      onFieldChange("sizes", []);
+    }
+  };
+
+  const isGroupSelected = (targetValues) => {
+    if (!currentSizes.length) return false;
+    return targetValues.every((val) => currentSizes.includes(val)) && currentSizes.length === targetValues.length;
   };
 
   const hasUploadingImages = imageUploads.some((item) => item.uploading);
@@ -50,6 +76,8 @@ const AddProductModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="w-full max-w-2xl rounded-[16px] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex flex-col max-h-[80vh] md:max-h-[90vh] overflow-hidden animate-[sfadeUp_0.3s_ease]">
+        
+        {/* Modal Header */}
         <div className="bg-[#0E2A4A] px-4 py-3 md:px-5 md:py-4 flex items-center justify-between shrink-0">
           <div>
             <h2 className="text-[18px] md:text-[24px] text-white tracking-[2px] font-['Bebas_Neue',_sans-serif] leading-none">
@@ -69,8 +97,30 @@ const AddProductModal = ({
           </button>
         </div>
 
+        {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-3 md:p-5 lg:p-8 bg-[#f5f5f5]">
           <form id="add-product-form" onSubmit={onSubmit} className="bg-white rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.07)] overflow-hidden">
+            
+            {/* ARTICLE ID FIELD */}
+            <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
+              <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
+                <Hash size={18} />
+              </div>
+              <div className="flex-1 py-1">
+                <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-0.5 block">
+                  ARTICLE ID <span className="text-[#D63031]">*</span>
+                </label>
+                <input
+                  required
+                  value={newProduct.articleId || ""}
+                  onChange={(e) => onFieldChange("articleId", e.target.value)}
+                  className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none placeholder:text-[#ccc]"
+                  placeholder="e.g. ART-9921"
+                />
+              </div>
+            </div>
+
+            {/* PRODUCT NAME */}
             <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
                 <Tag size={18} />
@@ -81,7 +131,7 @@ const AddProductModal = ({
                 </label>
                 <input
                   required
-                  value={newProduct.name}
+                  value={newProduct.name || ""}
                   onChange={(e) => onFieldChange("name", e.target.value)}
                   className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none placeholder:text-[#ccc]"
                   placeholder="e.g. Babla Shirt"
@@ -89,6 +139,7 @@ const AddProductModal = ({
               </div>
             </div>
 
+            {/* BRAND */}
             <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
                 <BadgeCheck size={18} />
@@ -98,8 +149,11 @@ const AddProductModal = ({
                   BRAND
                 </label>
                 <select
-                  value={newProduct.brand || "Miniput"}
-                  onChange={(e) => onFieldChange("brand", e.target.value)}
+                  value={selectedBrand}
+                  onChange={(e) => {
+                    onFieldChange("brand", e.target.value);
+                    onFieldChange("sizes", []); // Dynamic default useEffect triggers right after this clean wipe
+                  }}
                   className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none appearance-none cursor-pointer"
                 >
                   <option value="Miniput">Miniput</option>
@@ -108,6 +162,7 @@ const AddProductModal = ({
               </div>
             </div>
 
+            {/* CATEGORY */}
             <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
                 <Shapes size={18} />
@@ -117,7 +172,7 @@ const AddProductModal = ({
                   CATEGORY
                 </label>
                 <select
-                  value={newProduct.category}
+                  value={newProduct.category || ""}
                   onChange={(e) => onFieldChange("category", e.target.value)}
                   className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none appearance-none cursor-pointer"
                 >
@@ -131,23 +186,83 @@ const AddProductModal = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
-              <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
+            {/* SIZES GROUP SELECTION */}
+            <div className="flex items-start gap-2 md:gap-3 px-3 py-3 md:px-4 md:py-4 border-b border-[#f2f2f2] min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
+              <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0 mt-1">
                 <Ruler size={18} />
               </div>
               <div className="flex-1 py-1">
-                <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-0.5 block">
-                  SIZES
+                <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-2 block">
+                  SIZES SELECTION ({selectedBrand.toUpperCase()})
                 </label>
-                <input
-                  value={sizesValue}
-                  onChange={(e) => handleSizesChange(e.target.value)}
-                  className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none placeholder:text-[#ccc]"
-                  placeholder="e.g. 38, 40, 42"
-                />
+
+                {/* Miniput Sizing Configuration Panel */}
+                {selectedBrand === "Miniput" && (
+                  <div className="flex flex-col gap-2 mt-1">
+                    {miniputOptions.map((opt) => {
+                      const isChecked = isGroupSelected(opt.values);
+                      return (
+                        <label
+                          key={opt.id}
+                          className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${
+                            isChecked
+                              ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => handleGroupChange(opt.values, e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
+                          />
+                          <div className="flex flex-col">
+                            <span>{opt.label}</span>
+                            <span className="text-[10px] text-gray-400 font-normal mt-0.5">
+                              Pack includes sizes: {opt.values.join(", ")}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Kwink Sizing Configuration Panel */}
+                {selectedBrand === "Kwink" && (
+                  <div className="flex flex-col gap-2 mt-1">
+                    {kwinkOptions.map((opt) => {
+                      const isChecked = isGroupSelected(opt.values);
+                      return (
+                        <label
+                          key={opt.id}
+                          className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${
+                            isChecked
+                              ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
+                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => handleGroupChange(opt.values, e.target.checked)}
+                            className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
+                          />
+                          <div className="flex flex-col">
+                            <span>{opt.label}</span>
+                            <span className="text-[10px] text-gray-400 font-normal mt-0.5">
+                              Pack includes sizes: {opt.values.join(", ")}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
 
+            {/* PRICE & STOCK */}
             <div className="flex flex-col sm:flex-row border-b border-[#f2f2f2]">
               <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b sm:border-b-0 sm:border-r border-[#f2f2f2] min-h-[50px] md:min-h-[60px] flex-1 focus-within:bg-[#fffdf5] transition-colors">
                 <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
@@ -161,7 +276,7 @@ const AddProductModal = ({
                     required
                     type="number"
                     min="0"
-                    value={newProduct.price}
+                    value={newProduct.price || ""}
                     onChange={(e) => onFieldChange("price", e.target.value)}
                     className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none placeholder:text-[#ccc]"
                     placeholder="0.00"
@@ -180,7 +295,7 @@ const AddProductModal = ({
                     required
                     type="number"
                     min="0"
-                    value={newProduct.stock}
+                    value={newProduct.stock || ""}
                     onChange={(e) => onFieldChange("stock", e.target.value)}
                     className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none placeholder:text-[#ccc]"
                     placeholder="Units available"
@@ -189,6 +304,7 @@ const AddProductModal = ({
               </div>
             </div>
 
+            {/* IMAGES */}
             <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
                 <ImagePlus size={18} />
@@ -255,6 +371,7 @@ const AddProductModal = ({
               </div>
             </div>
 
+            {/* DESCRIPTION */}
             <div className="flex items-start gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 min-h-[60px] md:min-h-[80px] focus-within:bg-[#fffdf5] transition-colors">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0 mt-1 md:mt-2">
                 <FileText size={18} />
@@ -264,7 +381,7 @@ const AddProductModal = ({
                   DESCRIPTION
                 </label>
                 <textarea
-                  value={newProduct.description}
+                  value={newProduct.description || ""}
                   onChange={(e) => onFieldChange("description", e.target.value)}
                   className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none placeholder:text-[#ccc] resize-none h-14 md:h-20"
                   placeholder="Product details and special notes..."
@@ -274,6 +391,7 @@ const AddProductModal = ({
           </form>
         </div>
 
+        {/* Modal Actions Footer */}
         <div className="bg-white px-4 py-3 md:px-5 md:py-4 flex gap-2 md:gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.05)] shrink-0 z-10">
           <button
             type="button"
