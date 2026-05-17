@@ -13,6 +13,8 @@ import {
 
 export const PRODUCT_BRANDS = ['Miniput', 'Kwink'] as const;
 export type ProductBrand = (typeof PRODUCT_BRANDS)[number];
+export const DISCOUNT_TYPES = ['percent', 'fixed'] as const;
+export type DiscountType = (typeof DISCOUNT_TYPES)[number];
 
 export class ProductEntity {
   @IsUUID()
@@ -31,6 +33,15 @@ export class ProductEntity {
   @IsNumber()
   @Min(0)
   price: number;
+
+  @IsOptional()
+  @IsIn(DISCOUNT_TYPES)
+  discountType?: DiscountType | null;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  discountValue?: number | null;
 
   @IsNumber()
   @Min(0)

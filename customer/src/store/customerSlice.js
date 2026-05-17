@@ -52,11 +52,17 @@ const customerSlice = createSlice({
       Object.assign(state, action.payload);
     },
     addToCart: (state, action) => {
+      const product = action.payload;
+
+      const effectivePrice = product.isDiscountActive ? product.finalPrice : product.price;
+
       const newItem = {
-        ...action.payload,
+        ...product,
+        price: effectivePrice,
+        originalPrice: product.isDiscountActive ? (product.originalPrice ?? product.price) : product.price,
         cartItemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       };
-      
+
       state.cart.push(newItem);
       localStorage.setItem("cart", JSON.stringify(state.cart));
     },

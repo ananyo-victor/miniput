@@ -5,7 +5,6 @@ import {
   createProductThunk,
   deleteUploadedProductImageThunk,
   deleteProductThunk,
-  quickAddStockThunk,
   resetNewProduct,
   setNewProductField,
   toggleProductVisibilityThunk,
@@ -157,7 +156,10 @@ const InventoryPage = () => {
     dispatch(setNewProductField({ key: "imageUrl", value: existingImageUrls[0] || "" }));
     dispatch(setNewProductField({ key: "imageUrls", value: existingImageUrls }));
     dispatch(setNewProductField({ key: "description", value: product.description || "" }));
-
+    dispatch(setNewProductField({ key: "discountEnabled", value: Boolean(product.discountType) }));
+    dispatch(setNewProductField({ key: "discountType", value: product.discountType || "percent" }));
+    dispatch(setNewProductField({ key: "discountValue", value: product.discountValue || "" }));
+    
     const newImageUploads = existingImageUrls.map((url, idx) => ({
       localId: `existing-${product.id}-${idx}`,
       previewUrl: url,
@@ -325,8 +327,6 @@ const InventoryPage = () => {
     });
   };
 
-  const handleQuickAdd = (product) =>
-    dispatch(quickAddStockThunk({ id: product.id, stock: product.stock }));
   const handleToggleVisibility = (product) =>
     dispatch(toggleProductVisibilityThunk({ id: product.id, isHidden: !product.isHidden }));
   const handleDelete = (product) => {
@@ -498,13 +498,6 @@ const InventoryPage = () => {
                       className="rounded-lg bg-[#e3f2fd] px-3 py-1.5 text-[11px] font-black text-[#1976d2] hover:bg-[#bbdefb] transition-colors"
                     >
                       EDIT
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleQuickAdd(product)}
-                      className="rounded-lg bg-[#f0f0f0] px-3 py-1.5 text-[11px] font-black text-[#555] hover:bg-[#e8e8e8] transition-colors"
-                    >
-                      +10 STOCK
                     </button>
                     <button
                       type="button"

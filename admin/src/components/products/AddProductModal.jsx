@@ -40,7 +40,7 @@ const AddProductModal = ({
     : [];
 
   const miniputOptions = [
-    { id: "group-1-10", label: "Sizes 1 to 10", values: ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"] }
+    { id: "group-1-10", label: "Sizes 1 to 10", values: ["1", "2", "3", "4", "5", "6", "7", "8"] }
   ];
 
   const kwinkOptions = [
@@ -76,7 +76,7 @@ const AddProductModal = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
       <div className="w-full max-w-2xl rounded-[16px] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex flex-col max-h-[80vh] md:max-h-[90vh] overflow-hidden animate-[sfadeUp_0.3s_ease]">
-        
+
         {/* Modal Header */}
         <div className="bg-[#0E2A4A] px-4 py-3 md:px-5 md:py-4 flex items-center justify-between shrink-0">
           <div>
@@ -100,7 +100,7 @@ const AddProductModal = ({
         {/* Modal Body */}
         <div className="flex-1 overflow-y-auto p-3 md:p-5 lg:p-8 bg-[#f5f5f5]">
           <form id="add-product-form" onSubmit={onSubmit} className="bg-white rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.07)] overflow-hidden">
-            
+
             {/* ARTICLE ID FIELD */}
             <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
@@ -204,11 +204,10 @@ const AddProductModal = ({
                       return (
                         <label
                           key={opt.id}
-                          className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${
-                            isChecked
-                              ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
-                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                          }`}
+                          className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${isChecked
+                            ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                            }`}
                         >
                           <input
                             type="checkbox"
@@ -236,11 +235,10 @@ const AddProductModal = ({
                       return (
                         <label
                           key={opt.id}
-                          className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${
-                            isChecked
-                              ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
-                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                          }`}
+                          className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${isChecked
+                            ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                            }`}
                         >
                           <input
                             type="checkbox"
@@ -388,6 +386,97 @@ const AddProductModal = ({
                 />
               </div>
             </div>
+
+            {/* DISCOUNT SECTION */}
+            <div className="flex flex-col border-b border-[#f2f2f2] focus-within:bg-[#fffdf5] transition-colors">
+              <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3">
+                <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
+                  <Tag size={18} />
+                </div>
+                <div className="flex-1 py-1">
+                  <label className="flex items-center gap-2 cursor-pointer w-max">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.discountEnabled || false}
+                      onChange={(e) => onFieldChange("discountEnabled", e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
+                    />
+                    <span className="text-[10px] md:text-[12px] font-black tracking-[1.5px] text-[#1a1a1a] uppercase">
+                      Enable Sale / Discount
+                    </span>
+                  </label>
+
+                  {newProduct.discountEnabled && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 bg-gray-50/80 p-3 rounded-xl border border-gray-100">
+                      <div>
+                        <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-0.5 block">
+                          Discount Type
+                        </label>
+                        <select
+                          value={newProduct.discountType || "percent"}
+                          onChange={(e) => onFieldChange("discountType", e.target.value)}
+                          className="w-full bg-white border border-gray-200 rounded p-1.5 text-[12px] font-bold outline-none"
+                        >
+                          <option value="percent">Percentage (%)</option>
+                          <option value="fixed">Fixed Amount</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-0.5 flex justify-between">
+                          <span>Discount Value</span>
+                          {newProduct.discountType === "percent" && (
+                            <span className="text-gray-400 lowercase normal-case tracking-normal">(Max 90)</span>
+                          )}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          max={newProduct.discountType === "percent" ? "90" : undefined}
+                          value={newProduct.discountValue || ""}
+                          onChange={(e) => {
+                            let val = e.target.value;
+
+                            if (val !== "") {
+                              const num = Number(val);
+                              const maxLimit = newProduct.discountType === "percent" ? 90 : Number(newProduct.price || 0);
+
+                              if (num < 0) {
+                                val = "0";
+                              } else if (num > maxLimit) {
+                                val = String(maxLimit);
+                              }
+                            }
+
+                            onFieldChange("discountValue", val);
+                          }}
+                          className="w-full bg-white border border-gray-200 rounded p-1.5 text-[12px] font-bold outline-none"
+                          placeholder="e.g. 20"
+                        />
+                      </div>
+                      {/* Live Preview */}
+                      <div className="md:col-span-2 mt-1 bg-green-50 border border-green-200 rounded-lg p-3 shadow-sm">
+                        <div>
+                          <p className="text-[8px] md:text-[9px] text-green-800 font-black uppercase tracking-wider mb-1">Price Preview</p>
+                          <div className="flex items-end gap-2">
+                            <span className="text-xs text-green-600/70 line-through">₹{Number(newProduct.price || 0).toLocaleString()}</span>
+                            <span className="text-lg md:text-xl font-black text-green-700">₹{
+                              (() => {
+                                const base = Number(newProduct.price || 0);
+                                const val = Number(newProduct.discountValue || 0);
+                                let fin = base;
+                                if (newProduct.discountType === 'percent') fin = base - (base * Math.min(90, val) / 100);
+                                else fin = Math.max(0, base - val);
+                                return fin.toLocaleString();
+                              })()
+                            }</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </form>
         </div>
 
@@ -417,3 +506,6 @@ const AddProductModal = ({
 };
 
 export default AddProductModal;
+
+
+

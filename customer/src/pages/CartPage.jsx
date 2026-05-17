@@ -58,7 +58,16 @@ const CartPage = () => {
                       {String(item.brand || "MINIPUT").toUpperCase()}
                     </p>
                     <h3 className="text-lg font-black truncate">{item.name}</h3>
-                    <p className="text-sm text-gray-500">Rs {Number(item.price || 0).toLocaleString()} each</p>
+                    
+                    {item.isDiscountActive && item.originalPrice > item.price ? (
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <p className="text-[12px] text-gray-400 line-through">Rs {Number(item.originalPrice).toLocaleString()}</p>
+                        <p className="text-sm font-bold text-red-500">Rs {Number(item.price).toLocaleString()} each</p>
+                        <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-black">{item.discountLabel}</span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">Rs {Number(item.price || 0).toLocaleString()} each</p>
+                    )}
 
                     <div className="mt-3 inline-flex items-center gap-3 rounded-xl bg-gray-100 border border-gray-200 p-1.5">
                       <button

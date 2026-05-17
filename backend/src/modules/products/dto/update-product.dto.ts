@@ -10,7 +10,12 @@ import {
   Min,
   ValidateIf,
 } from 'class-validator';
-import { PRODUCT_BRANDS, ProductBrand } from '../entities/product.entity';
+import {
+  DISCOUNT_TYPES,
+  DiscountType,
+  PRODUCT_BRANDS,
+  ProductBrand,
+} from '../entities/product.entity';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -30,6 +35,16 @@ export class UpdateProductDto {
   @IsNumber()
   @Min(0)
   price?: number;
+
+  @IsOptional()
+  @IsIn(DISCOUNT_TYPES)
+  discountType?: DiscountType | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  discountValue?: number | null;
 
   @IsOptional()
   @Type(() => Number)

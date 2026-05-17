@@ -88,7 +88,7 @@ const OrderFormPage = () => {
   const handleNext = () => {
     if (step === 1) {
       const newErrors = {};
-      if (!formData.partyName.trim()) newErrors.partyName = "Party name is required";
+      if (!formData.partyName.trim()) newErrors.partyName = "name is required";
       if (!formData.phone.trim()) {
         newErrors.phone = "Phone number is required";
       } else if (!PHONE_REGEX.test(formData.phone.trim())) {
@@ -113,7 +113,7 @@ const OrderFormPage = () => {
     }
   };
 
-    const handleBack = () => {
+  const handleBack = () => {
     if (step > 1) setStep(step - 1);
   };
 
@@ -186,7 +186,7 @@ const OrderFormPage = () => {
 
             <h2 className="text-[11px] font-black tracking-[1.5px] text-[#888] uppercase mb-2 ml-1">Party Information</h2>
             <div className="bg-white rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.04)] mb-6 flex flex-col md:flex-row overflow-hidden border border-[#f0f0f0]">
-              <FormField icon="🏢" label="PARTY NAME" required className="flex-1 border-b md:border-b-0 md:border-r border-[#f0f0f0]" hasError={Boolean(errors.partyName)} errorText={errors.partyName}>
+              <FormField icon="🏢" label="NAME" required className="flex-1 border-b md:border-b-0 md:border-r border-[#f0f0f0]" hasError={Boolean(errors.partyName)} errorText={errors.partyName}>
                 <input
                   type="text"
                   value={formData.partyName}
@@ -220,20 +220,14 @@ const OrderFormPage = () => {
                   placeholder="Full delivery address"
                 />
               </FormField>
-              <FormField icon="🚛" label="TRANSPORT / COURIER">
-                <select
+              <FormField icon="🚛" label="TRANSPORT / COURIER" optional>
+                <input
+                  type="text"
                   value={formData.transport}
                   onChange={(e) => handleChange("transport", e.target.value)}
-                  className="w-full bg-transparent border-none text-[14px] md:text-[15px] font-bold text-[#1a1a1a] outline-none cursor-pointer"
-                >
-                  <option value="">Select mode...</option>
-                  <option value="Bus">Bus</option>
-                  <option value="Train / Parcel">Train / Parcel</option>
-                  <option value="Private Courier">Private Courier</option>
-                  <option value="Self Pickup">Self Pickup</option>
-                  <option value="Company Vehicle">Company Vehicle</option>
-                  <option value="Other">Other</option>
-                </select>
+                  className="w-full bg-transparent border-none text-[14px] md:text-[15px] font-bold text-[#1a1a1a] outline-none placeholder:text-[#ccc]"
+                  placeholder="Preferred transport or courier"
+                />
               </FormField>
             </div>
 
@@ -250,7 +244,7 @@ const OrderFormPage = () => {
                     placeholder="e.g. 23ABCDE1234F1Z5"
                   />
                 </FormField>
-                <FormField icon="👤" label="AGENT NAME" optional className="flex-1">
+                <FormField icon="👤" label="AGENT NAME" required className="flex-1">
                   <input
                     type="text"
                     value={formData.agent}
@@ -260,7 +254,7 @@ const OrderFormPage = () => {
                   />
                 </FormField>
               </div>
-              <FormField icon="✍️" label="FILLED BY" required hasError={Boolean(errors.filledBy)} errorText={errors.filledBy}>
+              <FormField icon="✍️" label="FILLED BY" optional hasError={Boolean(errors.filledBy)} errorText={errors.filledBy}>
                 <input
                   type="text"
                   value={formData.filledBy}
@@ -306,7 +300,17 @@ const OrderFormPage = () => {
                     <div key={item.cartItemId || item.id || item._id || `${item.name}-${index}`} className="flex justify-between items-center text-sm">
                       <div>
                         <p className="font-bold text-[#1a1a1a]">{String(item.name || 'PRODUCT').toUpperCase()}</p>
-                        <p className="text-[11px] text-[#888]">{quantity} UNIT{quantity !== 1 ? 'S' : ''} × ₹{Number(item.price || 0).toLocaleString()}</p>
+                        <div className="flex items-center gap-1 text-[11px] text-[#888]">
+                          <span>{quantity} UNIT{quantity !== 1 ? 'S' : ''} ×</span>
+                          {item.isDiscountActive && item.originalPrice > item.price ? (
+                            <>
+                              <span className="line-through text-[#bbb]">₹{Number(item.originalPrice).toLocaleString()}</span>
+                              <span className="font-bold text-[#D63031]">₹{Number(item.price).toLocaleString()}</span>
+                            </>
+                          ) : (
+                            <span>₹{Number(item.price || 0).toLocaleString()}</span>
+                          )}
+                        </div>
                       </div>
                       <p className="font-black">₹{itemTotal.toLocaleString()}</p>
                     </div>
@@ -323,7 +327,7 @@ const OrderFormPage = () => {
             <h2 className="text-[11px] font-black tracking-[1.5px] text-[#888] uppercase mb-2 ml-1">Party Details</h2>
             <div className="bg-white rounded-[16px] shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-5 space-y-4 border border-[#f0f0f0] text-[13px]">
               <div className="flex justify-between border-b border-[#f9f9f9] pb-3">
-                <span className="font-bold text-[#888]">Party Name</span>
+                <span className="font-bold text-[#888]">Name</span>
                 <span className="font-black text-[#1a1a1a] text-right">{formData.partyName || "—"}</span>
               </div>
               <div className="flex justify-between border-b border-[#f9f9f9] pb-3">

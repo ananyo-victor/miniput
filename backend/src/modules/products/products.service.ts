@@ -4,6 +4,10 @@ import pool from '../../config/database.config';
 import { UploadsService } from '../uploads/uploads.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import {
+  DISCOUNT_TYPES,
+  DiscountType,
+} from './entities/product.entity';
 
 const normalizeImageUrls = (imageValue: any) => {
   if (Array.isArray(imageValue)) {
@@ -29,6 +33,37 @@ const normalizeSize = (sizeValue: any): number[] => {
     .filter((value) => Number.isFinite(value) && value >= 0);
 };
 
+const roundPrice = (value: number): number =>
+  Math.round(Math.max(0, value) * 100) / 100;
+
+const normalizeDiscountType = (discountTypeValue: any): DiscountType | null => {
+  if (typeof discountTypeValue !== 'string') {
+    return null;
+  }
+
+  const normalizedType = discountTypeValue.trim().toLowerCase();
+
+  if (!DISCOUNT_TYPES.includes(normalizedType as DiscountType)) {
+    return null;
+  }
+
+  return normalizedType as DiscountType;
+};
+
+const normalizeDiscountValue = (discountValue: any): number | null => {
+  if (discountValue === null || discountValue === undefined || discountValue === '') {
+    return null;
+  }
+
+  const parsedValue = Number(discountValue);
+
+  if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+    return null;
+  }
+
+  return roundPrice(parsedValue);
+};
+
 const getSizeRange = (size: any): string | null => {
   const normalizedSize = normalizeSize(size);
 
@@ -39,16 +74,86 @@ const getSizeRange = (size: any): string | null => {
   return `${normalizedSize[0]}-${normalizedSize[normalizedSize.length - 1]}`;
 };
 
+const buildDiscountMeta = (product: any) => {
+  const originalPrice = roundPrice(Number(product?.price) || 0);
+  const discountType = normalizeDiscountType(product?.discountType);
+  const discountValue = normalizeDiscountValue(product?.discountValue);
+
+  const isEligibleDiscount =
+    !!discountType && discountValue !== null && discountValue > 0;
+
+  let discountAmount = 0;
+
+  if (isEligibleDiscount) {
+    discountAmount =
+      discountType === 'percent'
+        ? (originalPrice * discountValue) / 100
+        : discountValue;
+  }
+
+  discountAmount = roundPrice(Math.min(originalPrice, discountAmount));
+
+  const finalPrice = roundPrice(originalPrice - discountAmount);
+  const discountPercent =
+    originalPrice > 0 ? roundPrice((discountAmount / originalPrice) * 100) : 0;
+
+  return {
+    discountType,
+    discountValue,
+    isDiscountActive: isEligibleDiscount,
+    originalPrice,
+    finalPrice,
+    discountAmount,
+    discountPercent,
+    discountLabel: isEligibleDiscount
+      ? discountType === 'percent'
+        ? `${Math.round(discountValue || 0)}% OFF`
+        : `Rs ${discountAmount} OFF`
+      : null,
+  };
+};
+
+const validateDiscountConfig = ({
+  price,
+  discountType,
+  discountValue,
+}: {
+  price: number;
+  discountType: DiscountType | null;
+  discountValue: number | null;
+}) => {
+  if (!discountType && discountValue !== null) {
+    throw new Error('discountType is required when discountValue is set');
+  }
+
+  if (discountType && discountValue === null) {
+    throw new Error('discountValue is required when discountType is set');
+  }
+
+  if (discountType === 'percent' && discountValue !== null && discountValue > 90) {
+    throw new Error('Percent discount cannot be greater than 90');
+  }
+
+  if (discountType === 'fixed' && discountValue !== null && discountValue > price) {
+    throw new Error('Fixed discount cannot be greater than product price');
+  }
+};
+
 const mapProductRow = (product: any) => {
   const normalizedSize = normalizeSize(product?.size);
+  const discountMeta = buildDiscountMeta(product);
 
   return {
     ...product,
+    price: roundPrice(Number(product?.price) || 0),
+    discountType: discountMeta.discountType,
+    discountValue: discountMeta.discountValue,
     size: normalizedSize,
     imageUrls: product?.imageUrl || [],
     imageUrl: product?.imageUrl?.[0] || null,
     piecesPerPack: normalizedSize.length || product?.piecesPerPack,
     sizeRange: getSizeRange(normalizedSize),
+    ...discountMeta,
   };
 };
 
@@ -59,7 +164,63 @@ export class ProductsService implements OnModuleInit {
   constructor(private readonly uploadsService: UploadsService) {}
 
   async onModuleInit() {
+    await this.ensureDiscountColumnsExist();
     await this.ensureSizeColumnIsIntegerArray();
+  }
+
+  private async ensureDiscountColumnsExist() {
+    try {
+      await pool.query(
+        `
+        ALTER TABLE products
+        ADD COLUMN IF NOT EXISTS "discountType" text,
+        ADD COLUMN IF NOT EXISTS "discountValue" numeric(10,2)
+        `,
+      );
+
+      await pool.query(
+        `
+        ALTER TABLE products
+        DROP CONSTRAINT IF EXISTS products_discount_window_check,
+        DROP COLUMN IF EXISTS "discountStartAt",
+        DROP COLUMN IF EXISTS "discountEndAt"
+        `,
+      );
+
+      await pool.query(
+        `
+        DO $$
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1
+            FROM pg_constraint
+            WHERE conname = 'products_discount_type_check'
+          ) THEN
+            ALTER TABLE products
+            ADD CONSTRAINT products_discount_type_check
+            CHECK ("discountType" IN ('percent', 'fixed') OR "discountType" IS NULL);
+          END IF;
+
+          IF NOT EXISTS (
+            SELECT 1
+            FROM pg_constraint
+            WHERE conname = 'products_discount_value_check'
+          ) THEN
+            ALTER TABLE products
+            ADD CONSTRAINT products_discount_value_check
+            CHECK ("discountValue" IS NULL OR "discountValue" >= 0);
+          END IF;
+
+        END $$
+        `,
+      );
+
+      this.logger.log('Ensured products discount columns and constraints');
+    } catch (error) {
+      this.logger.warn(
+        `Could not ensure products discount columns: ${error.message}`,
+      );
+    }
   }
 
   private async ensureSizeColumnIsIntegerArray() {
@@ -123,6 +284,8 @@ export class ProductsService implements OnModuleInit {
       name,
       category,
       price,
+      discountType,
+      discountValue,
       stock,
       imageUrl,
       imageUrls,
@@ -135,6 +298,14 @@ export class ProductsService implements OnModuleInit {
     const normalizedImageUrls = normalizeImageUrls(imageUrls ?? imageUrl);
     const normalizedSize = normalizeSize(size);
     const piecesPerPack = normalizedSize.length;
+    const normalizedDiscountType = normalizeDiscountType(discountType);
+    const normalizedDiscountValue = normalizeDiscountValue(discountValue);
+
+    validateDiscountConfig({
+      price: roundPrice(Number(price) || 0),
+      discountType: normalizedDiscountType,
+      discountValue: normalizedDiscountValue,
+    });
 
     const productId = uuidv4();
 
@@ -145,6 +316,8 @@ export class ProductsService implements OnModuleInit {
         name,
         category,
         price,
+        "discountType",
+        "discountValue",
         stock,
         "imageUrl",
         brand,
@@ -155,7 +328,8 @@ export class ProductsService implements OnModuleInit {
       )
       VALUES (
         $1, $2, $3, $4, $5, $6,
-        $7, $8, $9, $10, $11::integer[], $12
+        $7, $8, $9, $10,
+        $11, $12, $13::integer[], $14
       )
       RETURNING *
     `;
@@ -166,6 +340,8 @@ export class ProductsService implements OnModuleInit {
       name,
       category,
       price,
+      normalizedDiscountType,
+      normalizedDiscountValue,
       stock,
       normalizedImageUrls,
       brand,
@@ -200,6 +376,14 @@ export class ProductsService implements OnModuleInit {
       name: productData.name ?? current.name,
       category: productData.category ?? current.category,
       price: productData.price ?? current.price,
+      discountType:
+        productData.discountType === undefined
+          ? normalizeDiscountType(current.discountType)
+          : normalizeDiscountType(productData.discountType),
+      discountValue:
+        productData.discountValue === undefined
+          ? normalizeDiscountValue(current.discountValue)
+          : normalizeDiscountValue(productData.discountValue),
       stock: productData.stock ?? current.stock,
       imageUrls: normalizeImageUrls(
         productData.imageUrls ?? productData.imageUrl ?? current.imageUrl,
@@ -212,6 +396,17 @@ export class ProductsService implements OnModuleInit {
           : !!productData.isHidden,
       size: normalizeSize(productData.size ?? current.size),
     };
+
+    if (!merged.discountType) {
+      merged.discountValue = null;
+    }
+
+    validateDiscountConfig({
+      price: roundPrice(Number(merged.price) || 0),
+      discountType: merged.discountType,
+      discountValue: merged.discountValue,
+    });
+
     const piecesPerPack = merged.size.length;
 
     const query = `
@@ -221,14 +416,16 @@ export class ProductsService implements OnModuleInit {
         "articleId" = $2,
         category = $3,
         price = $4,
-        stock = $5,
-        "imageUrl" = $6,
-        brand = $7,
-        description = $8,
-        "isHidden" = $9,
-        "size" = $10::integer[],
-        "piecesPerPack" = $11
-      WHERE id = $12
+        "discountType" = $5,
+        "discountValue" = $6,
+        stock = $7,
+        "imageUrl" = $8,
+        brand = $9,
+        description = $10,
+        "isHidden" = $11,
+        "size" = $12::integer[],
+        "piecesPerPack" = $13
+      WHERE id = $14
       RETURNING *
     `;
 
@@ -237,6 +434,8 @@ export class ProductsService implements OnModuleInit {
       merged.articleId,
       merged.category,
       merged.price,
+      merged.discountType,
+      merged.discountValue,
       merged.stock,
       merged.imageUrls,
       merged.brand,

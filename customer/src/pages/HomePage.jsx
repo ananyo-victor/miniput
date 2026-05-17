@@ -50,17 +50,22 @@ const productMatchesPromoTag = (product, tag) => {
   if (!normalizedTag || normalizedTag === "all") {
     return true;
   }
+  const effectivePrice = product.isDiscountActive ? product.finalPrice : getNumericValue(product.price);
 
   const priceCap = parsePriceCapFromTag(normalizedTag);
   if (priceCap !== null) {
-    return getNumericValue(product.price) <= priceCap;
+    return effectivePrice <= priceCap;
   }
 
   const percentOff = parsePercentOffFromTag(normalizedTag);
   if (percentOff !== null) {
-    const sellingPrice = getNumericValue(product.price);
+    if (product.isDiscountActive && product.discountPercent >= percentOff) {
+      return true;
+    }
+
+    const sellingPrice = effectivePrice;
     const basePrice = getNumericValue(
-      product.mrp ?? product.originalPrice ?? product.listPrice ?? product.compareAtPrice
+      product.originalPrice ?? product.mrp ?? product.listPrice ?? product.compareAtPrice ?? product.price
     );
 
     if (basePrice > 0 && basePrice > sellingPrice) {
@@ -297,17 +302,15 @@ const HomePage = () => {
           </div>
         ) : (
           <div
-            className={`relative max-w-6xl h-full mx-auto flex justify-between items-end gap-4 ${
-              activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
-            }`}
+            className={`relative max-w-6xl h-full mx-auto flex justify-between items-end gap-4 ${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
+              }`}
           >
             <div className="p-8 pb-12">
               <h1
-                className={`tracking-tighter leading-none ${
-                  activeBrand === "Miniput"
+                className={`tracking-tighter leading-none ${activeBrand === "Miniput"
                     ? "mk-bebas text-[clamp(36px,6vw,72px)] bg-[linear-gradient(90deg,#E85A1D,#FFB800,#3aa34a,#0E2A4A,#c03fa1)] bg-clip-text text-transparent"
                     : "text-4xl italic font-black text-white [font-family:'Nunito',sans-serif]"
-                }`}
+                  }`}
               >
                 {activeBrand}
               </h1>
@@ -330,11 +333,10 @@ const HomePage = () => {
                 [activeBrand]: "all"
               }))
             }
-            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wide transition text ${
-              activePromoTag === "all"
+            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wide transition text ${activePromoTag === "all"
                 ? "border-[#0E2A4A] bg-[#0E2A4A] text-white"
                 : "border-gray-300 bg-white text-gray-600"
-            }`}
+              }`}
           >
             ALL OFFERS
           </button>
@@ -353,11 +355,10 @@ const HomePage = () => {
                     [activeBrand]: tag
                   }))
                 }
-                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-black tracking-wide transition ${
-                  isActive
+                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-black tracking-wide transition ${isActive
                     ? "border-[#0E2A4A] bg-[#0E2A4A] text-white"
                     : "border-gray-300 bg-white text-gray-600"
-                }`}
+                  }`}
               >
                 {String(tag || "").toUpperCase()}
               </button>

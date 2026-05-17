@@ -55,6 +55,7 @@ const normalizeSizeList = (sizeValue) => {
 
 const buildCreateProductPayload = (payload = {}) => {
   const normalizedSizes = normalizeSizeList(payload.size ?? payload.sizes);
+  const discountEnabled = Boolean(payload.discountEnabled);
 
   return {
     articleId: typeof payload.articleId === "string" ? payload.articleId.trim() : "",
@@ -66,7 +67,9 @@ const buildCreateProductPayload = (payload = {}) => {
     description: typeof payload.description === "string" ? payload.description : "",
     isHidden: Boolean(payload.isHidden),
     size: normalizedSizes,
-    imageUrls: normalizeImageUrlList(payload.imageUrls, payload.imageUrl)
+    imageUrls: normalizeImageUrlList(payload.imageUrls, payload.imageUrl),
+    discountType: discountEnabled ? payload.discountType || "percent" : null,
+    discountValue: discountEnabled ? Number(payload.discountValue) || null : null,
   };
 };
 
@@ -98,7 +101,7 @@ export const uploadProductImageThunk = createAsyncThunk("admin/uploadImage", asy
     { imageData },
     { headers: getAdminAuthHeaders() }
   );
-  return data; // returns { imageUrl }
+  return data;
 });
 
 export const deleteUploadedProductImageThunk = createAsyncThunk(
@@ -120,18 +123,6 @@ export const createProductThunk = createAsyncThunk("admin/createProduct", async 
   return data;
 });
 
-export const quickAddStockThunk = createAsyncThunk(
-  "admin/quickAddStock",
-  async ({ id, stock }, { dispatch }) => {
-    const { data } = await axios.put(
-      `${API_BASE_URL}/api/products/${id}`,
-      { stock: Number(stock || 0) + 10 },
-      { headers: getAdminAuthHeaders() }
-    );
-    await dispatch(fetchProducts(true));
-    return data;
-  }
-);
 
 export const toggleProductVisibilityThunk = createAsyncThunk(
   "admin/toggleVisibility",
@@ -154,12 +145,12 @@ export const deleteProductThunk = createAsyncThunk("admin/deleteProduct", async 
 
 export const updateProductThunk = createAsyncThunk("admin/updateProduct", async (payload, { dispatch }) => {
   const { id, ...updateData } = payload;
-  const { data } = await axios.put(`${API_BASE_URL}/api/products/${id}`, updateData, { headers: getAdminAuthHeaders() });
+  const requestBody = buildCreateProductPayload(updateData);
+  const { data } = await axios.put(`${API_BASE_URL}/api/products/${id}`, requestBody, { headers: getAdminAuthHeaders() });
   await dispatch(fetchProducts(true));
   return data;
 });
 
-// --- NEW CONTENT MANAGEMENT THUNKS ---
 export const fetchAboutContentThunk = createAsyncThunk("admin/fetchAboutContent", async () => {
   const { data } = await axios.get(`${API_BASE_URL}/api/content/about`);
   return data;
@@ -180,7 +171,6 @@ export const updateBrandHomeContentThunk = createAsyncThunk("admin/updateBrandHo
   return data;
 });
 
-// --- INITIAL STATE & SLICE ---
 const initialState = {
   authStep: 1,
   userId: "",
@@ -203,7 +193,10 @@ const initialState = {
     sizes: [],
     imageUrl: "",
     imageUrls: [],
-    description: ""
+    description: "",
+    discountEnabled: false,
+    discountType: "percent",
+    discountValue: ""
   }
 };
 
