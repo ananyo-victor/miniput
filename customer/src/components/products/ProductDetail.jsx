@@ -95,21 +95,21 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
           />
 
           {/* Commented out navigation, preserved from original */}
-          <button
+          {productImages.length > 1 && <button
             onClick={onPrevImage}
             className="absolute top-1/2 -translate-y-1/2 left-2.5 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
             aria-label="Previous image"
           >
             <ChevronLeft size={22} />
-          </button>
+          </button>}
 
-          <button
+          {productImages.length > 1 && <button
             onClick={onNextImage}
             className="absolute top-1/2 -translate-y-1/2 right-2.5 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
             aria-label="Next image"
           >
             <ChevronRight size={22} />
-          </button>
+          </button>}
         </div>
 
         {/* Details Section - Stacks on mobile, side-by-side on desktop */}
@@ -211,12 +211,12 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
               ✕
             </button>
 
-            <button
+            {productImages.length > 1 && <button
               onClick={onPrevImage}
               className="absolute left-4 md:left-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors"
             >
               <ChevronLeft size={32} />
-            </button>
+            </button>}
 
             <img
               src={productImages[currentImageIndex]}
@@ -224,12 +224,12 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
               className="max-w-[90%] max-h-[90vh] object-contain"
             />
 
-            <button
+            {productImages.length > 1 && <button
               onClick={onNextImage}
               className="absolute right-4 md:right-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors"
             >
               <ChevronRight size={32} />
-            </button>
+            </button>}
           </div>
         )}
       </div>
