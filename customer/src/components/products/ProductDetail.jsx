@@ -19,6 +19,7 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
   const [quantity, setQuantity] = useState(1);
   const [selectedSizes, setSelectedSizes] = useState([currentProduct.sizes?.[0] || "26"]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
 
   const productImages = useMemo(() => {
     if (Array.isArray(currentProduct.imageUrls) && currentProduct.imageUrls.length) {
@@ -86,7 +87,8 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
         <img
           src={productImages[currentImageIndex]}
           alt={currentProduct.name}
-          className="w-full h-full object-contain"
+          onClick={() => setShowPreview(true)}
+          className="w-full h-full object-contain cursor-zoom-in"
         />
 
         <button
@@ -116,9 +118,8 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
             <button
               key={size}
               onClick={() => toggleSize(size)}
-              className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black cursor-pointer transition-colors ${
-                selectedSizes.includes(size) ? "bg-[#FFB800] text-gray-900" : "bg-gray-900 text-white"
-              }`}
+              className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-black cursor-pointer transition-colors ${selectedSizes.includes(size) ? "bg-[#FFB800] text-gray-900" : "bg-gray-900 text-white"
+                }`}
             >
               {size}
             </button>
@@ -173,6 +174,37 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
           </button>
         </div>
       </div>
+      {showPreview && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center">
+
+          <button
+            onClick={() => setShowPreview(false)}
+            className="absolute top-5 right-5 text-white text-3xl z-50"
+          >
+            ✕
+          </button>
+
+          <button
+            onClick={onPrevImage}
+            className="absolute left-4 text-white bg-black/40 p-2 rounded-full"
+          >
+            <ChevronLeft size={30} />
+          </button>
+
+          <img
+            src={productImages[currentImageIndex]}
+            alt={currentProduct.name}
+            className="max-w-[95%] max-h-[95%] object-contain"
+          />
+
+          <button
+            onClick={onNextImage}
+            className="absolute right-4 text-white bg-black/40 p-2 rounded-full"
+          >
+            <ChevronRight size={30} />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
