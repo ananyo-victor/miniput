@@ -181,6 +181,41 @@ const HomePage = () => {
     }
   }, [activeBrand, heroImages, heroIndexByBrand]);
 
+  const goToPrevHero = () => {
+    setHeroIndexByBrand((prev) => {
+      const idx = Number(prev[activeBrand] || 0);
+      const length = heroImages.length || 1;
+      const newIndex = (idx - 1 + length) % length;
+      return { ...prev, [activeBrand]: newIndex };
+    });
+  };
+
+  const goToNextHero = () => {
+    setHeroIndexByBrand((prev) => {
+      const idx = Number(prev[activeBrand] || 0);
+      const length = heroImages.length || 1;
+      const newIndex = (idx + 1) % length;
+      return { ...prev, [activeBrand]: newIndex };
+    });
+  };
+
+  const goToHeroIndex = (index) => {
+    setHeroIndexByBrand((prev) => ({ ...prev, [activeBrand]: index }));
+  };
+
+  useEffect(() => {
+    if (!heroImages.length || heroImages.length < 2) return;
+    const interval = setInterval(() => {
+      setHeroIndexByBrand((prev) => {
+        const idx = Number(prev[activeBrand] || 0);
+        const next = (idx + 1) % heroImages.length;
+        return { ...prev, [activeBrand]: next };
+      });
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [activeBrand, heroImages]);
+
   const activePromoTag = activePromoTagByBrand[activeBrand] || "all";
 
   const filteredProducts = useMemo(() => {
@@ -212,11 +247,54 @@ const HomePage = () => {
     <div className="flex-1 flex flex-col">
       <section className={`relative overflow-hidden h-[200px] sm:h-[300px]`}>
         {activeHeroImage ? (
-          <img
-            src={activeHeroImage}
-            alt={`${activeBrand} hero`}
-            className="w-full h-full object-fill sm:object-contain object-center transition-opacity duration-1000"
-          />
+          <div className="w-full h-full relative">
+            <img
+              src={activeHeroImage}
+              alt={`${activeBrand} hero`}
+              className="w-full h-full object-fill sm:object-contain object-center transition-opacity duration-1000"
+            />
+
+            {heroImages.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={goToPrevHero}
+                  className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/80 rounded-full p-2 shadow-md"
+                  aria-label="Previous hero"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#0E2A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={goToNextHero}
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/80 rounded-full p-2 shadow-md"
+                  aria-label="Next hero"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#0E2A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
+                <div className="absolute bottom-3 left-1/2 transform -translate-x-1/2 flex gap-2">
+                  {heroImages.map((_, i) => {
+                    const isActiveDot = i === (heroIndexByBrand[activeBrand] || 0);
+                    return (
+                      <button
+                        key={`dot-${i}`}
+                        type="button"
+                        onClick={() => goToHeroIndex(i)}
+                        className={`w-2 h-2 rounded-full ${isActiveDot ? "bg-[#0E2A4A]" : "bg-white/80 border"}`}
+                        aria-label={`Go to hero ${i + 1}`}
+                      />
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
         ) : (
           <div
             className={`relative max-w-6xl h-full mx-auto flex justify-between items-end gap-4 ${
