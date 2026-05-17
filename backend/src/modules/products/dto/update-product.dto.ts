@@ -1,20 +1,22 @@
 import { Type } from 'class-transformer';
 import {
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsIn,
   IsNumber,
-  IsObject,
   IsOptional,
   IsString,
   Min,
   ValidateIf,
-  ValidateNested,
 } from 'class-validator';
 import { PRODUCT_BRANDS, ProductBrand } from '../entities/product.entity';
-import { ProductVariantDto } from './product-variant.dto';
 
 export class UpdateProductDto {
+  @IsOptional()
+  @IsString()
+  articleId?: string;
+
   @IsOptional()
   @IsString()
   name?: string;
@@ -24,11 +26,13 @@ export class UpdateProductDto {
   category?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   price?: number;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   stock?: number;
@@ -58,25 +62,13 @@ export class UpdateProductDto {
   @IsBoolean()
   isHidden?: boolean;
 
+  // WHOLESALE PACK INFO
+
   @IsOptional()
+  @Type(() => Number)
   @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => ProductVariantDto)
-  variants?: ProductVariantDto[];
-
-  @IsOptional()
-  @IsArray()
-  sizes?: Array<string | ProductVariantDto>;
-
-  @IsOptional()
-  @IsArray()
-  sizeList?: Array<string | ProductVariantDto>;
-
-  @IsOptional()
-  @IsObject()
-  sizeQuantities?: Record<string, number>;
-
-  @IsOptional()
-  @IsObject()
-  sizeStockMap?: Record<string, number>;
+  @ArrayMinSize(1)
+  @IsNumber({}, { each: true })
+  @Min(0, { each: true })
+  size?: number[];
 }

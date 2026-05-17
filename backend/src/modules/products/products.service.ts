@@ -1,134 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../../config/database.config';
 import { UploadsService } from '../uploads/uploads.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { ProductEntity } from './entities/product.entity';
-import { ProductVariantEntity } from './entities/product-variant.entity';
-
-const DEFAULT_SIZE = 'default';
-
-const normalizeStock = (value: any) => {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return 0;
-  return Math.max(0, Math.floor(parsed));
-};
-
-const isPlainObject = (value: any) => value && typeof value === 'object' && !Array.isArray(value);
-
-const normalizeVariantCandidate = (variant: any) => {
-  if (!variant) return null;
-
-  const size = String(variant.size ?? '').trim();
-  if (!size) return null;
-
-  const parsedPrice = Number(variant.price);
-  return {
-    size,
-    stock: normalizeStock(variant.stock ?? variant.quantity),
-    price:
-      variant.price === undefined ||
-      variant.price === null ||
-      variant.price === '' ||
-      !Number.isFinite(parsedPrice)
-        ? null
-        : parsedPrice,
-    sku: variant.sku ? String(variant.sku) : null,
-  };
-};
-
-const parseSizeStringCandidate = (sizeEntry: any) => {
-  const raw = String(sizeEntry ?? '').trim();
-  if (!raw) return null;
-
-  const [sizePart, stockPart] = raw.split(':');
-  if (stockPart === undefined) {
-    return { size: raw, stock: 0 };
-  }
-
-  return {
-    size: String(sizePart || '').trim(),
-    stock: normalizeStock(stockPart),
-  };
-};
-
-const extractVariantCandidates = (productData: any) => {
-  const candidates = [];
-  let hasVariantInput = false;
-
-  if (Array.isArray(productData.variants)) {
-    hasVariantInput = true;
-    candidates.push(...productData.variants);
-  }
-
-  if (Array.isArray(productData.sizes)) {
-    hasVariantInput = true;
-    for (const sizeEntry of productData.sizes) {
-      if (isPlainObject(sizeEntry)) {
-        candidates.push({
-          size: sizeEntry.size ?? sizeEntry.label ?? sizeEntry.value,
-          stock: sizeEntry.stock ?? sizeEntry.quantity,
-          price: sizeEntry.price,
-          sku: sizeEntry.sku,
-        });
-      } else {
-        candidates.push(parseSizeStringCandidate(sizeEntry));
-      }
-    }
-  }
-
-  if (Array.isArray(productData.sizeList)) {
-    hasVariantInput = true;
-    for (const sizeEntry of productData.sizeList) {
-      if (isPlainObject(sizeEntry)) {
-        candidates.push({
-          size: sizeEntry.size ?? sizeEntry.label ?? sizeEntry.value,
-          stock: sizeEntry.stock ?? sizeEntry.quantity,
-          price: sizeEntry.price,
-          sku: sizeEntry.sku,
-        });
-      } else {
-        candidates.push(parseSizeStringCandidate(sizeEntry));
-      }
-    }
-  }
-
-  if (isPlainObject(productData.sizeQuantities)) {
-    hasVariantInput = true;
-    for (const [size, quantity] of Object.entries(productData.sizeQuantities)) {
-      candidates.push({ size, stock: quantity });
-    }
-  }
-
-  if (isPlainObject(productData.sizeStockMap)) {
-    hasVariantInput = true;
-    for (const [size, quantity] of Object.entries(productData.sizeStockMap)) {
-      candidates.push({ size, stock: quantity });
-    }
-  }
-
-  return { candidates, hasVariantInput };
-};
-
-const normalizeVariants = (variants: any[], fallbackStock = 0) => {
-  if (!Array.isArray(variants) || !variants.length) {
-    return [{ size: DEFAULT_SIZE, stock: normalizeStock(fallbackStock), price: null, sku: null }];
-  }
-
-  const dedupedBySize = new Map();
-  for (const variant of variants) {
-    const normalizedVariant = normalizeVariantCandidate(variant);
-    if (!normalizedVariant) continue;
-    dedupedBySize.set(normalizedVariant.size, normalizedVariant);
-  }
-
-  if (!dedupedBySize.size) {
-    return [{ size: DEFAULT_SIZE, stock: normalizeStock(fallbackStock), price: null, sku: null }];
-  }
-
-  return Array.from(dedupedBySize.values());
-};
 
 const normalizeImageUrls = (imageValue: any) => {
   if (Array.isArray(imageValue)) {
@@ -144,264 +19,261 @@ const normalizeImageUrls = (imageValue: any) => {
   return null;
 };
 
-const upsertVariants = async (client: any, productId: string, variants: any[]) => {
-  for (const variant of variants) {
-    await client.query(
-      `
-      INSERT INTO product_variants (id, product_id, size, stock, price, sku)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      ON CONFLICT (product_id, size)
-      DO UPDATE SET stock = EXCLUDED.stock, price = EXCLUDED.price, sku = EXCLUDED.sku
-      `,
-      [uuidv4(), productId, variant.size, variant.stock, variant.price, variant.sku],
-    );
-  }
-};
-
-const syncProductStock = async (client: any, productId: string) => {
-  await client.query(
-    `
-    UPDATE products
-    SET stock = COALESCE((
-      SELECT SUM(v.stock)
-      FROM product_variants v
-      WHERE v.product_id = $1
-    ), 0)
-    WHERE id = $1
-    `,
-    [productId],
-  );
-};
-
-const getVariantsByProductIds = async (
-  client: any,
-  productIds: string[],
-): Promise<Map<string, ProductVariantEntity[]>> => {
-  if (!productIds.length) return new Map();
-  const { rows } = await client.query(
-    `
-    SELECT id, product_id, size, stock, price, sku
-    FROM product_variants
-    WHERE product_id = ANY($1::uuid[])
-    ORDER BY size ASC
-    `,
-    [productIds],
-  );
-
-  const variantsByProductId = new Map();
-  for (const row of rows) {
-    const mapped = {
-      id: row.id,
-      productId: row.product_id,
-      size: row.size,
-      stock: Number(row.stock || 0),
-      price: row.price === null ? null : Number(row.price),
-      sku: row.sku,
-    };
-
-    if (!variantsByProductId.has(row.product_id)) {
-      variantsByProductId.set(row.product_id, []);
-    }
-    variantsByProductId.get(row.product_id).push(mapped);
+const normalizeSize = (sizeValue: any): number[] => {
+  if (!Array.isArray(sizeValue)) {
+    return [];
   }
 
-  return variantsByProductId;
+  return sizeValue
+    .map((value) => Number(value))
+    .filter((value) => Number.isFinite(value) && value >= 0);
 };
 
-const withVariants = (
-  productRow: ProductEntity & { imageUrl?: string[] | string | null },
-  variantsByProductId: Map<string, ProductVariantEntity[]>,
-) => {
-  const variants = variantsByProductId.get(productRow.id) || [];
-  const computedStock = variants.length
-    ? variants.reduce((sum, variant) => sum + Number(variant.stock || 0), 0)
-    : Number(productRow.stock || 0);
+const getSizeRange = (size: any): string | null => {
+  const normalizedSize = normalizeSize(size);
 
-  const imageUrls = Array.isArray(productRow.imageUrl)
-    ? productRow.imageUrl
-    : productRow.imageUrl
-      ? [productRow.imageUrl]
-      : [];
+  if (!normalizedSize.length) {
+    return null;
+  }
+
+  return `${normalizedSize[0]}-${normalizedSize[normalizedSize.length - 1]}`;
+};
+
+const mapProductRow = (product: any) => {
+  const normalizedSize = normalizeSize(product?.size);
 
   return {
-    ...productRow,
-    stock: computedStock,
-    variants,
-    sizes: variants.map((variant) => variant.size),
-    imageUrls,
-    imageUrl: imageUrls[0] || null,
+    ...product,
+    size: normalizedSize,
+    imageUrls: product?.imageUrl || [],
+    imageUrl: product?.imageUrl?.[0] || null,
+    piecesPerPack: normalizedSize.length || product?.piecesPerPack,
+    sizeRange: getSizeRange(normalizedSize),
   };
 };
 
 @Injectable()
-export class ProductsService {
+export class ProductsService implements OnModuleInit {
+  private readonly logger = new Logger(ProductsService.name);
+
   constructor(private readonly uploadsService: UploadsService) {}
+
+  async onModuleInit() {
+    await this.ensureSizeColumnIsIntegerArray();
+  }
+
+  private async ensureSizeColumnIsIntegerArray() {
+    try {
+      const { rows } = await pool.query(
+        `
+        SELECT udt_name
+        FROM information_schema.columns
+        WHERE table_schema = current_schema()
+          AND table_name = 'products'
+          AND column_name = 'size'
+        LIMIT 1
+        `,
+      );
+
+      if (!rows.length) {
+        return;
+      }
+
+      if (rows[0].udt_name === '_int4') {
+        return;
+      }
+
+      await pool.query(
+        `
+        ALTER TABLE products
+        ALTER COLUMN "size" TYPE integer[]
+        USING (
+          ARRAY(
+            SELECT TRUNC(TRIM(value_txt)::numeric)::integer
+            FROM unnest(COALESCE("size"::text[], ARRAY[]::text[])) AS value_txt
+            WHERE TRIM(value_txt) ~ '^-?\\d+(\\.\\d+)?$'
+          )
+        )
+        `,
+      );
+
+      this.logger.log('Converted products.size column to integer[]');
+    } catch (error) {
+      this.logger.warn(
+        `Could not convert products.size column to integer[]: ${error.message}`,
+      );
+    }
+  }
 
   async getAllProducts(includeHidden: boolean) {
     let query = 'SELECT * FROM products';
+
     if (!includeHidden) {
       query += ' WHERE "isHidden" = false';
     }
 
     const { rows } = await pool.query(query);
-    const productIds = rows.map((product) => product.id);
-    const variantsByProductId = await getVariantsByProductIds(pool, productIds);
-    return rows.map((product) => withVariants(product, variantsByProductId));
+
+    return rows.map(mapProductRow);
   }
 
   async createProduct(productData: CreateProductDto) {
-    const { name, category, price, stock, imageUrl, imageUrls, brand, description, isHidden, variants } =
-      productData;
-    const { candidates: variantCandidates, hasVariantInput } = extractVariantCandidates(productData);
+    const {
+      articleId,
+      name,
+      category,
+      price,
+      stock,
+      imageUrl,
+      imageUrls,
+      brand,
+      description,
+      isHidden,
+      size,
+    } = productData;
+
     const normalizedImageUrls = normalizeImageUrls(imageUrls ?? imageUrl);
+    const normalizedSize = normalizeSize(size);
+    const piecesPerPack = normalizedSize.length;
 
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
+    const productId = uuidv4();
 
-      const productId = uuidv4();
-      await client.query(
-        `
-        INSERT INTO products (id, name, category, price, stock, "imageUrl", brand, description, "isHidden")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *
-        `,
-        [productId, name, category, price, 0, normalizedImageUrls, brand, description || '', !!isHidden],
-      );
+    const query = `
+      INSERT INTO products (
+        id,
+        "articleId",
+        name,
+        category,
+        price,
+        stock,
+        "imageUrl",
+        brand,
+        description,
+        "isHidden",
+        "size",
+        "piecesPerPack"
+      )
+      VALUES (
+        $1, $2, $3, $4, $5, $6,
+        $7, $8, $9, $10, $11::integer[], $12
+      )
+      RETURNING *
+    `;
 
-      const normalizedVariants = hasVariantInput
-        ? normalizeVariants(variantCandidates, stock)
-        : normalizeVariants(variants, stock);
-      await upsertVariants(client, productId, normalizedVariants);
-      await syncProductStock(client, productId);
+    const values = [
+      productId,
+      articleId?.trim() || null,
+      name,
+      category,
+      price,
+      stock,
+      normalizedImageUrls,
+      brand,
+      description || '',
+      !!isHidden,
+      normalizedSize,
+      piecesPerPack,
+    ];
 
-      const variantsByProductId = await getVariantsByProductIds(client, [productId]);
-      const { rows: latestRows } = await client.query('SELECT * FROM products WHERE id = $1', [productId]);
+    const { rows } = await pool.query(query, values);
 
-      await client.query('COMMIT');
-      return withVariants(latestRows[0], variantsByProductId);
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
+    return mapProductRow(rows[0]);
   }
 
   async updateProduct(id: string, productData: UpdateProductDto) {
-    const client = await pool.connect();
-    const { candidates: variantCandidates, hasVariantInput } = extractVariantCandidates(productData);
-    try {
-      await client.query('BEGIN');
+    const { rows: currentRows } = await pool.query(
+      'SELECT * FROM products WHERE id = $1',
+      [id],
+    );
 
-      const { rows: currentRows } = await client.query('SELECT * FROM products WHERE id = $1 FOR UPDATE', [id]);
-      if (!currentRows.length) {
-        throw new Error('Product not found');
-      }
-
-      const current = currentRows[0];
-      const merged = {
-        name: productData.name ?? current.name,
-        category: productData.category ?? current.category,
-        price: productData.price ?? current.price,
-        imageUrls: normalizeImageUrls(productData.imageUrls ?? productData.imageUrl ?? current.imageUrl),
-        brand: productData.brand ?? current.brand,
-        description: productData.description ?? current.description ?? '',
-        isHidden: productData.isHidden === undefined ? current.isHidden : !!productData.isHidden,
-      };
-
-      await client.query(
-        `
-        UPDATE products
-        SET
-          name = $1,
-          category = $2,
-          price = $3,
-          "imageUrl" = $4,
-          brand = $5,
-          description = $6,
-          "isHidden" = $7
-        WHERE id = $8
-        `,
-        [
-          merged.name,
-          merged.category,
-          merged.price,
-          merged.imageUrls,
-          merged.brand,
-          merged.description,
-          merged.isHidden,
-          id,
-        ],
-      );
-
-      if (hasVariantInput) {
-        await client.query('DELETE FROM product_variants WHERE product_id = $1', [id]);
-        const normalizedVariants = normalizeVariants(variantCandidates, productData.stock ?? current.stock);
-        await upsertVariants(client, id, normalizedVariants);
-      } else if (productData.stock !== undefined) {
-        const targetStock = normalizeStock(productData.stock);
-        const { rows: existingVariants } = await client.query(
-          `
-          SELECT id, stock
-          FROM product_variants
-          WHERE product_id = $1
-          ORDER BY "createdAt" ASC, id ASC
-          FOR UPDATE
-          `,
-          [id],
-        );
-
-        if (!existingVariants.length) {
-          await upsertVariants(client, id, [{ size: DEFAULT_SIZE, stock: targetStock, price: null, sku: null }]);
-        } else if (existingVariants.length === 1) {
-          await client.query(`UPDATE product_variants SET stock = $1 WHERE id = $2`, [
-            targetStock,
-            existingVariants[0].id,
-          ]);
-        } else {
-          const totalStock = existingVariants.reduce((sum, item) => sum + Number(item.stock || 0), 0);
-          const delta = targetStock - totalStock;
-          const firstVariant = existingVariants[0];
-          const adjustedFirstStock = Number(firstVariant.stock || 0) + delta;
-
-          if (adjustedFirstStock < 0) {
-            throw new Error('Requested stock is lower than distributed variant stock');
-          }
-
-          await client.query(`UPDATE product_variants SET stock = $1 WHERE id = $2`, [
-            adjustedFirstStock,
-            firstVariant.id,
-          ]);
-        }
-      }
-
-      await syncProductStock(client, id);
-
-      const { rows: updatedRows } = await client.query(`SELECT * FROM products WHERE id = $1`, [id]);
-      const variantsByProductId = await getVariantsByProductIds(client, [id]);
-
-      await client.query('COMMIT');
-      return withVariants(updatedRows[0], variantsByProductId);
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
+    if (!currentRows.length) {
+      throw new Error('Product not found');
     }
+
+    const current = currentRows[0];
+
+    const merged = {
+      articleId:
+        productData.articleId === undefined
+          ? current.articleId
+          : productData.articleId.trim() || null,
+      name: productData.name ?? current.name,
+      category: productData.category ?? current.category,
+      price: productData.price ?? current.price,
+      stock: productData.stock ?? current.stock,
+      imageUrls: normalizeImageUrls(
+        productData.imageUrls ?? productData.imageUrl ?? current.imageUrl,
+      ),
+      brand: productData.brand ?? current.brand,
+      description: productData.description ?? current.description,
+      isHidden:
+        productData.isHidden === undefined
+          ? current.isHidden
+          : !!productData.isHidden,
+      size: normalizeSize(productData.size ?? current.size),
+    };
+    const piecesPerPack = merged.size.length;
+
+    const query = `
+      UPDATE products
+      SET
+        name = $1,
+        "articleId" = $2,
+        category = $3,
+        price = $4,
+        stock = $5,
+        "imageUrl" = $6,
+        brand = $7,
+        description = $8,
+        "isHidden" = $9,
+        "size" = $10::integer[],
+        "piecesPerPack" = $11
+      WHERE id = $12
+      RETURNING *
+    `;
+
+    const values = [
+      merged.name,
+      merged.articleId,
+      merged.category,
+      merged.price,
+      merged.stock,
+      merged.imageUrls,
+      merged.brand,
+      merged.description,
+      merged.isHidden,
+      merged.size,
+      piecesPerPack,
+      id,
+    ];
+
+    const { rows } = await pool.query(query, values);
+
+    return mapProductRow(rows[0]);
   }
 
   async updateVisibility(id: string, isHidden: boolean) {
-    const query = `UPDATE products SET "isHidden" = $1 WHERE id = $2 RETURNING *`;
+    const query = `
+      UPDATE products
+      SET "isHidden" = $1
+      WHERE id = $2
+      RETURNING *
+    `;
+
     const { rows } = await pool.query(query, [!!isHidden, id]);
+
     return rows[0];
   }
 
   async deleteProduct(id: string) {
-    const { rows: productRows } = await pool.query(`SELECT "imageUrl" FROM products WHERE id = $1`, [id]);
+    const { rows: productRows } = await pool.query(
+      `SELECT "imageUrl" FROM products WHERE id = $1`,
+      [id],
+    );
 
     if (productRows.length > 0) {
       const product = productRows[0];
+
       const imageUrls = Array.isArray(product.imageUrl)
         ? product.imageUrl
         : product.imageUrl
@@ -414,6 +286,7 @@ export class ProductsService {
     }
 
     await pool.query(`DELETE FROM products WHERE id = $1`, [id]);
+
     return true;
   }
 }
