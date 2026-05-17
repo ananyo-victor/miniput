@@ -12,6 +12,7 @@ import {
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { EventsGateway } from '../../events/events.gateway';
 import { OrdersService } from './orders.service';
+import { CreateOrderDto } from './dto/create-order.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -22,7 +23,7 @@ export class OrdersController {
 
   @Post()
   @UseGuards(AuthGuard)
-  async createOrder(@Body() body: any) {
+  async createOrder(@Body() body: CreateOrderDto) {
     try {
       const newOrder = await this.ordersService.createOrder(body);
       this.eventsGateway.emitNewOrder(newOrder);

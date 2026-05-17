@@ -8,6 +8,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
+import { AdminLoginDto } from './dto/admin-login.dto';
+import { RefreshAdminTokenDto } from './dto/refresh-admin-token.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +17,7 @@ export class AuthController {
 
   @Post('admin/login')
   @HttpCode(HttpStatus.OK)
-  adminLogin(@Body() body: any) {
+  adminLogin(@Body() body: AdminLoginDto) {
     try {
       const { userId, password } = body;
       const isValid = this.authService.verifyAdminCredentials(userId, password);
@@ -45,7 +47,7 @@ export class AuthController {
 
   @Post('admin/refresh')
   @HttpCode(HttpStatus.OK)
-  refreshAdminToken(@Body() body: any) {
+  refreshAdminToken(@Body() body: RefreshAdminTokenDto) {
     try {
       const { refreshToken } = body;
 

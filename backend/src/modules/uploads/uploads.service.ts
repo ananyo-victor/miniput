@@ -3,10 +3,11 @@ import { DeleteObjectCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
 import s3Client from '../../config/s3.config';
 import 'dotenv/config';
+import { UploadAssetEntity } from './entities/upload.entity';
 
 @Injectable()
 export class UploadsService {
-  async uploadProductImage(imageData: string) {
+  async uploadProductImage(imageData: string): Promise<UploadAssetEntity> {
     const matches = imageData.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
 
     if (!matches || matches.length !== 3) {

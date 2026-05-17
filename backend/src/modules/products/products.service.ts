@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../../config/database.config';
 import { UploadsService } from '../uploads/uploads.service';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { ProductEntity } from './entities/product.entity';
+import { ProductVariantEntity } from './entities/product-variant.entity';
 
 const DEFAULT_SIZE = 'default';
 
@@ -169,7 +173,10 @@ const syncProductStock = async (client: any, productId: string) => {
   );
 };
 
-const getVariantsByProductIds = async (client: any, productIds: string[]) => {
+const getVariantsByProductIds = async (
+  client: any,
+  productIds: string[],
+): Promise<Map<string, ProductVariantEntity[]>> => {
   if (!productIds.length) return new Map();
   const { rows } = await client.query(
     `
@@ -201,7 +208,10 @@ const getVariantsByProductIds = async (client: any, productIds: string[]) => {
   return variantsByProductId;
 };
 
-const withVariants = (productRow: any, variantsByProductId: Map<string, any[]>) => {
+const withVariants = (
+  productRow: ProductEntity & { imageUrl?: string[] | string | null },
+  variantsByProductId: Map<string, ProductVariantEntity[]>,
+) => {
   const variants = variantsByProductId.get(productRow.id) || [];
   const computedStock = variants.length
     ? variants.reduce((sum, variant) => sum + Number(variant.stock || 0), 0)
@@ -239,7 +249,7 @@ export class ProductsService {
     return rows.map((product) => withVariants(product, variantsByProductId));
   }
 
-  async createProduct(productData: any) {
+  async createProduct(productData: CreateProductDto) {
     const { name, category, price, stock, imageUrl, imageUrls, brand, description, isHidden, variants } =
       productData;
     const { candidates: variantCandidates, hasVariantInput } = extractVariantCandidates(productData);
@@ -278,7 +288,7 @@ export class ProductsService {
     }
   }
 
-  async updateProduct(id: string, productData: any) {
+  async updateProduct(id: string, productData: UpdateProductDto) {
     const client = await pool.connect();
     const { candidates: variantCandidates, hasVariantInput } = extractVariantCandidates(productData);
     try {

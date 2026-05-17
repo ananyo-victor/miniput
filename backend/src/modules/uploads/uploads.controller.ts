@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { UploadsService } from './uploads.service';
+import { DeleteProductImageDto } from './dto/delete-product-image.dto';
+import { UploadProductImageDto } from './dto/upload-product-image.dto';
 
 @Controller('uploads')
 export class UploadsController {
@@ -17,7 +19,7 @@ export class UploadsController {
 
   @Post('product-image')
   @UseGuards(AuthGuard)
-  async uploadProductImage(@Body() body: any) {
+  async uploadProductImage(@Body() body: UploadProductImageDto) {
     try {
       const { imageData } = body;
 
@@ -41,7 +43,7 @@ export class UploadsController {
   @Post('delete-image')
   @HttpCode(HttpStatus.OK)
   @UseGuards(AuthGuard)
-  async deleteProductImage(@Body() body: any) {
+  async deleteProductImage(@Body() body: DeleteProductImageDto) {
     try {
       const { publicId } = body;
 

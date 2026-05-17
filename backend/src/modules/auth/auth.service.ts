@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as jwt from 'jsonwebtoken';
 import 'dotenv/config';
+import { AdminTokenPayload } from './entities/auth.entity';
 
 @Injectable()
 export class AuthService {
@@ -22,9 +23,12 @@ export class AuthService {
     );
   }
 
-  verifyRefreshToken(token: string): any {
+  verifyRefreshToken(token: string): AdminTokenPayload | null {
     try {
-      return jwt.verify(token, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET);
+      return jwt.verify(
+        token,
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+      ) as AdminTokenPayload;
     } catch {
       return null;
     }

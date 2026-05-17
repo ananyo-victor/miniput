@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import pool from '../../config/database.config';
+import { AboutContentEntity } from './entities/about-content.entity';
+import { BrandHomeContentEntity, BrandName } from './entities/brand-home-content.entity';
+import { UpsertAboutContentDto } from './dto/upsert-about-content.dto';
+import { UpsertHomeContentDto } from './dto/upsert-home-content.dto';
 
-const normalizeBrand = (brand: string) => {
+const normalizeBrand = (brand: string): BrandName => {
   const value = String(brand || '').trim().toLowerCase();
   if (value === 'miniput') return 'Miniput';
   if (value === 'kwink') return 'Kwink';
@@ -27,7 +31,7 @@ const validateHeroImages = (items: string[]) => {
 
 @Injectable()
 export class ContentService {
-  async getHomeContentByBrand(brandInput: string) {
+  async getHomeContentByBrand(brandInput: string): Promise<BrandHomeContentEntity> {
     const brand = normalizeBrand(brandInput);
     const { rows } = await pool.query(
       `
@@ -54,7 +58,10 @@ export class ContentService {
     };
   }
 
-  async upsertHomeContentByBrand(brandInput: string, payload: any) {
+  async upsertHomeContentByBrand(
+    brandInput: string,
+    payload: UpsertHomeContentDto,
+  ): Promise<BrandHomeContentEntity> {
     const brand = normalizeBrand(brandInput);
     const heroImageUrls = normalizeStringArray(payload.heroImageUrls ?? payload.heroImages ?? payload.imageUrls);
     const promoTags = normalizeStringArray(payload.promoTags ?? payload.offerTexts ?? payload.badges);
@@ -90,7 +97,7 @@ export class ContentService {
     };
   }
 
-  async getAboutContent() {
+  async getAboutContent(): Promise<AboutContentEntity> {
     const { rows } = await pool.query(
       `
       SELECT id, miniput_details, kwink_details, address, whatsapp_number, phone_number, "updatedAt"
@@ -117,7 +124,7 @@ export class ContentService {
     };
   }
 
-  async upsertAboutContent(payload: any) {
+  async upsertAboutContent(payload: UpsertAboutContentDto): Promise<AboutContentEntity> {
     const next = {
       miniputDetails: payload.miniputDetails,
       kwinkDetails: payload.kwinkDetails,

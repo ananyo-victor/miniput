@@ -15,6 +15,9 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { ProductsService } from './products.service';
+import { CreateProductDto } from './dto/create-product.dto';
+import { UpdateProductDto } from './dto/update-product.dto';
+import { UpdateProductVisibilityDto } from './dto/update-product-visibility.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -31,7 +34,7 @@ export class ProductsController {
 
   @Post()
   @UseGuards(AuthGuard)
-  async createProduct(@Body() body: any) {
+  async createProduct(@Body() body: CreateProductDto) {
     try {
       return await this.productsService.createProduct(body);
     } catch (error) {
@@ -41,7 +44,7 @@ export class ProductsController {
 
   @Put(':id')
   @UseGuards(AuthGuard)
-  async updateProduct(@Param('id') id: string, @Body() body: any) {
+  async updateProduct(@Param('id') id: string, @Body() body: UpdateProductDto) {
     try {
       return await this.productsService.updateProduct(id, body);
     } catch (error) {
@@ -51,8 +54,9 @@ export class ProductsController {
 
   @Patch(':id/visibility')
   @UseGuards(AuthGuard)
-  async updateVisibility(@Param('id') id: string, @Body('isHidden') isHidden: boolean) {
+  async updateVisibility(@Param('id') id: string, @Body() body: UpdateProductVisibilityDto) {
     try {
+      const { isHidden } = body;
       const updatedProduct = await this.productsService.updateVisibility(id, isHidden);
       return { success: true, product: updatedProduct };
     } catch (error) {

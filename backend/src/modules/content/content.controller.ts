@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { ContentService } from './content.service';
+import { UpsertAboutContentDto } from './dto/upsert-about-content.dto';
+import { UpsertHomeContentDto } from './dto/upsert-home-content.dto';
 
 @Controller('content')
 export class ContentController {
@@ -29,7 +31,7 @@ export class ContentController {
 
   @Put('home/:brand')
   @UseGuards(AuthGuard)
-  async upsertHomeContentByBrand(@Param('brand') brand: string, @Body() body: any) {
+  async upsertHomeContentByBrand(@Param('brand') brand: string, @Body() body: UpsertHomeContentDto) {
     try {
       return await this.contentService.upsertHomeContentByBrand(brand, body || {});
     } catch (error) {
@@ -51,7 +53,7 @@ export class ContentController {
 
   @Put('about')
   @UseGuards(AuthGuard)
-  async upsertAboutContent(@Body() body: any) {
+  async upsertAboutContent(@Body() body: UpsertAboutContentDto) {
     try {
       return await this.contentService.upsertAboutContent(body || {});
     } catch (error) {

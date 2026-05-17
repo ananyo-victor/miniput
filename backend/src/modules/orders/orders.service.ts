@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../../config/database.config';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderEntity, OrderItemEntity } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
-  async createOrder(orderData: any) {
+  async createOrder(orderData: CreateOrderDto): Promise<OrderEntity> {
     const { customerPhone, items, totalPrice, address } = orderData;
     const query = `
       INSERT INTO orders (id, "customerPhone", items, "totalPrice", address)
@@ -28,7 +30,7 @@ export class OrdersService {
 
       const touchedProductIds = new Set<string>();
 
-      for (const item of order.items) {
+      for (const item of order.items as OrderItemEntity[]) {
         const quantity = Math.max(1, Number(item.quantity || 1));
         const productId = item.productId || item.id;
         const explicitSize =
