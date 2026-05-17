@@ -1,13 +1,15 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsArray, IsOptional, IsString } from 'class-validator';
 
 export class UpsertAboutContentDto {
   @IsOptional()
-  @IsString()
-  miniputDetails?: string;
+  @IsArray()
+  @IsString({ each: true })
+  miniputDetails?: string[];
 
   @IsOptional()
-  @IsString()
-  kwinkDetails?: string;
+  @IsArray()
+  @IsString({ each: true })
+  kwinkDetails?: string[];
 
   @IsOptional()
   @IsString()

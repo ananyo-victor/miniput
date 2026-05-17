@@ -1,11 +1,13 @@
-import { IsDate, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDate, IsOptional, IsString } from 'class-validator';
 
 export class AboutContentEntity {
-  @IsString()
-  miniputDetails: string;
+  @IsArray()
+  @IsString({ each: true })
+  miniputDetails: string[];
 
-  @IsString()
-  kwinkDetails: string;
+  @IsArray()
+  @IsString({ each: true })
+  kwinkDetails: string[];
 
   @IsString()
   address: string;

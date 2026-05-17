@@ -1,8 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
-import { getAdminAccessToken } from "../utils/adminToken";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { useDispatch } from "react-redux";
+import {
+  fetchAboutContentThunk,
+  fetchBrandHomeContentThunk,
+  updateAboutContentThunk,
+  updateBrandHomeContentThunk,
+  uploadProductImageThunk,
+  deleteUploadedProductImageThunk
+} from "../store/adminSlice";
 
 const BRAND_KEYS = ["Miniput", "Kwink"];
 
@@ -25,7 +30,6 @@ const toPublicIdFromImageUrl = (url) => {
   if (!url || typeof url !== "string") {
     return "";
   }
-
   try {
     const parsed = new URL(url);
     return parsed.pathname.replace(/^\/+/, "");
@@ -34,20 +38,9 @@ const toPublicIdFromImageUrl = (url) => {
   }
 };
 
-const fileToDataUrl = (file) =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Could not read selected image"));
-    reader.readAsDataURL(file);
-  });
-
-const getAuthHeaders = () => {
-  const token = getAdminAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
-
 const AboutPage = () => {
+  const dispatch = useDispatch();
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -82,22 +75,18 @@ const AboutPage = () => {
     setError("");
 
     try {
-      const [aboutRes, miniputRes, kwinkRes] = await Promise.all([
-        axios.get(`${API_BASE_URL}/api/content/about`),
-        axios.get(`${API_BASE_URL}/api/content/home/miniput`),
-        axios.get(`${API_BASE_URL}/api/content/home/kwink`)
+      const [aboutData, miniputData, kwinkData] = await Promise.all([
+        dispatch(fetchAboutContentThunk()).unwrap(),
+        dispatch(fetchBrandHomeContentThunk("miniput")).unwrap(),
+        dispatch(fetchBrandHomeContentThunk("kwink")).unwrap()
       ]);
-
-      const aboutData = aboutRes?.data || {};
-      const miniputData = miniputRes?.data || {};
-      const kwinkData = kwinkRes?.data || {};
 
       setAboutForm({
         address: aboutData.address || "",
         whatsappNumber: aboutData.whatsappNumber || "",
         phoneNumber: aboutData.phoneNumber || "",
-        miniputDetailsText: aboutData.miniputDetails || "",
-        kwinkDetailsText: aboutData.kwinkDetails || ""
+        miniputDetailsText: Array.isArray(aboutData.miniputDetails) ? aboutData.miniputDetails.join("\n") : "",
+        kwinkDetailsText: Array.isArray(aboutData.kwinkDetails) ? aboutData.kwinkDetails.join("\n") : ""
       });
 
       setBrandForm({
@@ -111,7 +100,7 @@ const AboutPage = () => {
         }
       });
     } catch (loadError) {
-      setError(loadError?.response?.data?.error || loadError?.message || "Failed to load content.");
+      setError(loadError?.error || loadError?.message || "Failed to load content.");
     } finally {
       setLoading(false);
     }
@@ -119,6 +108,7 @@ const AboutPage = () => {
 
   useEffect(() => {
     loadContent();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleAboutFieldChange = (field, value) => {
@@ -198,14 +188,10 @@ const AboutPage = () => {
 
     for (const file of filesToUpload) {
       try {
-        const imageData = await fileToDataUrl(file);
-        const { data } = await axios.post(
-          `${API_BASE_URL}/api/uploads/product-image`,
-          { imageData },
-          { headers: getAuthHeaders() }
-        );
-
+        // We reuse the existing uploadProductImageThunk which natively handles file conversion
+        const data = await dispatch(uploadProductImageThunk(file)).unwrap();
         const imageUrl = data?.imageUrl;
+
         if (!imageUrl) {
           throw new Error("Image upload returned an empty URL.");
         }
@@ -225,7 +211,7 @@ const AboutPage = () => {
           };
         });
       } catch (uploadError) {
-        window.alert(uploadError?.response?.data?.message || uploadError?.message || "Image upload failed.");
+        window.alert(uploadError?.message || "Image upload failed.");
       } finally {
         setUploadingCountByBrand((prev) => ({
           ...prev,
@@ -242,11 +228,7 @@ const AboutPage = () => {
     const publicId = toPublicIdFromImageUrl(imageUrl);
     if (publicId) {
       try {
-        await axios.post(
-          `${API_BASE_URL}/api/uploads/delete-image`,
-          { publicId },
-          { headers: getAuthHeaders() }
-        );
+        await dispatch(deleteUploadedProductImageThunk(publicId)).unwrap();
       } catch {
         window.alert("Image removed from page content, but deletion from storage failed.");
       }
@@ -286,39 +268,35 @@ const AboutPage = () => {
 
     try {
       await Promise.all([
-        axios.put(
-          `${API_BASE_URL}/api/content/about`,
-          {
-            address: String(aboutForm.address || "").trim(),
-            whatsappNumber: String(aboutForm.whatsappNumber || "").trim(),
-            phoneNumber: String(aboutForm.phoneNumber || "").trim(),
-            miniputDetails: parseMultiline(aboutForm.miniputDetailsText).join("\n"),
-            kwinkDetails: parseMultiline(aboutForm.kwinkDetailsText).join("\n")
-          },
-          { headers: getAuthHeaders() }
-        ),
-        axios.put(
-          `${API_BASE_URL}/api/content/home/miniput`,
-          {
+        dispatch(updateAboutContentThunk({
+          address: String(aboutForm.address || "").trim(),
+          whatsappNumber: String(aboutForm.whatsappNumber || "").trim(),
+          phoneNumber: String(aboutForm.phoneNumber || "").trim(),
+          miniputDetails: parseMultiline(aboutForm.miniputDetailsText),
+          kwinkDetails: parseMultiline(aboutForm.kwinkDetailsText)
+        })).unwrap(),
+
+        dispatch(updateBrandHomeContentThunk({
+          brand: "miniput",
+          payload: {
             heroImageUrls: miniputHeroImages,
             promoTags: parseMultiline(brandForm.Miniput?.promoTagsText)
-          },
-          { headers: getAuthHeaders() }
-        ),
-        axios.put(
-          `${API_BASE_URL}/api/content/home/kwink`,
-          {
+          }
+        })).unwrap(),
+
+        dispatch(updateBrandHomeContentThunk({
+          brand: "kwink",
+          payload: {
             heroImageUrls: kwinkHeroImages,
             promoTags: parseMultiline(brandForm.Kwink?.promoTagsText)
-          },
-          { headers: getAuthHeaders() }
-        )
+          }
+        })).unwrap()
       ]);
 
       setSuccess("About and home content updated successfully.");
       await loadContent();
     } catch (saveError) {
-      setError(saveError?.response?.data?.error || saveError?.message || "Failed to save content.");
+      setError(saveError?.error || saveError?.message || "Failed to save content.");
     } finally {
       setSaving(false);
     }

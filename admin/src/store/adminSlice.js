@@ -23,6 +23,7 @@ function fileToDataUrl(file) {
   });
 }
 
+// --- AUTH & PRODUCTS THUNKS ---
 export const adminStep1Thunk = createAsyncThunk("admin/step1", async ({ userId, password }) => {
   const { data } = await axios.post(`${API_BASE_URL}/api/auth/admin/step1`, { userId, password });
   return data;
@@ -50,7 +51,7 @@ export const uploadProductImageThunk = createAsyncThunk("admin/uploadImage", asy
     { imageData },
     { headers: getAdminAuthHeaders() }
   );
-  return data;
+  return data; // returns { imageUrl }
 });
 
 export const deleteUploadedProductImageThunk = createAsyncThunk(
@@ -110,6 +111,28 @@ export const updateProductThunk = createAsyncThunk("admin/updateProduct", async 
   return data;
 });
 
+// --- NEW CONTENT MANAGEMENT THUNKS ---
+export const fetchAboutContentThunk = createAsyncThunk("admin/fetchAboutContent", async () => {
+  const { data } = await axios.get(`${API_BASE_URL}/api/content/about`);
+  return data;
+});
+
+export const fetchBrandHomeContentThunk = createAsyncThunk("admin/fetchBrandHomeContent", async (brand) => {
+  const { data } = await axios.get(`${API_BASE_URL}/api/content/home/${brand.toLowerCase()}`);
+  return data;
+});
+
+export const updateAboutContentThunk = createAsyncThunk("admin/updateAboutContent", async (payload) => {
+  const { data } = await axios.put(`${API_BASE_URL}/api/content/about`, payload, { headers: getAdminAuthHeaders() });
+  return data;
+});
+
+export const updateBrandHomeContentThunk = createAsyncThunk("admin/updateBrandHomeContent", async ({ brand, payload }) => {
+  const { data } = await axios.put(`${API_BASE_URL}/api/content/home/${brand.toLowerCase()}`, payload, { headers: getAdminAuthHeaders() });
+  return data;
+});
+
+// --- INITIAL STATE & SLICE ---
 const initialState = {
   authStep: 1,
   userId: "",
@@ -121,17 +144,17 @@ const initialState = {
   authLoading: false,
   authError: "",
   editingProductId: null,
-    newProduct: {
-      name: "",
-      category: "Kids Wear",
-      brand: "Miniput",
-      price: "",
-      stock: "",
-      sizes: [],
-      imageUrl: "",
-      imageUrls: [],
-      description: ""
-    }
+  newProduct: {
+    name: "",
+    category: "Kids Wear",
+    brand: "Miniput",
+    price: "",
+    stock: "",
+    sizes: [],
+    imageUrl: "",
+    imageUrls: [],
+    description: ""
+  }
 };
 
 const adminSlice = createSlice({
@@ -155,10 +178,7 @@ const adminSlice = createSlice({
       state.showAdd = false;
       state.editingProductId = null;
     },
-    setTokens: (state, action) => {
-      // Tokens are stored in localStorage via setAdminTokens
-      // This reducer is called by axios interceptor for state consistency
-    },
+    setTokens: (state, action) => {},
     logout: (state) => {
       clearAdminToken();
       state.authed = false;

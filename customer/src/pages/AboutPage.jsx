@@ -8,11 +8,6 @@ import KwinkSign from "../../public/assests/kwink_SIGN.png";
 import MiniputLogo from "../../public/assests/MINIPUT_LOGO.png";
 import KwinkLogo from "../../public/assests/kwink_LOGO.png";
 
-const splitDetails = (value) =>
-  String(value || "")
-    .split(/\r?\n/)
-    .map((item) => item.trim())
-    .filter(Boolean);
 
 const normalizePhone = (value) => String(value || "").replace(/\D+/g, "");
 
@@ -24,8 +19,15 @@ const AboutPage = () => {
     dispatch(fetchAboutThunk());
   }, [dispatch]);
 
-  const miniputPoints = useMemo(() => splitDetails(about.miniputDetails), [about.miniputDetails]);
-  const kwinkPoints = useMemo(() => splitDetails(about.kwinkDetails), [about.kwinkDetails]);
+  const miniputPoints = useMemo(
+    () => (Array.isArray(about.miniputDetails) ? about.miniputDetails : []),
+    [about.miniputDetails]
+  );
+  
+  const kwinkPoints = useMemo(
+    () => (Array.isArray(about.kwinkDetails) ? about.kwinkDetails : []),
+    [about.kwinkDetails]
+  );
 
   const whatsappLink = useMemo(() => {
     const number = normalizePhone(about.whatsappNumber);

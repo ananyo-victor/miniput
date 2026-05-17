@@ -107,16 +107,16 @@ export class ContentService {
     );
 
     const row = rows[0] || {
-      miniput_details: '',
-      kwink_details: '',
+      miniput_details: [],
+      kwink_details: [],
       address: '',
       whatsapp_number: '',
       phone_number: '',
     };
 
     return {
-      miniputDetails: row.miniput_details,
-      kwinkDetails: row.kwink_details,
+      miniputDetails: row.miniput_details || [],
+      kwinkDetails: row.kwink_details || [],
       address: row.address,
       whatsappNumber: row.whatsapp_number,
       phoneNumber: row.phone_number,
@@ -125,23 +125,20 @@ export class ContentService {
   }
 
   async upsertAboutContent(payload: UpsertAboutContentDto): Promise<AboutContentEntity> {
-    const next = {
-      miniputDetails: payload.miniputDetails,
-      kwinkDetails: payload.kwinkDetails,
-      address: payload.address,
-      whatsappNumber: payload.whatsappNumber,
-      phoneNumber: payload.phoneNumber,
-    };
+    const miniputDetails = normalizeStringArray(payload.miniputDetails);
+    const kwinkDetails = normalizeStringArray(payload.kwinkDetails);
 
-    const asValue = (value: any) => (value === undefined ? null : String(value || '').trim());
+    const address = payload.address === undefined ? null : String(payload.address || '').trim();
+    const whatsappNumber = payload.whatsappNumber === undefined ? null : String(payload.whatsappNumber || '').trim();
+    const phoneNumber = payload.phoneNumber === undefined ? null : String(payload.phoneNumber || '').trim();
 
     const { rows } = await pool.query(
       `
       INSERT INTO about_content (id, miniput_details, kwink_details, address, whatsapp_number, phone_number)
       VALUES (
         1,
-        COALESCE($1, ''),
-        COALESCE($2, ''),
+        COALESCE($1, '{}'::TEXT[]),
+        COALESCE($2, '{}'::TEXT[]),
         COALESCE($3, ''),
         COALESCE($4, ''),
         COALESCE($5, '')
@@ -157,17 +154,17 @@ export class ContentService {
       RETURNING miniput_details, kwink_details, address, whatsapp_number, phone_number, "updatedAt"
       `,
       [
-        asValue(next.miniputDetails),
-        asValue(next.kwinkDetails),
-        asValue(next.address),
-        asValue(next.whatsappNumber),
-        asValue(next.phoneNumber),
+        miniputDetails,
+        kwinkDetails,  
+        address,
+        whatsappNumber,
+        phoneNumber,
       ],
     );
 
     return {
-      miniputDetails: rows[0].miniput_details,
-      kwinkDetails: rows[0].kwink_details,
+      miniputDetails: rows[0].miniput_details || [],
+      kwinkDetails: rows[0].kwink_details || [],
       address: rows[0].address,
       whatsappNumber: rows[0].whatsapp_number,
       phoneNumber: rows[0].phone_number,
