@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Copy, Minus, Plus, Share2 } from "lucide-react";
 
 const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
   const currentProduct = useMemo(
@@ -15,11 +15,15 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
       },
     [product]
   );
-  console.log("Rendering ProductDetail for:", currentProduct);
   const [quantity, setQuantity] = useState(1);
-  const [selectedSizes, setSelectedSizes] = useState([currentProduct.sizes?.[0] || "26"]);
+  const availableSizes = useMemo(
+    () => currentProduct.size || currentProduct.sizes || [],
+    [currentProduct.size, currentProduct.sizes]
+  );
+  const [selectedSizes, setSelectedSizes] = useState([availableSizes[0] || "26"]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
+  const [shareStatus, setShareStatus] = useState("");
 
   const productImages = useMemo(() => {
     if (Array.isArray(currentProduct.imageUrls) && currentProduct.imageUrls.length) {
@@ -30,9 +34,22 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
 
   useEffect(() => {
     setQuantity(1);
-    setSelectedSizes([currentProduct.sizes?.[0] || "26"]);
+    setSelectedSizes([availableSizes[0] || "26"]);
     setCurrentImageIndex(0);
-  }, [currentProduct.id, currentProduct.sizes]);
+    setShareStatus("");
+  }, [availableSizes, currentProduct.id]);
+
+  useEffect(() => {
+    if (!shareStatus) return undefined;
+    const timer = window.setTimeout(() => setShareStatus(""), 2400);
+    return () => window.clearTimeout(timer);
+  }, [shareStatus]);
+
+  const productShareUrl = useMemo(() => {
+    const path = `/product/${encodeURIComponent(currentProduct.id)}`;
+    if (typeof window === "undefined") return path;
+    return new URL(path, window.location.origin).toString();
+  }, [currentProduct.id]);
 
   const onPrevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
@@ -72,6 +89,51 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
   };
 
   const stockInfo = getStockStatus(currentProduct.stock || 0);
+
+  const copyShareLink = async () => {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(productShareUrl);
+      return;
+    }
+
+    const textArea = document.createElement("textarea");
+    textArea.value = productShareUrl;
+    textArea.setAttribute("readonly", "");
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textArea);
+  };
+
+  const handleShareProduct = async () => {
+    const shareData = {
+      title: currentProduct.name,
+      text: `Check out ${currentProduct.name} on Miniput.`,
+      url: productShareUrl,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        setShareStatus("Shared");
+        return;
+      }
+
+      await copyShareLink();
+      setShareStatus("Link copied");
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+
+      try {
+        await copyShareLink();
+        setShareStatus("Link copied");
+      } catch {
+        setShareStatus("Copy failed");
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white font-['Nunito',sans-serif] md:p-6 lg:p-10 flex justify-center">
@@ -116,16 +178,33 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
         <div className="bg-[#f5f5f5]/50 md:bg-white rounded-t-3xl -mt-6 md:mt-0 md:rounded-none flex-1 p-6 md:p-8 lg:p-12 z-10 relative flex flex-col justify-center w-full md:w-1/2">
 
           <div className="max-w-lg">
-            <h1 className="text-2xl lg:text-3xl font-black text-gray-900 mb-2 uppercase tracking-wide">
-              {currentProduct.name}
-            </h1>
+            <div className="flex items-start justify-between gap-3 mb-2">
+              <h1 className="text-2xl lg:text-3xl font-black text-gray-900 uppercase tracking-wide">
+                {currentProduct.name}
+              </h1>
+              <button
+                onClick={handleShareProduct}
+                className="shrink-0 h-10 px-3 bg-white md:bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full flex items-center gap-2 text-xs font-black text-gray-900 uppercase tracking-wider transition-colors shadow-sm"
+                aria-label="Share product"
+                type="button"
+              >
+                {shareStatus === "Link copied" || shareStatus === "Shared" ? <Check size={16} /> : <Share2 size={16} />}
+                <span className="hidden sm:inline">{shareStatus || "Share"}</span>
+              </button>
+            </div>
+            {shareStatus && (
+              <div className="mb-3 flex items-center gap-1.5 text-xs font-bold text-green-700 uppercase tracking-wider">
+                <Copy size={13} />
+                {shareStatus === "Shared" ? "Product shared" : shareStatus}
+              </div>
+            )}
             <p className="text-sm md:text-base text-gray-500 mb-6 leading-relaxed">
               {currentProduct.description || "Premium quality material designed for maximum comfort and durability."}
             </p>
 
             <div className="text-sm font-bold text-gray-600 mb-3 uppercase tracking-wider">Available Sizes</div>
             <div className="flex gap-2 mb-8 flex-wrap">
-              {(currentProduct.size || []).map((size) => (
+              {availableSizes.map((size) => (
                 <div
                   key={size}
                   className="size-8 md:size-10 rounded-full flex items-center justify-center text-xs sm:text-base font-black bg-gray-950 text-white select-none"
@@ -183,23 +262,23 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
                 )}
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 mt-auto">
-                <button
-                  onClick={() => onOrderNow && onOrderNow({ ...currentProduct, quantity, selectedSizes })}
-                  className="flex-1 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-2xl p-4 md:p-5 text-sm md:text-base font-black tracking-widest cursor-pointer transition-colors"
-                >
-                  ORDER NOW
-                </button>
-                <button
-                  onClick={() => onAddToCart && onAddToCart({ ...currentProduct, quantity, selectedSizes })}
-                  className="flex-1 bg-gray-900 hover:bg-gray-800 hover:-translate-y-1 text-[#FFB800] border-none rounded-2xl p-4 md:p-5 text-sm md:text-base font-black tracking-widest cursor-pointer transition-all shadow-lg"
-                >
-                  ADD TO CART
-                </button>
-              </div>
+            <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+              <button
+                onClick={() => onOrderNow && onOrderNow({ ...currentProduct, quantity, selectedSizes })}
+                className="flex-1 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-2xl p-4 md:p-5 text-sm md:text-base font-black tracking-widest cursor-pointer transition-colors"
+              >
+                ORDER NOW
+              </button>
+              <button
+                onClick={() => onAddToCart && onAddToCart({ ...currentProduct, quantity, selectedSizes })}
+                className="flex-1 bg-gray-900 hover:bg-gray-800 hover:-translate-y-1 text-[#FFB800] border-none rounded-2xl p-4 md:p-5 text-sm md:text-base font-black tracking-widest cursor-pointer transition-all shadow-lg"
+              >
+                ADD TO CART
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
         {/* Full Screen Image Preview Modal */}
         {showPreview && (
@@ -232,8 +311,8 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
             </button>}
           </div>
         )}
-      </div>
-      );
+    </div>
+  );
 };
 
-      export default ProductDetail;
+export default ProductDetail;

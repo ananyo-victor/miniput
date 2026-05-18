@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
 import ProductDetail from "../components/products/ProductDetail";
@@ -11,6 +11,8 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading } = useSelector((state) => state.products);
+  const [hasRequestedProducts, setHasRequestedProducts] = useState(false);
+  const isWaitingForProducts = !products.length && !hasRequestedProducts;
 
   const selectedProduct = useMemo(
     () => location.state?.product || products.find((item) => item.id === productId),
@@ -29,16 +31,17 @@ const ProductDetailPage = () => {
   };
 
   useEffect(() => {
-    if (!products.length) {
+    if (!products.length && !hasRequestedProducts) {
+      setHasRequestedProducts(true);
       dispatch(fetchProducts(false));
     }
-  }, [dispatch, products.length]);
+  }, [dispatch, hasRequestedProducts, products.length]);
 
   useEffect(() => {
-    if (!loading && !selectedProduct) {
+    if (!loading && !isWaitingForProducts && !selectedProduct) {
       navigate("/home", { replace: true });
     }
-  }, [loading, selectedProduct, navigate]);
+  }, [isWaitingForProducts, loading, navigate, selectedProduct]);
 
   if (!selectedProduct) return null;
 
