@@ -36,6 +36,12 @@ const OrderFormPage = () => {
   const orderItems = isDirectOrder ? [directOrderItem] : cart;
   const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const subtotal = orderItems.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 1), 0);
+  const getProductImage = (item) => {
+    if (Array.isArray(item.imageUrls) && item.imageUrls.length) {
+      return item.imageUrls[0];
+    }
+    return item.imageUrl || item.image || "https://via.placeholder.com/140?text=Item";
+  };
   const [formData, setFormData] = useState({
     partyName: "",
     phone: "",
@@ -88,14 +94,14 @@ const OrderFormPage = () => {
   const handleNext = () => {
     if (step === 1) {
       const newErrors = {};
-      if (!formData.partyName.trim()) newErrors.partyName = "name is required";
+      if (!formData.partyName.trim()) newErrors.partyName = "Name is required";
       if (!formData.phone.trim()) {
         newErrors.phone = "Phone number is required";
       } else if (!PHONE_REGEX.test(formData.phone.trim())) {
         newErrors.phone = "Enter a valid 10-digit mobile number";
       }
       if (!formData.address.trim()) newErrors.address = "Address is required";
-      if (!formData.filledBy.trim()) newErrors.filledBy = "Filled by is required";
+      if (!formData.agent.trim()) newErrors.agent = "Agent name is required";
 
       if (Object.keys(newErrors).length > 0) {
         setErrors(newErrors);
@@ -244,7 +250,7 @@ const OrderFormPage = () => {
                     placeholder="e.g. 23ABCDE1234F1Z5"
                   />
                 </FormField>
-                <FormField icon="👤" label="AGENT NAME" required className="flex-1">
+                <FormField icon="👤" label="AGENT NAME" required className="flex-1" hasError={Boolean(errors.agent)} errorText={errors.agent}>
                   <input
                     type="text"
                     value={formData.agent}
@@ -292,27 +298,37 @@ const OrderFormPage = () => {
               </div>
 
               {/* Dynamic items from selected order flow */}
-              <div className="p-4 space-y-3">
+              <div className="p-4 space-y-2.5">
                 {orderItems.map((item, index) => {
                   const quantity = Number(item.quantity || 1);
                   const itemTotal = Number(item.price || 0) * quantity;
                   return (
-                    <div key={item.cartItemId || item.id || item._id || `${item.name}-${index}`} className="flex justify-between items-center text-sm">
-                      <div>
-                        <p className="font-bold text-[#1a1a1a]">{String(item.name || 'PRODUCT').toUpperCase()}</p>
-                        <div className="flex items-center gap-1 text-[11px] text-[#888]">
-                          <span>{quantity} UNIT{quantity !== 1 ? 'S' : ''} ×</span>
-                          {item.isDiscountActive && item.originalPrice > item.price ? (
-                            <>
-                              <span className="line-through text-[#bbb]">₹{Number(item.originalPrice).toLocaleString()}</span>
-                              <span className="font-bold text-[#D63031]">₹{Number(item.price).toLocaleString()}</span>
-                            </>
-                          ) : (
-                            <span>₹{Number(item.price || 0).toLocaleString()}</span>
-                          )}
+                    <div
+                      key={item.cartItemId || item.id || item._id || `${item.name}-${index}`}
+                      className="flex justify-between items-center gap-2.5 text-sm"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src={getProductImage(item)}
+                          alt={item.name || "Product"}
+                          className="w-10 h-10 sm:w-11 sm:h-11 rounded-lg object-cover bg-[#f5f5f5] border border-[#f0f0f0] shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="font-bold text-[#1a1a1a] truncate">{String(item.name || 'PRODUCT').toUpperCase()}</p>
+                          <div className="flex items-center gap-1 text-[11px] text-[#888] flex-wrap">
+                            <span>{quantity} UNIT{quantity !== 1 ? 'S' : ''} ×</span>
+                            {item.isDiscountActive && item.originalPrice > item.price ? (
+                              <>
+                                <span className="line-through text-[#bbb]">₹{Number(item.originalPrice).toLocaleString()}</span>
+                                <span className="font-bold text-[#D63031]">₹{Number(item.price).toLocaleString()}</span>
+                              </>
+                            ) : (
+                              <span>₹{Number(item.price || 0).toLocaleString()}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
-                      <p className="font-black">₹{itemTotal.toLocaleString()}</p>
+                      <p className="font-black shrink-0">₹{itemTotal.toLocaleString()}</p>
                     </div>
                   );
                 })}
@@ -393,6 +409,4 @@ const OrderFormPage = () => {
 };
 
 export default OrderFormPage;
-
-
 
