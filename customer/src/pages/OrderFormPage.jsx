@@ -31,10 +31,10 @@ const OrderFormPage = () => {
   const location = useLocation();
   const [step, setStep] = useState(1);
   const cart = useSelector((state) => state.customer.cart);
+  const { about } = useSelector((state) => state.about);
   const directOrderItem = location.state?.directOrderItem;
   const isDirectOrder = Boolean(directOrderItem);
   const orderItems = isDirectOrder ? [directOrderItem] : cart;
-  const whatsappNumber = (import.meta.env.VITE_WHATSAPP_NUMBER || "").replace(/\D/g, "");
   const subtotal = orderItems.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 1), 0);
   const getProductImage = (item) => {
     if (Array.isArray(item.imageUrls) && item.imageUrls.length) {
@@ -83,6 +83,24 @@ const OrderFormPage = () => {
       `Total Order Value: INR ${subtotal.toLocaleString()}`,
     ].join("\n");
   };
+
+  function formatWhatsAppNumber(number) {
+    if (!number) return '';
+
+    const cleanNumber = String(number).replace(/\D/g, '');
+
+    if (cleanNumber.length === 10) {
+      return `+91${cleanNumber}`;
+    }
+
+    if (cleanNumber.length === 12 && cleanNumber.startsWith('91')) {
+      return `+${cleanNumber}`;
+    }
+
+    return String(number);
+  }
+
+  const whatsappNumber = formatWhatsAppNumber(about.whatsappNumber);
 
   const sendOrderOnWhatsApp = () => {
     if (!whatsappNumber) return;
