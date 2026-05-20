@@ -8,7 +8,7 @@ const ProductCard = ({ product, onClick }) => {
   return (
     <div
       onClick={() => onClick && onClick(product)}
-      className="bg-white rounded-3xl overflow-hidden shadow-sm group hover:shadow-xl transition-shadow cursor-pointer"
+      className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-xl md:rounded-2xl"
     >
       <div className="aspect-[3/4] relative bg-gray-100">
         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />

@@ -3,8 +3,8 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import { setAdminField } from "../../store/adminSlice";
 import { clearAdminToken } from "../../utils/adminToken";
-import MiniputSign from "../../../public/assests/MINIPUT_SIGN.png";
-import KwinkSign from "../../../public/assests/kwink_SIGN.png";
+import MiniputSign from "../../assests/MINIPUT_SIGN.png";
+import KwinkSign from "../../assests/kwink_SIGN.png";
 import { setActiveBrand, setActiveCategory } from "../../store/homeSlice";
 
 const navItems = [

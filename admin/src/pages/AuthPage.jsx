@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { adminLoginThunk, setAdminField } from "../store/adminSlice";
-import BackgroundImage from "../../public/assests/DecoBG.png";
-import MiniputLogo from "../../public/assests/MINIPUT_LOGO.png";
-import KwinkLogo from "../../public/assests/kwink_LOGO.png";
+import BackgroundImage from "../assests/DecoBG.png";
+import MiniputLogo from "../assests/MINIPUT_LOGO.png";
+import KwinkLogo from "../assests/kwink_LOGO.png";
 
 const LoginForm = ({
   showCancel = false,
