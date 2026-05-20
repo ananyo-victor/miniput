@@ -1,16 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
 import Navbar from "../components/layout/Navbar";
-import Footer from "../components/layout/Footer";
+import TopBar from "../components/layout/TopBar";
 import { clearAdminToken, getAdminAuthFromStorage } from "../utils/adminToken";
 
 const PrivateRoute = () => {
   const location = useLocation();
   const { token, isAdmin } = getAdminAuthFromStorage();
-  const layoutHeights = {
-    "--layout-navbar-h": "65px",
-    "--layout-footer-h": "64px",
-  };
+  
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   if (!token || !isAdmin) {
     clearAdminToken();
@@ -18,14 +16,28 @@ const PrivateRoute = () => {
   }
 
   return (
-    <div className="flex flex-col lg:flex-row min-h-screen bg-[#f5f5f5]" style={layoutHeights}>
-      <div className="flex-1 flex flex-col min-h-0">
-        <Navbar />
-        <main className="flex-1 min-h-[calc(100vh-var(--layout-navbar-h)-var(--layout-footer-h))] lg:min-h-[calc(100vh-var(--layout-navbar-h))]">
-          <Outlet />
-        </main>
+    <div className="flex flex-col min-h-screen bg-[#f5f5f5]">
+      {/* Enterprise Top Navbar */}
+      <TopBar />
+      
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 relative">
+        {/* Navigation Sidebar */}
+        <Navbar 
+          isCollapsed={isSidebarCollapsed} 
+          toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)} 
+        />
+        
+        {/* Main Content Area */}
+        <div 
+          className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${
+            isSidebarCollapsed ? "lg:ml-20" : "lg:ml-64"
+          }`}
+        >
+          <main className="flex-1 flex flex-col relative h-full">
+            <Outlet />
+          </main>
+        </div>
       </div>
-      {/* <Footer /> */}
     </div>
   );
 };

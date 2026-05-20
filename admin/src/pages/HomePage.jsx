@@ -250,92 +250,56 @@ const HomePage = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5]">
+      {/* 1. HERO SECTION - Reduced height & added gradient fade */}
       <section className="relative overflow-hidden bg-white">
         {activeHeroImage ? (
-          <div className="relative mx-auto h-[210px] w-full max-w-[1440px] sm:h-[300px] lg:h-[380px] xl:h-[420px]">
+          <div className="relative mx-auto h-[200px] w-full max-w-[1440px] sm:h-[240px] lg:h-[300px]">
             <img
               src={activeHeroImage}
               alt={`${activeBrand} hero`}
-              className="h-full w-full object-cover object-center transition-opacity duration-1000"
+              className="h-full w-full object-cover object-top transition-opacity duration-1000"
             />
+
+            {/* Amazon-style fade to blend image smoothly into the gray background */}
+            <div className="absolute inset-x-0 bottom-0 h-24 lg:h-36 bg-gradient-to-t from-[#f5f5f5] to-transparent pointer-events-none"></div>
 
             {heroImages.length > 1 && (
               <>
-                <button
-                  type="button"
-                  onClick={goToPrevHero}
-                  className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:left-6"
-                  aria-label="Previous hero"
-                >
+                <button type="button" onClick={goToPrevHero} className="absolute left-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:left-6">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#0E2A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={goToNextHero}
-                  className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:right-6"
-                  aria-label="Next hero"
-                >
+                <button type="button" onClick={goToNextHero} className="absolute right-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:right-6">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#0E2A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
-
-                <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-white/70 px-2.5 py-1.5 backdrop-blur">
-                  {heroImages.map((_, i) => {
-                    const isActiveDot = i === (heroIndexByBrand[activeBrand] || 0);
-                    return (
-                      <button
-                        key={`dot-${i}`}
-                        type="button"
-                        onClick={() => goToHeroIndex(i)}
-                        className={`h-2 w-2 rounded-full ${isActiveDot ? "bg-[#0E2A4A]" : "border border-gray-300 bg-white/80"}`}
-                        aria-label={`Go to hero ${i + 1}`}
-                      />
-                    );
-                  })}
-                </div>
               </>
             )}
           </div>
         ) : (
-          <div
-            className={`relative mx-auto flex h-[210px] w-full max-w-[1440px] items-end justify-between gap-4 sm:h-[300px] lg:h-[380px] xl:h-[420px] ${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
-              }`}
-          >
-            <div className="px-6 pb-10 sm:px-10 lg:px-16 lg:pb-14">
-              <h1
-                className={`tracking-tighter leading-none ${activeBrand === "Miniput"
-                    ? "mk-bebas text-[clamp(36px,6vw,72px)] bg-[linear-gradient(90deg,#E85A1D,#FFB800,#3aa34a,#0E2A4A,#c03fa1)] bg-clip-text text-transparent"
-                    : "text-4xl italic font-black text-white [font-family:'Nunito',sans-serif]"
-                  }`}
-              >
+          <div className={`relative mx-auto flex h-[200px] w-full max-w-[1440px] items-end justify-between gap-4 sm:h-[240px] lg:h-[300px] ${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"}`}>
+            <div className="px-6 pb-12 sm:px-10 lg:px-16">
+              <h1 className={`tracking-tighter leading-none ${activeBrand === "Miniput" ? "mk-bebas text-[clamp(36px,6vw,72px)] text-white" : "text-4xl italic font-black text-white"}`}>
                 {activeBrand}
               </h1>
-              <p className="text-xs font-black tracking-[0.3em] opacity-90 mt-2">
-                {activeBrand === "Miniput" ? "KIDS" : "YOUR SHIRT, YOUR STORY"}
-              </p>
             </div>
+            <div className="absolute inset-x-0 bottom-0 h-24 lg:h-36 bg-gradient-to-t from-[#f5f5f5] to-transparent pointer-events-none"></div>
           </div>
         )}
       </section>
 
-      <div className="sticky top-[100px] z-30 border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-[1440px] gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-8">
+      {/* 2. OVERLAPPING CONTENT - Pulled up with negative margin */}
+      <div className="relative z-20 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 -mt-12 lg:-mt-24">
+
+        {/* Filter Panel */}
+        <div className="bg-white shadow-sm border border-gray-200 rounded-2xl p-3 mb-6 flex gap-2 overflow-x-auto mk-scroll-hidden">
           <button
             type="button"
-            onClick={() =>
-              setActivePromoTagByBrand((prev) => ({
-                ...prev,
-                [activeBrand]: "all"
-              }))
-            }
-            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wide transition text ${activePromoTag === "all"
-                ? "border-[#0E2A4A] bg-[#0E2A4A] text-white"
-                : "border-gray-300 bg-white text-gray-600"
-              }`}
+            onClick={() => setActivePromoTagByBrand((prev) => ({ ...prev, [activeBrand]: "all" }))}
+            className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black tracking-wide transition ${activePromoTag === "all" ? "border-[#0E2A4A] bg-[#0E2A4A] text-white" : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"}`}
           >
             ALL OFFERS
           </button>
@@ -348,47 +312,36 @@ const HomePage = () => {
               <button
                 key={`${activeBrand}-promo-${index}`}
                 type="button"
-                onClick={() =>
-                  setActivePromoTagByBrand((prev) => ({
-                    ...prev,
-                    [activeBrand]: tag
-                  }))
-                }
-                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-black tracking-wide transition ${isActive
-                    ? "border-[#0E2A4A] bg-[#0E2A4A] text-white"
-                    : "border-gray-300 bg-white text-gray-600"
-                  }`}
+                onClick={() => setActivePromoTagByBrand((prev) => ({ ...prev, [activeBrand]: tag }))}
+                className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black tracking-wide transition ${isActive ? "border-[#0E2A4A] bg-[#0E2A4A] text-white" : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"}`}
               >
                 {String(tag || "").toUpperCase()}
               </button>
             );
           })}
         </div>
-      </div>
 
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-        {loading ? (
-          <div className="text-center text-gray-400 py-20 font-semibold">Loading products...</div>
-        ) : error ? (
-          <div className="text-center text-red-400 py-20 font-semibold">{error}</div>
-        ) : filteredProducts.length === 0 ? (
-          <div className="text-center text-gray-400 py-20 font-semibold">No products found</div>
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onClick={() =>
-                  navigate(`/product/${product.id}`, {
-                    state: { product }
-                  })
-                }
-              />
-            ))}
-          </div>
-        )}
-      </main>
+        {/* Product Grid */}
+        <main className="pb-10">
+          {loading ? (
+            <div className="text-center text-gray-400 py-20 font-semibold bg-white rounded-xl shadow-sm">Loading products...</div>
+          ) : error ? (
+            <div className="text-center text-red-400 py-20 font-semibold bg-white rounded-xl shadow-sm">{error}</div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="text-center text-gray-400 py-20 font-semibold bg-white rounded-xl shadow-sm">No products found</div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
+                />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

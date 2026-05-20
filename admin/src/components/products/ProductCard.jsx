@@ -10,7 +10,8 @@ const ProductCard = ({ product, onClick }) => {
       onClick={() => onClick && onClick(product)}
       className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-xl md:rounded-2xl"
     >
-      <div className="aspect-[3/4] relative bg-gray-100">
+      {/* UPDATED: Changed aspect-[3/4] to aspect-[4/5] to reduce the card height */}
+      <div className="aspect-[4/5] relative bg-gray-100">
         <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-4 text-white">
           <p className="text-[11px] font-black tracking-wider uppercase">{product.name}</p>
