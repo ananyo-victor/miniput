@@ -88,6 +88,7 @@ const HomePage = () => {
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
   const { activeBrand, activeCategory } = useSelector((state) => state.home);
+  console.log("HomePage Render - activeBrand:", activeBrand, "activeCategory:", activeCategory, "products count:", products.length);
 
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
     Miniput: "all",
@@ -103,41 +104,36 @@ const HomePage = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchProducts(false));
-  }, [dispatch]);
+    dispatch(fetchProducts({ includeHidden: false, brand: activeBrand }));
+  }, [activeBrand]);
 
   useEffect(() => {
     const loadHomeContent = async () => {
-      try {
-        const [miniputRes, kwinkRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/content/home/miniput`),
-          axios.get(`${API_BASE_URL}/api/content/home/kwink`)
-        ]);
+      const brandKey = normalizeText(activeBrand) === "kwink" ? "Kwink" : "Miniput";
+      const brandSlug = brandKey.toLowerCase();
 
-        setHomeContentByBrand({
-          Miniput: {
-            heroImageUrls: Array.isArray(miniputRes?.data?.heroImageUrls)
-              ? miniputRes.data.heroImageUrls.slice(0, 4)
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/content/home/${brandSlug}`);
+
+        setHomeContentByBrand((prev) => ({
+          ...prev,
+          [brandKey]: {
+            heroImageUrls: Array.isArray(res?.data?.heroImageUrls)
+              ? res.data.heroImageUrls.slice(0, 4)
               : [],
-            promoTags: Array.isArray(miniputRes?.data?.promoTags) ? miniputRes.data.promoTags : []
-          },
-          Kwink: {
-            heroImageUrls: Array.isArray(kwinkRes?.data?.heroImageUrls)
-              ? kwinkRes.data.heroImageUrls.slice(0, 4)
-              : [],
-            promoTags: Array.isArray(kwinkRes?.data?.promoTags) ? kwinkRes.data.promoTags : []
+            promoTags: Array.isArray(res?.data?.promoTags) ? res.data.promoTags : []
           }
-        });
+        }));
       } catch {
-        setHomeContentByBrand({
-          Miniput: { ...emptyBrandContent },
-          Kwink: { ...emptyBrandContent }
-        });
+        setHomeContentByBrand((prev) => ({
+          ...prev,
+          [brandKey]: { ...emptyBrandContent }
+        }));
       }
     };
 
     loadHomeContent();
-  }, []);
+  }, [activeBrand]);
 
   const urlBrand = useMemo(() => {
     const pathParts = location.pathname.split("/").filter(Boolean);
@@ -232,15 +228,13 @@ const HomePage = () => {
     );
 
     return products.filter((product) => {
-      const brandMatch = normalizeText(product.brand) === normalizeText(activeBrand);
-
       const categoryMatch =
         normalizedActiveCategory === "all" ||
         acceptedCategories.has(normalizeCategory(product.category));
 
       const promoMatch = productMatchesPromoTag(product, activePromoTag);
 
-      return brandMatch && categoryMatch && promoMatch;
+      return categoryMatch && promoMatch;
     });
   }, [products, activeBrand, activeCategory, activePromoTag]);
 

@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 const homeSlice = createSlice({
   name: "home",
   initialState: {
-    activeBrand: "Miniput",
+    activeBrand: "",
     activeCategory: "all"
   },
   reducers: {

@@ -7,6 +7,8 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import {
   DISCOUNT_TYPES,
   DiscountType,
+  PRODUCT_BRANDS,
+  ProductBrand,
 } from './entities/product.entity';
 
 const normalizeImageUrls = (imageValue: any) => {
@@ -62,6 +64,25 @@ const normalizeDiscountValue = (discountValue: any): number | null => {
   }
 
   return roundPrice(parsedValue);
+};
+
+const normalizeBrand = (brandValue?: string): ProductBrand | null => {
+  if (typeof brandValue !== 'string' || !brandValue.trim()) {
+    return null;
+  }
+
+  const normalizedInput = brandValue.trim().toLowerCase();
+  const matchedBrand = PRODUCT_BRANDS.find(
+    (brand) => brand.toLowerCase() === normalizedInput,
+  );
+
+  if (!matchedBrand) {
+    throw new Error(
+      `Invalid brand. Allowed values: ${PRODUCT_BRANDS.join(', ')}`,
+    );
+  }
+
+  return matchedBrand;
 };
 
 const getSizeRange = (size: any): string | null => {
@@ -266,14 +287,27 @@ export class ProductsService implements OnModuleInit {
     }
   }
 
-  async getAllProducts(includeHidden: boolean) {
+  async getAllProducts(includeHidden: boolean, brandInput?: string) {
     let query = 'SELECT * FROM products';
+    const conditions: string[] = [];
+    const values: any[] = [];
 
     if (!includeHidden) {
-      query += ' WHERE "isHidden" = false';
+      values.push(false);
+      conditions.push(`"isHidden" = $${values.length}`);
     }
 
-    const { rows } = await pool.query(query);
+    const normalizedBrand = normalizeBrand(brandInput);
+    if (normalizedBrand) {
+      values.push(normalizedBrand);
+      conditions.push(`brand = $${values.length}`);
+    }
+
+    if (conditions.length) {
+      query += ` WHERE ${conditions.join(' AND ')}`;
+    }
+
+    const { rows } = await pool.query(query, values);
 
     return rows.map(mapProductRow);
   }

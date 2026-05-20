@@ -116,38 +116,42 @@ export const deleteUploadedProductImageThunk = createAsyncThunk(
   }
 );
 
-export const createProductThunk = createAsyncThunk("admin/createProduct", async (payload, { dispatch }) => {
+export const createProductThunk = createAsyncThunk("admin/createProduct", async (payload, { dispatch, getState }) => {
   const requestBody = buildCreateProductPayload(payload);
   const { data } = await axios.post(`${API_BASE_URL}/api/products`, requestBody, { headers: getAdminAuthHeaders() });
-  await dispatch(fetchProducts(true));
+  const activeBrand = getState()?.home?.activeBrand || "Miniput";
+  await dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
   return data;
 });
 
 
 export const toggleProductVisibilityThunk = createAsyncThunk(
   "admin/toggleVisibility",
-  async ({ id, isHidden }, { dispatch }) => {
+  async ({ id, isHidden }, { dispatch, getState }) => {
     const { data } = await axios.patch(
       `${API_BASE_URL}/api/products/${id}/visibility`,
       { isHidden },
       { headers: getAdminAuthHeaders() }
     );
-    await dispatch(fetchProducts(true));
+    const activeBrand = getState()?.home?.activeBrand || "Miniput";
+    await dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
     return data;
   }
 );
 
-export const deleteProductThunk = createAsyncThunk("admin/deleteProduct", async (id, { dispatch }) => {
+export const deleteProductThunk = createAsyncThunk("admin/deleteProduct", async (id, { dispatch, getState }) => {
   const { data } = await axios.delete(`${API_BASE_URL}/api/products/${id}`, { headers: getAdminAuthHeaders() });
-  await dispatch(fetchProducts(true));
+  const activeBrand = getState()?.home?.activeBrand || "Miniput";
+  await dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
   return data;
 });
 
-export const updateProductThunk = createAsyncThunk("admin/updateProduct", async (payload, { dispatch }) => {
+export const updateProductThunk = createAsyncThunk("admin/updateProduct", async (payload, { dispatch, getState }) => {
   const { id, ...updateData } = payload;
   const requestBody = buildCreateProductPayload(updateData);
   const { data } = await axios.put(`${API_BASE_URL}/api/products/${id}`, requestBody, { headers: getAdminAuthHeaders() });
-  await dispatch(fetchProducts(true));
+  const activeBrand = getState()?.home?.activeBrand || "Miniput";
+  await dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
   return data;
 });
 

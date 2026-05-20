@@ -30,6 +30,11 @@ const TopBar = () => {
     dispatch(setActiveBrand(brand));
     dispatch(setActiveCategory("all"));
     setIsDropdownOpen(false);
+
+    if (location.pathname === "/inventory") {
+      return;
+    }
+
     navigate(`/home/${brand.toLowerCase()}`);
   };
 

@@ -85,6 +85,7 @@ const getPublicIdFromImageUrl = (url) => {
 const InventoryPage = () => {
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
+  const { activeBrand } = useSelector((state) => state.home);
   const { newProduct, editingProductId, productSaveLoading } = useSelector((state) => state.admin);
 
   const [activeFilter, setActiveFilter] = useState("all");
@@ -97,8 +98,8 @@ const InventoryPage = () => {
   const maxImages = 9;
 
   useEffect(() => {
-    dispatch(fetchProducts(true));
-  }, [dispatch]);
+    dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
+  }, [dispatch, activeBrand]);
 
   const counts = useMemo(() => {
     const map = { all: products.length, "in-stock": 0, limited: 0, low: 0, hidden: 0 };

@@ -24,9 +24,15 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Get()
-  async getProducts(@Query('includeHidden') includeHidden?: string) {
+  async getProducts(
+    @Query('includeHidden') includeHidden?: string,
+    @Query('brand') brand?: string,
+  ) {
     try {
-      return await this.productsService.getAllProducts(includeHidden === 'true');
+      return await this.productsService.getAllProducts(
+        includeHidden === 'true',
+        brand,
+      );
     } catch (error) {
       throw new InternalServerErrorException({ error: error.message });
     }

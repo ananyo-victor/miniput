@@ -11,6 +11,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading } = useSelector((state) => state.products);
+  const { activeBrand } = useSelector((state) => state.home);
 
   const selectedProduct = useMemo(
     () => location.state?.product || products.find((item) => item.id === productId),
@@ -30,9 +31,14 @@ const ProductDetailPage = () => {
 
   useEffect(() => {
     if (!products.length) {
-      dispatch(fetchProducts(false));
+      dispatch(
+        fetchProducts({
+          includeHidden: false,
+          brand: selectedProduct?.brand || activeBrand
+        })
+      );
     }
-  }, [dispatch, products.length]);
+  }, [dispatch, products.length, selectedProduct?.brand, activeBrand]);
 
   useEffect(() => {
     if (!loading && !selectedProduct) {
