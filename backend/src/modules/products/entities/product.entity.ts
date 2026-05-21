@@ -2,7 +2,6 @@ import {
   IsArray,
   IsBoolean,
   IsDate,
-  IsIn,
   IsNumber,
   IsOptional,
   ArrayMinSize,
@@ -11,14 +10,15 @@ import {
   Min,
 } from 'class-validator';
 
-export const PRODUCT_BRANDS = ['Miniput', 'Kwink'] as const;
-export type ProductBrand = (typeof PRODUCT_BRANDS)[number];
 export const DISCOUNT_TYPES = ['percent', 'fixed'] as const;
 export type DiscountType = (typeof DISCOUNT_TYPES)[number];
 
 export class ProductEntity {
   @IsUUID()
   id: string;
+
+  @IsUUID()
+  workspaceId: string;
 
   @IsOptional()
   @IsString()
@@ -35,7 +35,6 @@ export class ProductEntity {
   price: number;
 
   @IsOptional()
-  @IsIn(DISCOUNT_TYPES)
   discountType?: DiscountType | null;
 
   @IsOptional()
@@ -51,9 +50,6 @@ export class ProductEntity {
   @IsArray()
   @IsString({ each: true })
   imageUrl: string[] | null;
-
-  @IsIn(PRODUCT_BRANDS)
-  brand: ProductBrand;
 
   @IsString()
   description: string;

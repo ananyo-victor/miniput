@@ -31,68 +31,126 @@ const validateHeroImages = (items: string[]) => {
 
 @Injectable()
 export class ContentService {
-  async getHomeContentByBrand(brandInput: string): Promise<BrandHomeContentEntity> {
-    const brand = normalizeBrand(brandInput);
+  private async validateWorkspaceExists(
+    workspaceId: string,
+  ) {
+    const { rows } = await pool.query(
+      `SELECT id FROM workspace WHERE id = $1`,
+      [workspaceId],
+    );
+
+    if (!rows.length) {
+      throw new Error('Invalid workspaceId');
+    }
+  }
+  async getHomeContent(workspaceId: string) {
+    await this.validateWorkspaceExists(workspaceId);
+
     const { rows } = await pool.query(
       `
-      SELECT brand, hero_image_urls, promo_tags, "updatedAt"
-      FROM brand_home_content
-      WHERE brand = $1
-      `,
-      [brand],
+    SELECT
+      "workspaceId",
+      hero_image_urls,
+      promo_tags,
+      "updatedAt"
+    FROM brand_home_content
+    WHERE "workspaceId" = $1
+    `,
+      [workspaceId],
     );
 
     if (!rows.length) {
       return {
-        brand,
+        workspaceId,
         heroImageUrls: [],
         promoTags: [],
       };
     }
 
     return {
-      brand: rows[0].brand,
-      heroImageUrls: rows[0].hero_image_urls || [],
-      promoTags: rows[0].promo_tags || [],
+      workspaceId: rows[0].workspaceId,
+      heroImageUrls:
+        rows[0].hero_image_urls || [],
+      promoTags:
+        rows[0].promo_tags || [],
       updatedAt: rows[0].updatedAt,
     };
   }
 
-  async upsertHomeContentByBrand(
-    brandInput: string,
+  async upsertHomeContent(
+    workspaceId: string,
     payload: UpsertHomeContentDto,
-  ): Promise<BrandHomeContentEntity> {
-    const brand = normalizeBrand(brandInput);
-    const heroImageUrls = normalizeStringArray(payload.heroImageUrls ?? payload.heroImages ?? payload.imageUrls);
-    const promoTags = normalizeStringArray(payload.promoTags ?? payload.offerTexts ?? payload.badges);
+  ) {
+    await this.validateWorkspaceExists(workspaceId);
 
-    const { rows: existingRows } = await pool.query(
-      `SELECT hero_image_urls, promo_tags FROM brand_home_content WHERE brand = $1`,
-      [brand],
+    const heroImageUrls =
+      normalizeStringArray(
+        payload.heroImageUrls ??
+        payload.heroImages ??
+        payload.imageUrls,
+      );
+
+    const promoTags =
+      normalizeStringArray(
+        payload.promoTags ??
+        payload.offerTexts ??
+        payload.badges,
+      );
+
+    const { rows: existingRows } =
+      await pool.query(
+        `
+      SELECT hero_image_urls, promo_tags
+      FROM brand_home_content
+      WHERE "workspaceId" = $1
+      `,
+        [workspaceId],
+      );
+
+    const current = existingRows[0] || {
+      hero_image_urls: [],
+      promo_tags: [],
+    };
+
+    const mergedHero = validateHeroImages(
+      heroImageUrls === null
+        ? current.hero_image_urls
+        : heroImageUrls,
     );
 
-    const current = existingRows[0] || { hero_image_urls: [], promo_tags: [] };
-    const mergedHero = validateHeroImages(heroImageUrls === null ? current.hero_image_urls : heroImageUrls);
-    const mergedTags = promoTags === null ? current.promo_tags : promoTags;
+    const mergedTags =
+      promoTags === null
+        ? current.promo_tags
+        : promoTags;
 
     const { rows } = await pool.query(
       `
-      INSERT INTO brand_home_content (brand, hero_image_urls, promo_tags)
-      VALUES ($1, $2, $3)
-      ON CONFLICT (brand)
-      DO UPDATE SET
-        hero_image_urls = EXCLUDED.hero_image_urls,
-        promo_tags = EXCLUDED.promo_tags,
-        "updatedAt" = NOW()
-      RETURNING brand, hero_image_urls, promo_tags, "updatedAt"
-      `,
-      [brand, mergedHero, mergedTags],
+    INSERT INTO brand_home_content (
+      "workspaceId",
+      hero_image_urls,
+      promo_tags
+    )
+    VALUES ($1, $2, $3)
+    ON CONFLICT ("workspaceId")
+    DO UPDATE SET
+      hero_image_urls = EXCLUDED.hero_image_urls,
+      promo_tags = EXCLUDED.promo_tags,
+      "updatedAt" = NOW()
+    RETURNING *
+    `,
+      [
+        workspaceId,
+        mergedHero,
+        mergedTags,
+      ],
     );
 
     return {
-      brand: rows[0].brand,
-      heroImageUrls: rows[0].hero_image_urls || [],
-      promoTags: rows[0].promo_tags || [],
+      workspaceId: rows[0].workspaceId,
+      heroImageUrls:
+        rows[0].hero_image_urls || [],
+      promoTags:
+        rows[0].promo_tags || [],
       updatedAt: rows[0].updatedAt,
     };
   }
@@ -155,7 +213,7 @@ export class ContentService {
       `,
       [
         miniputDetails,
-        kwinkDetails,  
+        kwinkDetails,
         address,
         whatsappNumber,
         phoneNumber,

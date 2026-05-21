@@ -7,6 +7,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '../../common/guards/auth.guard';
@@ -19,7 +20,7 @@ export class OrdersController {
   constructor(
     private readonly ordersService: OrdersService,
     private readonly eventsGateway: EventsGateway,
-  ) {}
+  ) { }
 
   @Post()
   @UseGuards(AuthGuard)
@@ -35,11 +36,17 @@ export class OrdersController {
 
   @Get('stats')
   @UseGuards(AuthGuard)
-  async getAdminStats() {
+  async getAdminStats(
+    @Query('workspaceId') workspaceId?: string,
+  ) {
     try {
-      return await this.ordersService.getAdminStats();
+      return await this.ordersService.getAdminStats(
+        workspaceId,
+      );
     } catch (error) {
-      throw new InternalServerErrorException({ error: error.message });
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
     }
   }
 

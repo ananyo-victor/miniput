@@ -19,6 +19,9 @@ export class OrderItemEntity {
   @IsUUID()
   id?: string;
 
+  @IsUUID()
+  workspaceId: string;
+
   @IsOptional()
   @IsUUID()
   productId?: string;

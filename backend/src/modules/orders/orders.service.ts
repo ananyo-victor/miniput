@@ -6,14 +6,61 @@ import { OrderEntity, OrderItemEntity } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
-  async createOrder(orderData: CreateOrderDto): Promise<OrderEntity> {
-    const { customerPhone, items, totalPrice, address } = orderData;
-    const query = `
-      INSERT INTO orders (id, "customerPhone", items, "totalPrice", address)
-      VALUES ($1, $2, $3, $4, $5) RETURNING *`;
+  private async validateWorkspaceExists(
+    workspaceId: string,
+  ) {
+    const { rows } = await pool.query(
+      `SELECT id FROM workspace WHERE id = $1`,
+      [workspaceId],
+    );
 
-    const values = [uuidv4(), customerPhone, JSON.stringify(items), totalPrice, address];
-    const { rows } = await pool.query(query, values);
+    if (!rows.length) {
+      throw new Error('Invalid workspaceId');
+    }
+  }
+  async createOrder(
+    orderData: CreateOrderDto,
+  ): Promise<OrderEntity> {
+
+    const {
+      workspaceId,
+      customerPhone,
+      items,
+      totalPrice,
+      address,
+    } = orderData;
+
+    await this.validateWorkspaceExists(
+      workspaceId,
+    );
+
+    const query = `
+    INSERT INTO orders (
+      id,
+      "workspaceId",
+      "customerPhone",
+      items,
+      "totalPrice",
+      address
+    )
+    VALUES (
+      $1, $2, $3, $4, $5, $6
+    )
+    RETURNING *
+  `;
+
+    const values = [
+      uuidv4(),
+      workspaceId,
+      customerPhone,
+      JSON.stringify(items),
+      totalPrice,
+      address,
+    ];
+
+    const { rows } =
+      await pool.query(query, values);
+
     return rows[0];
   }
 
@@ -141,14 +188,31 @@ export class OrdersService {
     return rows[0];
   }
 
-  async getAdminStats() {
+  async getAdminStats(workspaceId?: string) {
     const query = `
-      SELECT item->>'category' AS _id, SUM((item->>'price')::numeric) as "totalSales"
-      FROM orders, jsonb_array_elements(items) AS item
-      WHERE status = 'approved'
-      GROUP BY item->>'category'
-    `;
-    const { rows } = await pool.query(query);
+    SELECT
+      o."workspaceId",
+      item->>'category' AS category,
+      SUM(
+        (item->>'price')::numeric
+      ) AS "totalSales"
+    FROM orders o,
+    jsonb_array_elements(o.items) AS item
+    WHERE o.status = 'approved'
+    AND (
+      $1::uuid IS NULL
+      OR o."workspaceId" = $1
+    )
+    GROUP BY
+      o."workspaceId",
+      item->>'category'
+  `;
+
+    const { rows } = await pool.query(
+      query,
+      [workspaceId || null],
+    );
+
     return rows;
   }
 }

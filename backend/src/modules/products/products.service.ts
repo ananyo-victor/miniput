@@ -7,8 +7,6 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import {
   DISCOUNT_TYPES,
   DiscountType,
-  PRODUCT_BRANDS,
-  ProductBrand,
 } from './entities/product.entity';
 
 const normalizeImageUrls = (imageValue: any) => {
@@ -64,25 +62,6 @@ const normalizeDiscountValue = (discountValue: any): number | null => {
   }
 
   return roundPrice(parsedValue);
-};
-
-const normalizeBrand = (brandValue?: string): ProductBrand | null => {
-  if (typeof brandValue !== 'string' || !brandValue.trim()) {
-    return null;
-  }
-
-  const normalizedInput = brandValue.trim().toLowerCase();
-  const matchedBrand = PRODUCT_BRANDS.find(
-    (brand) => brand.toLowerCase() === normalizedInput,
-  );
-
-  if (!matchedBrand) {
-    throw new Error(
-      `Invalid brand. Allowed values: ${PRODUCT_BRANDS.join(', ')}`,
-    );
-  }
-
-  return matchedBrand;
 };
 
 const getSizeRange = (size: any): string | null => {
@@ -182,7 +161,7 @@ const mapProductRow = (product: any) => {
 export class ProductsService implements OnModuleInit {
   private readonly logger = new Logger(ProductsService.name);
 
-  constructor(private readonly uploadsService: UploadsService) {}
+  constructor(private readonly uploadsService: UploadsService) { }
 
   async onModuleInit() {
     await this.ensureDiscountColumnsExist();
@@ -287,8 +266,23 @@ export class ProductsService implements OnModuleInit {
     }
   }
 
-  async getAllProducts(includeHidden: boolean, brandInput?: string) {
+  private async validateWorkspaceExists(workspaceId: string) {
+    const { rows } = await pool.query(
+      `SELECT id FROM workspace WHERE id = $1`,
+      [workspaceId],
+    );
+
+    if (!rows.length) {
+      throw new Error('Invalid workspaceId');
+    }
+  }
+
+  async getAllProducts(
+    includeHidden: boolean,
+    workspaceId?: string,
+  ) {
     let query = 'SELECT * FROM products';
+
     const conditions: string[] = [];
     const values: any[] = [];
 
@@ -297,10 +291,9 @@ export class ProductsService implements OnModuleInit {
       conditions.push(`"isHidden" = $${values.length}`);
     }
 
-    const normalizedBrand = normalizeBrand(brandInput);
-    if (normalizedBrand) {
-      values.push(normalizedBrand);
-      conditions.push(`brand = $${values.length}`);
+    if (workspaceId) {
+      values.push(workspaceId);
+      conditions.push(`"workspaceId" = $${values.length}`);
     }
 
     if (conditions.length) {
@@ -314,6 +307,7 @@ export class ProductsService implements OnModuleInit {
 
   async createProduct(productData: CreateProductDto) {
     const {
+      workspaceId,
       articleId,
       name,
       category,
@@ -323,17 +317,18 @@ export class ProductsService implements OnModuleInit {
       stock,
       imageUrl,
       imageUrls,
-      brand,
       description,
       isHidden,
       size,
     } = productData;
+
 
     const normalizedImageUrls = normalizeImageUrls(imageUrls ?? imageUrl);
     const normalizedSize = normalizeSize(size);
     const piecesPerPack = normalizedSize.length;
     const normalizedDiscountType = normalizeDiscountType(discountType);
     const normalizedDiscountValue = normalizeDiscountValue(discountValue);
+    await this.validateWorkspaceExists(workspaceId);
 
     validateDiscountConfig({
       price: roundPrice(Number(price) || 0),
@@ -344,32 +339,32 @@ export class ProductsService implements OnModuleInit {
     const productId = uuidv4();
 
     const query = `
-      INSERT INTO products (
-        id,
-        "articleId",
-        name,
-        category,
-        price,
-        "discountType",
-        "discountValue",
-        stock,
-        "imageUrl",
-        brand,
-        description,
-        "isHidden",
-        "size",
-        "piecesPerPack"
-      )
-      VALUES (
-        $1, $2, $3, $4, $5, $6,
-        $7, $8, $9, $10,
-        $11, $12, $13::integer[], $14
-      )
-      RETURNING *
-    `;
+INSERT INTO products (
+  id,
+  "workspaceId",
+  "articleId",
+  name,
+  category,
+  price,
+  "discountType",
+  "discountValue",
+  stock,
+  "imageUrl",
+  description,
+  "isHidden",
+  "size",
+  "piecesPerPack"
+)
+VALUES (
+  $1,$2,$3,$4,$5,$6,
+  $7,$8,$9,$10,$11,
+  $12,$13::integer[],$14
+)
+RETURNING *    `;
 
     const values = [
       productId,
+      workspaceId,
       articleId?.trim() || null,
       name,
       category,
@@ -378,7 +373,6 @@ export class ProductsService implements OnModuleInit {
       normalizedDiscountValue,
       stock,
       normalizedImageUrls,
-      brand,
       description || '',
       !!isHidden,
       normalizedSize,
@@ -422,7 +416,7 @@ export class ProductsService implements OnModuleInit {
       imageUrls: normalizeImageUrls(
         productData.imageUrls ?? productData.imageUrl ?? current.imageUrl,
       ),
-      brand: productData.brand ?? current.brand,
+      workspaceId: productData.workspaceId ?? current.workspaceId,
       description: productData.description ?? current.description,
       isHidden:
         productData.isHidden === undefined
@@ -430,7 +424,7 @@ export class ProductsService implements OnModuleInit {
           : !!productData.isHidden,
       size: normalizeSize(productData.size ?? current.size),
     };
-
+    await this.validateWorkspaceExists(merged.workspaceId);
     if (!merged.discountType) {
       merged.discountValue = null;
     }
@@ -446,15 +440,15 @@ export class ProductsService implements OnModuleInit {
     const query = `
       UPDATE products
       SET
-        name = $1,
-        "articleId" = $2,
-        category = $3,
-        price = $4,
-        "discountType" = $5,
-        "discountValue" = $6,
-        stock = $7,
-        "imageUrl" = $8,
-        brand = $9,
+        "workspaceId" = $1,
+        name = $2,
+        "articleId" = $3,
+        category = $4,
+        price = $5,
+        "discountType" = $6,
+        "discountValue" = $7,
+        stock = $8,
+        "imageUrl" = $9,
         description = $10,
         "isHidden" = $11,
         "size" = $12::integer[],
@@ -472,7 +466,7 @@ export class ProductsService implements OnModuleInit {
       merged.discountValue,
       merged.stock,
       merged.imageUrls,
-      merged.brand,
+      merged.workspaceId,
       merged.description,
       merged.isHidden,
       merged.size,

@@ -3,21 +3,23 @@ import {
   ArrayMinSize,
   IsArray,
   IsBoolean,
-  IsIn,
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
   Min,
   ValidateIf,
 } from 'class-validator';
+
 import {
   DISCOUNT_TYPES,
   DiscountType,
-  PRODUCT_BRANDS,
-  ProductBrand,
 } from '../entities/product.entity';
 
 export class CreateProductDto {
+  @IsUUID()
+  workspaceId: string;
+
   @IsOptional()
   @IsString()
   articleId?: string;
@@ -34,7 +36,6 @@ export class CreateProductDto {
   price: number;
 
   @IsOptional()
-  @IsIn(DISCOUNT_TYPES)
   discountType?: DiscountType | null;
 
   @IsOptional()
@@ -61,9 +62,6 @@ export class CreateProductDto {
   @IsString({ each: true })
   imageUrls?: string[];
 
-  @IsIn(PRODUCT_BRANDS)
-  brand: ProductBrand;
-
   @IsOptional()
   @IsString()
   description?: string;
@@ -71,8 +69,6 @@ export class CreateProductDto {
   @IsOptional()
   @IsBoolean()
   isHidden?: boolean;
-
-  // WHOLESALE PACK INFO
 
   @Type(() => Number)
   @IsArray()

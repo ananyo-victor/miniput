@@ -8,37 +8,49 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
+
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { ContentService } from './content.service';
+
 import { UpsertAboutContentDto } from './dto/upsert-about-content.dto';
 import { UpsertHomeContentDto } from './dto/upsert-home-content.dto';
 
 @Controller('content')
 export class ContentController {
-  constructor(private readonly contentService: ContentService) {}
+  constructor(
+    private readonly contentService: ContentService,
+  ) { }
 
-  @Get('home/:brand')
-  async getHomeContentByBrand(@Param('brand') brand: string) {
+  @Get('home/workspace/:workspaceId')
+  async getHomeContent(
+    @Param('workspaceId') workspaceId: string,
+  ) {
     try {
-      return await this.contentService.getHomeContentByBrand(brand);
+      return await this.contentService.getHomeContent(
+        workspaceId,
+      );
     } catch (error) {
-      if (error.message.includes('Invalid brand')) {
-        throw new BadRequestException({ error: error.message });
-      }
-      throw new InternalServerErrorException({ error: error.message });
+      throw new BadRequestException({
+        error: error.message,
+      });
     }
   }
 
-  @Put('home/:brand')
+  @Put('home/workspace/:workspaceId')
   @UseGuards(AuthGuard)
-  async upsertHomeContentByBrand(@Param('brand') brand: string, @Body() body: UpsertHomeContentDto) {
+  async upsertHomeContent(
+    @Param('workspaceId') workspaceId: string,
+    @Body() body: UpsertHomeContentDto,
+  ) {
     try {
-      return await this.contentService.upsertHomeContentByBrand(brand, body || {});
+      return await this.contentService.upsertHomeContent(
+        workspaceId,
+        body || {},
+      );
     } catch (error) {
-      if (error.message.includes('Invalid brand') || error.message.includes('cannot exceed 4')) {
-        throw new BadRequestException({ error: error.message });
-      }
-      throw new InternalServerErrorException({ error: error.message });
+      throw new BadRequestException({
+        error: error.message,
+      });
     }
   }
 
@@ -47,17 +59,25 @@ export class ContentController {
     try {
       return await this.contentService.getAboutContent();
     } catch (error) {
-      throw new InternalServerErrorException({ error: error.message });
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
     }
   }
 
   @Put('about')
   @UseGuards(AuthGuard)
-  async upsertAboutContent(@Body() body: UpsertAboutContentDto) {
+  async upsertAboutContent(
+    @Body() body: UpsertAboutContentDto,
+  ) {
     try {
-      return await this.contentService.upsertAboutContent(body || {});
+      return await this.contentService.upsertAboutContent(
+        body || {},
+      );
     } catch (error) {
-      throw new InternalServerErrorException({ error: error.message });
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
     }
   }
 }

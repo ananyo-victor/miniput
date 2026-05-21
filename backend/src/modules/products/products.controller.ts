@@ -13,28 +13,32 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { ProductsService } from './products.service';
+
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { UpdateProductVisibilityDto } from './dto/update-product-visibility.dto';
 
 @Controller('products')
 export class ProductsController {
-  constructor(private readonly productsService: ProductsService) {}
+  constructor(private readonly productsService: ProductsService) { }
 
   @Get()
   async getProducts(
     @Query('includeHidden') includeHidden?: string,
-    @Query('brand') brand?: string,
+    @Query('workspaceId') workspaceId?: string,
   ) {
     try {
       return await this.productsService.getAllProducts(
         includeHidden === 'true',
-        brand,
+        workspaceId,
       );
     } catch (error) {
-      throw new InternalServerErrorException({ error: error.message });
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
     }
   }
 
@@ -44,29 +48,48 @@ export class ProductsController {
     try {
       return await this.productsService.createProduct(body);
     } catch (error) {
-      throw new InternalServerErrorException({ error: error.message });
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
     }
   }
 
   @Put(':id')
   @UseGuards(AuthGuard)
-  async updateProduct(@Param('id') id: string, @Body() body: UpdateProductDto) {
+  async updateProduct(
+    @Param('id') id: string,
+    @Body() body: UpdateProductDto,
+  ) {
     try {
       return await this.productsService.updateProduct(id, body);
     } catch (error) {
-      throw new InternalServerErrorException({ error: error.message });
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
     }
   }
 
   @Patch(':id/visibility')
   @UseGuards(AuthGuard)
-  async updateVisibility(@Param('id') id: string, @Body() body: UpdateProductVisibilityDto) {
+  async updateVisibility(
+    @Param('id') id: string,
+    @Body() body: UpdateProductVisibilityDto,
+  ) {
     try {
-      const { isHidden } = body;
-      const updatedProduct = await this.productsService.updateVisibility(id, isHidden);
-      return { success: true, product: updatedProduct };
+      const updatedProduct =
+        await this.productsService.updateVisibility(
+          id,
+          body.isHidden,
+        );
+
+      return {
+        success: true,
+        product: updatedProduct,
+      };
     } catch (error) {
-      throw new InternalServerErrorException({ error: error.message });
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
     }
   }
 
@@ -76,9 +99,15 @@ export class ProductsController {
   async deleteProduct(@Param('id') id: string) {
     try {
       await this.productsService.deleteProduct(id);
-      return { success: true, message: 'Product deleted successfully' };
+
+      return {
+        success: true,
+        message: 'Product deleted successfully',
+      };
     } catch (error) {
-      throw new InternalServerErrorException({ error: error.message });
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
     }
   }
 }
