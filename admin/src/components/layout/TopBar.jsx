@@ -26,6 +26,13 @@ const TopBar = () => {
 
   const isKwink = location.pathname.includes("kwink") || activeBrand === "Kwink";
 
+  // Determine if the current route is the homepage
+  const isHomePage = 
+    location.pathname === "/home" || 
+    location.pathname.startsWith("/home/") ||
+    location.pathname === "/miniput" ||
+    location.pathname === "/kwink";
+
   const handleBrandSwitch = (brand) => {
     dispatch(setActiveBrand(brand));
     dispatch(setActiveCategory("all"));
@@ -49,14 +56,12 @@ const TopBar = () => {
   }, []);
 
   return (
-    // UPDATED: Changed background to white, text to navy, added bottom border
     <header className="bg-white text-[#0E2A4A] border-b border-gray-200 flex flex-col lg:flex-row items-center justify-between px-4 py-3 lg:py-0 lg:h-[72px] sticky top-0 z-[60] w-full gap-3 lg:gap-6">
       
       <div className="flex items-center justify-between w-full lg:w-auto lg:contents">
         
         {/* Left: Branding with Dropdown */}
         <div className="flex items-center shrink-0 lg:w-[200px] relative" ref={dropdownRef}>
-          {/* UPDATED: Removed white background box, integrated seamlessly */}
           <div 
             className="px-2 py-1.5 rounded-xl flex items-center justify-between h-[40px] lg:h-[48px] cursor-pointer w-[140px] lg:w-full transition-colors hover:bg-gray-50" 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -100,14 +105,12 @@ const TopBar = () => {
         {/* Right: User Info & Logout */}
         <div className="flex items-center gap-2 lg:gap-5 shrink-0 lg:order-3">
           <div className="flex flex-col items-end lg:items-start leading-tight cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
-            {/* UPDATED: Text colors to match the light theme */}
             <span className="text-[10px] lg:text-[11px] text-gray-500 font-semibold">Hello, {auth?.userId || 'Admin'}</span>
             <span className="text-[11px] lg:text-[13px] font-black text-[#0E2A4A] flex items-center gap-1">
               <User size={12} className="lg:hidden"/> Account
             </span>
           </div>
           
-          {/* UPDATED: Logout button to match light theme */}
           <button 
             onClick={handleLogout}
             className="flex items-center gap-1.5 hover:bg-red-50 hover:text-red-600 text-gray-500 p-2 lg:px-3 lg:py-2 rounded-xl transition-colors"
@@ -119,26 +122,24 @@ const TopBar = () => {
         </div>
       </div>
 
-      {/* Middle: Search Bar */}
-      <div className="flex-1 w-full lg:max-w-3xl order-last lg:order-2">
-        {/* UPDATED: Search bar with subtle border, matching corners, and a Navy button for better symmetry */}
-        <div className="flex w-full rounded-xl border border-gray-200 overflow-hidden focus-within:border-[#0E2A4A] focus-within:ring-1 focus-within:ring-[#0E2A4A] transition-all bg-gray-50 h-[40px] lg:h-[44px]">
-          <select className="bg-transparent text-gray-600 text-xs lg:text-sm font-semibold px-2 lg:px-3 outline-none border-r border-gray-200 hidden md:block cursor-pointer hover:bg-gray-100">
-            <option>All Categories</option>
-            <option>Shirts</option>
-            <option>Pants</option>
-            <option>Sets</option>
-          </select>
-          <input 
-            type="text" 
-            placeholder="Search products..." 
-            className="flex-1 bg-transparent px-3 lg:px-4 py-2 text-gray-800 text-sm lg:text-base outline-none w-full placeholder:text-gray-400"
-          />
-          {/* <button className="bg-[#0E2A4A] hover:bg-[#1a3d6e] px-4 lg:px-6 flex items-center justify-center transition-colors text-white">
-            <Search size={18} strokeWidth={2.5} />
-          </button> */}
+      {/* Middle: Search Bar (Only visible on Homepage) */}
+      {isHomePage && (
+        <div className="flex-1 w-full lg:max-w-3xl order-last lg:order-2">
+          <div className="flex w-full rounded-xl border border-gray-200 overflow-hidden focus-within:border-[#0E2A4A] focus-within:ring-1 focus-within:ring-[#0E2A4A] transition-all bg-gray-50 h-[40px] lg:h-[44px]">
+            <select className="bg-transparent text-gray-600 text-xs lg:text-sm font-semibold px-2 lg:px-3 outline-none border-r border-gray-200 hidden md:block cursor-pointer hover:bg-gray-100">
+              <option>All Categories</option>
+              <option>Shirts</option>
+              <option>Pants</option>
+              <option>Sets</option>
+            </select>
+            <input 
+              type="text" 
+              placeholder="Search products..." 
+              className="flex-1 bg-transparent px-3 lg:px-4 py-2 text-gray-800 text-sm lg:text-base outline-none w-full placeholder:text-gray-400"
+            />
+          </div>
         </div>
-      </div>
+      )}
 
     </header>
   );
