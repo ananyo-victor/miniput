@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
 
-const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
+// Notice we are now destructuring onPrev and onNext from the props
+const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNow }) => {
   const currentProduct = useMemo(
     () =>
       product || {
@@ -15,8 +16,11 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
       },
     [product]
   );
+  
   const [quantity, setQuantity] = useState(1);
-  const [selectedSizes, setSelectedSizes] = useState([currentProduct.sizes?.[0] || "26"]);
+  const [selectedSizes, setSelectedSizes] = useState([
+    currentProduct.size?.[0] || currentProduct.sizes?.[0] || "26"
+  ]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -29,9 +33,9 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
 
   useEffect(() => {
     setQuantity(1);
-    setSelectedSizes([currentProduct.sizes?.[0] || "26"]);
+    setSelectedSizes([currentProduct.size?.[0] || currentProduct.sizes?.[0] || "26"]);
     setCurrentImageIndex(0);
-  }, [currentProduct.id, currentProduct.sizes]);
+  }, [currentProduct.id, currentProduct.sizes, currentProduct.size]);
 
   const onPrevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
@@ -65,22 +69,24 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
   };
 
   const getStockStatus = (stock) => {
-    if (stock > 50) return { label: "IN STOCK", color: "text-green-700" };
-    if (stock > 20) return { label: "LIMITED STOCK", color: "text-yellow-600" };
-    return { label: "LOW STOCK", color: "text-red-600" };
+    if (stock > 50) return { label: "IN STOCK", color: "text-[#2d7d46] bg-[#e6f4ea] border-[#2d7d46]/20" };
+    if (stock > 20) return { label: "LIMITED STOCK", color: "text-[#d49000] bg-[#fff8e1] border-[#d49000]/20" };
+    return { label: "LOW STOCK", color: "text-[#D63031] bg-[#fde8e8] border-[#D63031]/20" };
   };
 
   const stockInfo = getStockStatus(currentProduct.stock || 0);
+  const availableSizes = currentProduct.size || currentProduct.sizes || [];
 
   return (
-    <div className="min-h-screen bg-white font-['Nunito',sans-serif] md:p-6 lg:p-10 flex justify-center">
-      <div className="flex flex-col md:flex-row w-full max-w-[1200px] bg-white md:rounded-3xl md:shadow-sm md:overflow-hidden md:border md:border-gray-100">
+    <div className="absolute inset-0 overflow-hidden bg-[#f5f5f5] font-['Nunito',sans-serif] md:p-6 lg:p-8 flex items-center justify-center">
+      
+      <div className="flex flex-col md:flex-row w-full max-w-[1000px] h-full max-h-[600px] bg-white md:rounded-2xl md:shadow-md md:border md:border-gray-200 overflow-hidden">
 
-        {/* Image Section - Adjusts for Desktop/Tablet */}
-        <div className="relative h-[clamp(320px,50vw,480px)] md:h-auto md:min-h-[500px] lg:min-h-[650px] bg-[#e8e8e8] shrink-0 overflow-hidden md:w-1/2 flex items-center justify-center">
+        {/* Image Section */}
+        <div className="relative h-[45%] md:h-full w-full md:w-1/2 shrink-0 bg-[#f0f0f0] group">
           <button
             onClick={onBack}
-            className="absolute top-4 left-4 md:top-6 md:left-6 w-10 h-10 bg-white/70 hover:bg-white rounded-full flex items-center justify-center text-lg cursor-pointer z-20 shadow-sm border-none transition-colors"
+            className="absolute top-4 left-4 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-sm transition-colors z-20 text-[#0E2A4A]"
             aria-label="Go back"
           >
             <ArrowLeft size={20} />
@@ -90,135 +96,153 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
             src={productImages[currentImageIndex]}
             alt={currentProduct.name}
             onClick={() => setShowPreview(true)}
-            className="w-full h-full object-contain cursor-zoom-in"
+            className="w-full h-full object-cover cursor-zoom-in"
           />
 
-          {/* Commented out navigation, preserved from original */}
-          {productImages.length > 1 && <button
-            onClick={onPrevImage}
-            className="absolute top-1/2 -translate-y-1/2 left-2.5 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
-            aria-label="Previous image"
-          >
-            <ChevronLeft size={22} />
-          </button>}
-
-          {productImages.length > 1 && <button
-            onClick={onNextImage}
-            className="absolute top-1/2 -translate-y-1/2 right-2.5 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
-            aria-label="Next image"
-          >
-            <ChevronRight size={22} />
-          </button>}
+          {productImages.length > 1 && (
+            <>
+              <button
+                onClick={onPrevImage}
+                className="absolute top-1/2 -translate-y-1/2 left-4 w-9 h-9 bg-white/70 hover:bg-white rounded-full flex items-center justify-center shadow-sm transition-colors md:opacity-0 group-hover:opacity-100 text-[#0E2A4A]"
+              >
+                <ChevronLeft size={20} />
+              </button>
+              <button
+                onClick={onNextImage}
+                className="absolute top-1/2 -translate-y-1/2 right-4 w-9 h-9 bg-white/70 hover:bg-white rounded-full flex items-center justify-center shadow-sm transition-colors md:opacity-0 group-hover:opacity-100 text-[#0E2A4A]"
+              >
+                <ChevronRight size={20} />
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Details Section - Stacks on mobile, side-by-side on desktop */}
-        <div className="bg-[#f5f5f5]/50 md:bg-white rounded-t-3xl -mt-6 md:mt-0 md:rounded-none flex-1 p-6 md:p-8 lg:p-12 z-10 relative flex flex-col justify-center w-full md:w-1/2">
+        {/* Details Section */}
+        <div className="flex-1 flex flex-col justify-center bg-white rounded-t-3xl -mt-6 md:mt-0 p-6 lg:p-10 relative z-10 w-full md:w-1/2 mk-scroll-hidden overflow-y-auto">
+          <div className="max-w-md mx-auto w-full flex flex-col h-full">
+            
+            {/* Enterprise Grade Product Navigation (Prev / Next) */}
+            <div className="flex justify-end items-center gap-3 mb-4 pb-2 border-b border-gray-100">
+              <button 
+                onClick={onPrev} 
+                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#888] hover:text-[#0E2A4A] transition-colors"
+              >
+                <ChevronLeft size={14} strokeWidth={3} /> Prev
+              </button>
+              <div className="w-px h-3 bg-gray-300"></div>
+              <button 
+                onClick={onNext} 
+                className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#888] hover:text-[#0E2A4A] transition-colors"
+              >
+                Next <ChevronRight size={14} strokeWidth={3} />
+              </button>
+            </div>
 
-          <div className="max-w-lg">
-            <h1 className="text-2xl lg:text-3xl font-black text-gray-900 mb-2 uppercase tracking-wide">
+            <h1 className="text-2xl lg:text-3xl font-black text-[#1a1a1a] mb-2 uppercase tracking-wide leading-tight mt-2">
               {currentProduct.name}
             </h1>
-            <p className="text-sm md:text-base text-gray-500 mb-6 leading-relaxed">
+            <p className="text-sm text-[#666] mb-6 leading-relaxed">
               {currentProduct.description || "Premium quality material designed for maximum comfort and durability."}
             </p>
 
-            <div className="text-sm font-bold text-gray-600 mb-3 uppercase tracking-wider">Available Sizes</div>
+            <div className="text-[11px] font-bold text-[#888] mb-3 uppercase tracking-widest">Available Sizes</div>
             <div className="flex gap-2 mb-8 flex-wrap">
-              {(currentProduct.size || []).map((size) => (
+              {availableSizes.map((size) => (
                 <div
                   key={size}
-                  className="size-8 md:size-10 rounded-full flex items-center justify-center text-xs sm:text-base font-black bg-gray-950 text-white select-none"
+                  className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black bg-[#0E2A4A] text-white select-none shadow-sm"
                 >
                   {size}
                 </div>
               ))}
             </div>
 
-            <div className="flex items-end justify-between mb-4 border-t border-gray-200 pt-6">
+            <div className="flex items-end justify-between mb-4 border-t border-[#f0f0f0] pt-6 mt-auto">
               <div>
-                <div className="text-sm font-bold text-gray-600 mb-3 uppercase tracking-wider">Quantity</div>
-                <div className="flex items-center gap-4 bg-white md:bg-gray-50 rounded-full p-1 shadow-sm border border-gray-100">
+                <div className="text-[11px] font-bold text-[#888] mb-3 uppercase tracking-widest">Quantity</div>
+                <div className="flex items-center gap-3 bg-gray-50 rounded-full p-1 shadow-inner border border-gray-100">
                   <button
                     onClick={() => handleQtyChange(-1)}
-                    className="size-9 md:size-10 bg-gray-900 hover:bg-gray-700 text-white rounded-full flex items-center justify-center transition-colors"
-                    aria-label="Decrease quantity"
+                    className="w-9 h-9 bg-white hover:bg-gray-100 text-[#0E2A4A] rounded-full flex items-center justify-center transition-colors shadow-sm border border-gray-200"
                   >
-                    <Minus size={18} />
+                    <Minus size={16} strokeWidth={2.5} />
                   </button>
                   <input
                     type="text"
                     value={quantity}
                     onChange={handleQuantityInput}
-                    className="w-12 text-center text-xl font-black bg-transparent border-none focus:outline-none md:text-2xl"
+                    className="w-10 text-center text-lg font-black bg-transparent border-none focus:outline-none text-[#1a1a1a]"
                   />
                   <button
                     onClick={() => handleQtyChange(1)}
-                    className="size-9 md:size-10 bg-gray-900 hover:bg-gray-700 text-white rounded-full flex items-center justify-center transition-colors"
-                    aria-label="Increase quantity"
+                    className="w-9 h-9 bg-white hover:bg-gray-100 text-[#0E2A4A] rounded-full flex items-center justify-center transition-colors shadow-sm border border-gray-200"
                   >
-                    <Plus size={18} />
+                    <Plus size={16} strokeWidth={2.5} />
                   </button>
                 </div>
               </div>
+
               {currentProduct.isDiscountActive ? (
                 <div className="text-right">
                   <div className="flex items-center justify-end gap-2 mb-1">
-                    <span className="text-base md:text-lg line-through text-gray-400 font-bold">
+                    <span className="text-sm line-through text-gray-400 font-bold">
                       Rs.{currentProduct.originalPrice ?? currentProduct.price}
                     </span>
-                    <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                    <span className="text-[10px] bg-red-50 text-[#D63031] px-2 py-0.5 rounded font-black uppercase tracking-wider border border-red-100">
                       {currentProduct.discountLabel}
                     </span>
                   </div>
-                  <div className="text-[28px] lg:text-4xl font-black text-red-600">
+                  <div className="text-3xl lg:text-4xl font-black text-[#D63031]">
                     Rs.{currentProduct.finalPrice}
                   </div>
                 </div>
               ) : (
-                <div className="text-[28px] lg:text-4xl font-black text-gray-900">
+                <div className="text-3xl lg:text-4xl font-black text-[#1a1a1a]">
                   Rs.{currentProduct.price}
                 </div>
               )}
             </div>
 
-            <div className={`text-xs font-bold mb-8 uppercase tracking-wider ${stockInfo.color}`}>
-              {stockInfo.label} ({currentProduct.stock || 0} ITEMS)
+            <div className={`mt-6 inline-flex items-center px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider ${stockInfo.color}`}>
+              {stockInfo.label} • {currentProduct.stock || 0} ITEMS
             </div>
-
-
           </div>
         </div>
       </div>
 
       {/* Full Screen Image Preview Modal */}
       {showPreview && (
-        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center backdrop-blur-sm">
+        <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center backdrop-blur-sm">
           <button
             onClick={() => setShowPreview(false)}
-            className="absolute top-6 right-6 text-white/70 hover:text-white text-3xl z-50 transition-colors"
+            className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors z-50"
           >
-            ✕
+            <X size={20} />
           </button>
 
-          {productImages.length > 1 && <button
-            onClick={onPrevImage}
-            className="absolute left-4 md:left-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors"
-          >
-            <ChevronLeft size={32} />
-          </button>}
+          {productImages.length > 1 && (
+            <button
+              onClick={onPrevImage}
+              className="absolute left-4 md:left-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors z-50"
+            >
+              <ChevronLeft size={24} />
+            </button>
+          )}
 
           <img
             src={productImages[currentImageIndex]}
             alt={currentProduct.name}
-            className="max-w-[90%] max-h-[90vh] object-contain"
+            className="w-auto h-auto max-w-[90%] max-h-[90vh] object-contain"
           />
 
-          {productImages.length > 1 && <button
-            onClick={onNextImage}
-            className="absolute right-4 md:right-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors"
-          >
-            <ChevronRight size={32} />
-          </button>}
+          {productImages.length > 1 && (
+            <button
+              onClick={onNextImage}
+              className="absolute right-4 md:right-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors z-50"
+            >
+              <ChevronRight size={24} />
+            </button>
+          )}
         </div>
       )}
     </div>
