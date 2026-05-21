@@ -5,8 +5,10 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import ProductCard from "../components/products/ProductCard";
 import { fetchProducts } from "../store/productsSlice";
 import { setActiveBrand, setActiveCategory } from "../store/homeSlice";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const ITEMS_PER_PAGE = 24; // Displays 24 items per page
 
 const normalizeText = (value) =>
   String(value || "")
@@ -88,7 +90,6 @@ const HomePage = () => {
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
   const { activeBrand, activeCategory } = useSelector((state) => state.home);
-  console.log("HomePage Render - activeBrand:", activeBrand, "activeCategory:", activeCategory, "products count:", products.length);
 
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
     Miniput: "all",
@@ -103,9 +104,12 @@ const HomePage = () => {
     Kwink: { ...emptyBrandContent }
   });
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     dispatch(fetchProducts({ includeHidden: false, brand: activeBrand }));
-  }, [activeBrand]);
+  }, [activeBrand, dispatch]);
 
   useEffect(() => {
     const loadHomeContent = async () => {
@@ -200,10 +204,6 @@ const HomePage = () => {
     });
   };
 
-  const goToHeroIndex = (index) => {
-    setHeroIndexByBrand((prev) => ({ ...prev, [activeBrand]: index }));
-  };
-
   useEffect(() => {
     if (!heroImages.length || heroImages.length < 2) return;
     const interval = setInterval(() => {
@@ -218,6 +218,11 @@ const HomePage = () => {
   }, [activeBrand, heroImages]);
 
   const activePromoTag = activePromoTagByBrand[activeBrand] || "all";
+
+  // Reset pagination to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeBrand, activeCategory, activePromoTag]);
 
   const filteredProducts = useMemo(() => {
     const normalizedActiveCategory = normalizeCategory(activeCategory);
@@ -236,7 +241,20 @@ const HomePage = () => {
 
       return categoryMatch && promoMatch;
     });
-  }, [products, activeBrand, activeCategory, activePromoTag]);
+  }, [products, activeCategory, activePromoTag]);
+
+  // Calculate Pagination Variables
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  }, [filteredProducts, currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    // Smooth scroll to top of product grid
+    window.scrollTo({ top: 300, behavior: "smooth" });
+  };
 
   const activeHeroImage = heroImages.length
     ? heroImages[Math.min(heroIndexByBrand[activeBrand] || 0, heroImages.length - 1)]
@@ -244,7 +262,7 @@ const HomePage = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5]">
-      {/* 1. HERO SECTION - Reduced height & added gradient fade */}
+      {/* 1. HERO SECTION */}
       <section className="relative overflow-hidden bg-white">
         {activeHeroImage ? (
           <div className="relative mx-auto h-[200px] w-full max-w-[1440px] sm:h-[240px] lg:h-[300px]">
@@ -253,22 +271,15 @@ const HomePage = () => {
               alt={`${activeBrand} hero`}
               className="h-full w-full object-cover object-top transition-opacity duration-1000"
             />
-
-            {/* Amazon-style fade to blend image smoothly into the gray background */}
             <div className="absolute inset-x-0 bottom-0 h-24 lg:h-36 bg-gradient-to-t from-[#f5f5f5] to-transparent pointer-events-none"></div>
 
             {heroImages.length > 1 && (
               <>
-                <button type="button" onClick={goToPrevHero} className="absolute left-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:left-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#0E2A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+                <button type="button" onClick={goToPrevHero} className="absolute left-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:left-6 text-[#0E2A4A]">
+                  <ChevronLeft size={20} />
                 </button>
-
-                <button type="button" onClick={goToNextHero} className="absolute right-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:right-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#0E2A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                <button type="button" onClick={goToNextHero} className="absolute right-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:right-6 text-[#0E2A4A]">
+                  <ChevronRight size={20} />
                 </button>
               </>
             )}
@@ -285,7 +296,7 @@ const HomePage = () => {
         )}
       </section>
 
-      {/* 2. OVERLAPPING CONTENT - Pulled up with negative margin */}
+      {/* 2. OVERLAPPING CONTENT */}
       <div className="relative z-20 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 -mt-12 lg:-mt-24">
 
         {/* Filter Panel */}
@@ -316,7 +327,7 @@ const HomePage = () => {
         </div>
 
         {/* Product Grid */}
-        <main className="pb-10">
+        <main className="pb-16">
           {loading ? (
             <div className="text-center text-gray-400 py-20 font-semibold bg-white rounded-xl shadow-sm">Loading products...</div>
           ) : error ? (
@@ -324,15 +335,43 @@ const HomePage = () => {
           ) : filteredProducts.length === 0 ? (
             <div className="text-center text-gray-400 py-20 font-semibold bg-white rounded-xl shadow-sm">No products found</div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-              {filteredProducts.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
-                />
-              ))}
-            </div>
+            <>
+              {/* Paginated Grid */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 mb-10">
+                {paginatedProducts.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
+                  />
+                ))}
+              </div>
+
+              {/* Enterprise Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-4 bg-white px-6 py-4 rounded-full w-max mx-auto shadow-sm border border-gray-100">
+                  <button
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="flex items-center gap-1 text-[11px] font-black uppercase tracking-widest text-[#0E2A4A] hover:bg-gray-50 p-2 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                  >
+                    <ChevronLeft size={16} strokeWidth={3} /> Prev
+                  </button>
+
+                  <div className="text-sm font-black text-gray-400 tracking-wide">
+                    <span className="text-[#0E2A4A]">{currentPage}</span> / {totalPages}
+                  </div>
+
+                  <button
+                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="flex items-center gap-1 text-[11px] font-black uppercase tracking-widest text-[#0E2A4A] hover:bg-gray-50 p-2 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
+                  >
+                    Next <ChevronRight size={16} strokeWidth={3} />
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </main>
       </div>
