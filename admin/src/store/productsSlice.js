@@ -5,37 +5,53 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const normalizeFetchOptions = (value = false) => {
   if (typeof value === "boolean") {
-    return { includeHidden: value, brand: "" };
+    return {
+      includeHidden: value,
+      workspaceId: "",
+    };
   }
 
   if (value && typeof value === "object") {
     return {
-      includeHidden: Boolean(value.includeHidden),
-      brand: typeof value.brand === "string" ? value.brand.trim() : ""
+      includeHidden:
+        Boolean(value.includeHidden),
+
+      workspaceId:
+        typeof value.workspaceId ===
+          "string"
+          ? value.workspaceId
+          : "",
     };
   }
 
-  return { includeHidden: false, brand: "" };
+  return {
+    includeHidden: false,
+    workspaceId: "",
+  };
 };
 
-export const fetchProducts = createAsyncThunk("products/fetch", async (options = false) => {
-  const { includeHidden, brand } = normalizeFetchOptions(options);
-  const query = new URLSearchParams();
+export const fetchProducts = createAsyncThunk(
+  "products/fetch",
+  async (options = false) => {
+    const { includeHidden, workspaceId } = normalizeFetchOptions(options);
 
-  if (includeHidden) {
-    query.set("includeHidden", "true");
-  }
+    const query = new URLSearchParams();
 
-  if (brand) {
-    query.set("brand", brand);
-  }
+    if (includeHidden) {
+      query.set("includeHidden", "true");
+    }
 
-  const queryString = query.toString();
-  const { data } = await axios.get(
-    `${API_BASE_URL}/api/products${queryString ? `?${queryString}` : ""}`
-  );
-  return data;
-});
+    if (workspaceId) {
+      query.set("workspaceId", workspaceId);
+    }
+
+    const queryString = query.toString();
+
+    const { data } = await axios.get(`${API_BASE_URL}/api/products${queryString ? `?${queryString}` : ""}`);
+
+    return data;
+  },
+);
 
 const productsSlice = createSlice({
   name: "products",

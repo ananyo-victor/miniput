@@ -11,7 +11,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading } = useSelector((state) => state.products);
-  const { activeBrand } = useSelector((state) => state.home);
+  const { activeWorkspaceId } = useSelector((state) => state.workspace);
 
   const selectedProduct = useMemo(
     () => location.state?.product || products.find((item) => item.id === productId),
@@ -34,11 +34,11 @@ const ProductDetailPage = () => {
       dispatch(
         fetchProducts({
           includeHidden: false,
-          brand: selectedProduct?.brand || activeBrand
+          workspaceId: selectedProduct?.workspaceId || activeWorkspaceId
         })
       );
     }
-  }, [dispatch, products.length, selectedProduct?.brand, activeBrand]);
+  }, [dispatch, products.length, selectedProduct?.workspaceId, activeWorkspaceId]);
 
   useEffect(() => {
     if (!loading && !selectedProduct) {

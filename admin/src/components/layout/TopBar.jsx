@@ -1,20 +1,19 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { Search, LogOut, User, ChevronDown } from "lucide-react";
+import { LogOut, User, ChevronDown } from "lucide-react";
 import { clearAdminToken, getAdminAuthFromStorage } from "../../utils/adminToken";
 import { setAdminField } from "../../store/adminSlice";
-import { setActiveBrand, setActiveCategory } from "../../store/homeSlice";
-import MiniputLogo from "../../assests/MINIPUT_LOGO.png";
-import KwinkLogo from "../../assests/kwink_LOGO.png";
+import { setActiveCategory } from "../../store/homeSlice";
+import { setActiveWorkspace } from "../../store/workspaceSlice";
 
 const TopBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { activeBrand } = useSelector((state) => state.home);
   const auth = getAdminAuthFromStorage();
-  
+  const { items: workspaces, activeWorkspace } = useSelector((state) => state.workspace);
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -24,25 +23,16 @@ const TopBar = () => {
     navigate("/");
   };
 
-  const isKwink = location.pathname.includes("kwink") || activeBrand === "Kwink";
+  const isHomePage = location.pathname === "/home" || location.pathname.startsWith("/home/") || location.pathname === "/miniput" || location.pathname === "/kwink";
 
-  // Determine if the current route is the homepage
-  const isHomePage = 
-    location.pathname === "/home" || 
-    location.pathname.startsWith("/home/") ||
-    location.pathname === "/miniput" ||
-    location.pathname === "/kwink";
-
-  const handleBrandSwitch = (brand) => {
-    dispatch(setActiveBrand(brand));
+  const handleWorkspaceSwitch = (workspace) => {
+    dispatch(setActiveWorkspace(workspace));
     dispatch(setActiveCategory("all"));
     setIsDropdownOpen(false);
 
-    if (location.pathname === "/inventory") {
-      return;
+    if (location.pathname !== "/inventory") {
+      navigate(`/home/${workspace.slug}`);
     }
-
-    navigate(`/home/${brand.toLowerCase()}`);
   };
 
   useEffect(() => {
@@ -57,61 +47,47 @@ const TopBar = () => {
 
   return (
     <header className="bg-white text-[#0E2A4A] border-b border-gray-200 flex flex-col lg:flex-row items-center justify-between px-4 py-3 lg:py-0 lg:h-[72px] sticky top-0 z-[60] w-full gap-3 lg:gap-6">
-      
       <div className="flex items-center justify-between w-full lg:w-auto lg:contents">
-        
-        {/* Left: Branding with Dropdown */}
-        <div className="flex items-center shrink-0 lg:w-[200px] relative" ref={dropdownRef}>
-          <div 
-            className="px-2 py-1.5 rounded-xl flex items-center justify-between h-[40px] lg:h-[48px] cursor-pointer w-[140px] lg:w-full transition-colors hover:bg-gray-50" 
+        <div className="flex items-center shrink-0 lg:w-[220px] relative" ref={dropdownRef}>
+          <button
+            type="button"
+            className="px-3 py-1.5 rounded-xl flex items-center justify-between h-[40px] lg:h-[48px] cursor-pointer w-[180px] lg:w-full transition-colors hover:bg-gray-50 border border-gray-200"
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
           >
-            <img 
-              src={isKwink ? KwinkLogo : MiniputLogo} 
-              alt={isKwink ? "Kwink" : "Miniput"} 
-              className="h-full w-auto object-contain max-w-[80%]"
-            />
-            <ChevronDown 
-              size={18} 
-              className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} 
-            />
-          </div>
+            <span className="font-black text-sm truncate">{activeWorkspace?.name || "Workspace"}</span>
+            <ChevronDown size={18} className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
+          </button>
 
-          {/* Dropdown Menu */}
           {isDropdownOpen && (
-            <div className="absolute top-full left-0 mt-2 w-full min-w-[150px] bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 z-50">
-              <button
-                onClick={() => handleBrandSwitch("Miniput")}
-                className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center justify-between transition-colors ${
-                  !isKwink ? "bg-[#f0f7f8] text-[#0E2A4A]" : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                Miniput Kids
-                {!isKwink && <div className="w-2 h-2 rounded-full bg-[#FFB800]"></div>}
-              </button>
-              <button
-                onClick={() => handleBrandSwitch("Kwink")}
-                className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center justify-between transition-colors ${
-                  isKwink ? "bg-[#f0f7f8] text-[#0E2A4A]" : "text-gray-600 hover:bg-gray-50"
-                }`}
-              >
-                Kwink
-                {isKwink && <div className="w-2 h-2 rounded-full bg-[#83a963]"></div>}
-              </button>
+            <div className="absolute top-full left-0 mt-2 w-full min-w-[180px] bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 z-50">
+              {workspaces.map((workspace) => {
+                const isActive = workspace.id === activeWorkspace?.id;
+                return (
+                  <button
+                    key={workspace.id}
+                    onClick={() => handleWorkspaceSwitch(workspace)}
+                    className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center justify-between transition-colors ${
+                      isActive ? "bg-[#f0f7f8] text-[#0E2A4A]" : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    <span className="truncate">{workspace.name}</span>
+                    {isActive && <div className="w-2 h-2 rounded-full bg-[#0E2A4A]"></div>}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
 
-        {/* Right: User Info & Logout */}
         <div className="flex items-center gap-2 lg:gap-5 shrink-0 lg:order-3">
           <div className="flex flex-col items-end lg:items-start leading-tight cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
-            <span className="text-[10px] lg:text-[11px] text-gray-500 font-semibold">Hello, {auth?.userId || 'Admin'}</span>
+            <span className="text-[10px] lg:text-[11px] text-gray-500 font-semibold">Hello, {auth?.userId || "Admin"}</span>
             <span className="text-[11px] lg:text-[13px] font-black text-[#0E2A4A] flex items-center gap-1">
-              <User size={12} className="lg:hidden"/> Account
+              <User size={12} className="lg:hidden" /> Account
             </span>
           </div>
-          
-          <button 
+
+          <button
             onClick={handleLogout}
             className="flex items-center gap-1.5 hover:bg-red-50 hover:text-red-600 text-gray-500 p-2 lg:px-3 lg:py-2 rounded-xl transition-colors"
             title="Logout"
@@ -122,7 +98,6 @@ const TopBar = () => {
         </div>
       </div>
 
-      {/* Middle: Search Bar (Only visible on Homepage) */}
       {isHomePage && (
         <div className="flex-1 w-full lg:max-w-3xl order-last lg:order-2">
           <div className="flex w-full rounded-xl border border-gray-200 overflow-hidden focus-within:border-[#0E2A4A] focus-within:ring-1 focus-within:ring-[#0E2A4A] transition-all bg-gray-50 h-[40px] lg:h-[44px]">
@@ -140,7 +115,6 @@ const TopBar = () => {
           </div>
         </div>
       )}
-
     </header>
   );
 };

@@ -1,20 +1,17 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import ProductCard from "../components/products/ProductCard";
 import { fetchProducts } from "../store/productsSlice";
-import { setActiveBrand, setActiveCategory } from "../store/homeSlice";
+import { setActiveCategory } from "../store/homeSlice";
+import { setActiveWorkspaceBySlug } from "../store/workspaceSlice";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const ITEMS_PER_PAGE = 24; // Displays 24 items per page
+const ITEMS_PER_PAGE = 24;
 
-const normalizeText = (value) =>
-  String(value || "")
-    .trim()
-    .toLowerCase();
-
+const normalizeText = (value) => String(value || "").trim().toLowerCase();
 const normalizeCategory = (value) => normalizeText(value).replace(/[\s_-]+/g, "");
 
 const CATEGORY_ALIASES = {
@@ -22,12 +19,7 @@ const CATEGORY_ALIASES = {
   jeans: ["jeans", "pant", "pants", "trouser", "trousers"],
   jacket: ["jacket", "hoodie", "coat"],
   set: ["set", "sets", "dress", "combo"],
-  shorts: ["short", "shorts"]
-};
-
-const emptyBrandContent = {
-  heroImageUrls: [],
-  promoTags: []
+  shorts: ["short", "shorts"],
 };
 
 const parsePriceCapFromTag = (tag) => {
@@ -42,291 +34,155 @@ const parsePercentOffFromTag = (tag) => {
   return match ? Number(match[1]) : null;
 };
 
-const getNumericValue = (value) => {
-  const num = Number(value);
-  return Number.isFinite(num) ? num : 0;
-};
-
 const productMatchesPromoTag = (product, tag) => {
   const normalizedTag = normalizeText(tag);
-  if (!normalizedTag || normalizedTag === "all") {
-    return true;
-  }
-  const effectivePrice = product.isDiscountActive ? product.finalPrice : getNumericValue(product.price);
+  if (!normalizedTag || normalizedTag === "all") return true;
+
+  const effectivePrice = product.isDiscountActive ? Number(product.finalPrice) : Number(product.price);
 
   const priceCap = parsePriceCapFromTag(normalizedTag);
-  if (priceCap !== null) {
-    return effectivePrice <= priceCap;
-  }
+  if (priceCap !== null) return effectivePrice <= priceCap;
 
   const percentOff = parsePercentOffFromTag(normalizedTag);
   if (percentOff !== null) {
-    if (product.isDiscountActive && product.discountPercent >= percentOff) {
-      return true;
-    }
-
-    const sellingPrice = effectivePrice;
-    const basePrice = getNumericValue(
-      product.originalPrice ?? product.mrp ?? product.listPrice ?? product.compareAtPrice ?? product.price
-    );
-
-    if (basePrice > 0 && basePrice > sellingPrice) {
-      const discountPercent = ((basePrice - sellingPrice) / basePrice) * 100;
-      return discountPercent >= percentOff;
+    if (product.isDiscountActive && Number(product.discountPercent) >= percentOff) return true;
+    const basePrice = Number(product.originalPrice ?? product.price);
+    if (basePrice > 0 && basePrice > effectivePrice) {
+      return ((basePrice - effectivePrice) / basePrice) * 100 >= percentOff;
     }
   }
 
-  const searchableText = [product.name, product.category, product.description, product.brand]
+  return [product.name, product.category, product.description]
     .map((item) => normalizeText(item))
-    .join(" ");
-
-  return searchableText.includes(normalizedTag);
+    .join(" ")
+    .includes(normalizedTag);
 };
 
 const HomePage = () => {
-  const location = useLocation();
+  const { workspaceSlug } = useParams();
   const navigate = useNavigate();
-  const { brand } = useParams();
   const dispatch = useDispatch();
+
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { activeBrand, activeCategory } = useSelector((state) => state.home);
+  const { activeCategory } = useSelector((state) => state.home);
+  const { items: workspaces, activeWorkspace, activeWorkspaceId } = useSelector((state) => state.workspace);
 
-  const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
-    Miniput: "all",
-    Kwink: "all"
-  });
-  const [heroIndexByBrand, setHeroIndexByBrand] = useState({
-    Miniput: 0,
-    Kwink: 0
-  });
-  const [homeContentByBrand, setHomeContentByBrand] = useState({
-    Miniput: { ...emptyBrandContent },
-    Kwink: { ...emptyBrandContent }
-  });
-
-  // Pagination State
+  const [homeContent, setHomeContent] = useState({ heroImageUrls: [], promoTags: [] });
+  const [activePromoTag, setActivePromoTag] = useState("all");
+  const [heroIndex, setHeroIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    dispatch(fetchProducts({ includeHidden: false, brand: activeBrand }));
-  }, [activeBrand, dispatch]);
+    if (workspaceSlug) {
+      dispatch(setActiveWorkspaceBySlug(workspaceSlug));
+      dispatch(setActiveCategory("all"));
+    }
+  }, [dispatch, workspaceSlug]);
 
   useEffect(() => {
+    if (!activeWorkspaceId && workspaces.length) {
+      navigate(`/home/${workspaces[0].slug}`, { replace: true });
+    }
+  }, [activeWorkspaceId, navigate, workspaces]);
+
+  useEffect(() => {
+    if (!activeWorkspaceId) return;
+    dispatch(fetchProducts({ includeHidden: false, workspaceId: activeWorkspaceId }));
+  }, [dispatch, activeWorkspaceId]);
+
+  useEffect(() => {
+    if (!activeWorkspaceId) return;
+
     const loadHomeContent = async () => {
-      const brandKey = normalizeText(activeBrand) === "kwink" ? "Kwink" : "Miniput";
-      const brandSlug = brandKey.toLowerCase();
-
       try {
-        const res = await axios.get(`${API_BASE_URL}/api/content/home/${brandSlug}`);
-
-        setHomeContentByBrand((prev) => ({
-          ...prev,
-          [brandKey]: {
-            heroImageUrls: Array.isArray(res?.data?.heroImageUrls)
-              ? res.data.heroImageUrls.slice(0, 4)
-              : [],
-            promoTags: Array.isArray(res?.data?.promoTags) ? res.data.promoTags : []
-          }
-        }));
+        const res = await axios.get(`${API_BASE_URL}/api/content/home/workspace/${activeWorkspaceId}`);
+        setHomeContent({
+          heroImageUrls: Array.isArray(res?.data?.heroImageUrls) ? res.data.heroImageUrls.slice(0, 4) : [],
+          promoTags: Array.isArray(res?.data?.promoTags) ? res.data.promoTags : [],
+        });
       } catch {
-        setHomeContentByBrand((prev) => ({
-          ...prev,
-          [brandKey]: { ...emptyBrandContent }
-        }));
+        setHomeContent({ heroImageUrls: [], promoTags: [] });
       }
     };
 
     loadHomeContent();
-  }, [activeBrand]);
+  }, [activeWorkspaceId]);
 
-  const urlBrand = useMemo(() => {
-    const pathParts = location.pathname.split("/").filter(Boolean);
-    const possibleBrand = normalizeText(brand || pathParts[pathParts.length - 1]);
-
-    if (possibleBrand === "miniput") {
-      return "Miniput";
-    }
-
-    if (possibleBrand === "kwink") {
-      return "Kwink";
-    }
-
-    return null;
-  }, [brand, location.pathname]);
+  const heroImages = homeContent.heroImageUrls || [];
+  const promoTags = homeContent.promoTags || [];
 
   useEffect(() => {
-    if (urlBrand && urlBrand !== activeBrand) {
-      dispatch(setActiveBrand(urlBrand));
-      dispatch(setActiveCategory("all"));
-    }
-  }, [urlBrand, activeBrand, dispatch]);
+    setHeroIndex(0);
+    setActivePromoTag("all");
+  }, [activeWorkspaceId]);
 
   useEffect(() => {
-    dispatch(setActiveCategory("all"));
-  }, [activeBrand, dispatch]);
-
-  const currentBrandContent = homeContentByBrand[activeBrand] || emptyBrandContent;
-  const heroImages = Array.isArray(currentBrandContent.heroImageUrls)
-    ? currentBrandContent.heroImageUrls.slice(0, 4)
-    : [];
-  const promoTags = Array.isArray(currentBrandContent.promoTags) ? currentBrandContent.promoTags : [];
+    if (heroIndex >= heroImages.length) setHeroIndex(0);
+  }, [heroImages, heroIndex]);
 
   useEffect(() => {
-    const currentIndex = Number(heroIndexByBrand[activeBrand] || 0);
-
-    if (!heroImages.length) {
-      if (currentIndex !== 0) {
-        setHeroIndexByBrand((prev) => ({ ...prev, [activeBrand]: 0 }));
-      }
-      return;
-    }
-
-    if (currentIndex >= heroImages.length) {
-      setHeroIndexByBrand((prev) => ({ ...prev, [activeBrand]: 0 }));
-    }
-  }, [activeBrand, heroImages, heroIndexByBrand]);
-
-  const goToPrevHero = () => {
-    setHeroIndexByBrand((prev) => {
-      const idx = Number(prev[activeBrand] || 0);
-      const length = heroImages.length || 1;
-      const newIndex = (idx - 1 + length) % length;
-      return { ...prev, [activeBrand]: newIndex };
-    });
-  };
-
-  const goToNextHero = () => {
-    setHeroIndexByBrand((prev) => {
-      const idx = Number(prev[activeBrand] || 0);
-      const length = heroImages.length || 1;
-      const newIndex = (idx + 1) % length;
-      return { ...prev, [activeBrand]: newIndex };
-    });
-  };
-
-  useEffect(() => {
-    if (!heroImages.length || heroImages.length < 2) return;
-    const interval = setInterval(() => {
-      setHeroIndexByBrand((prev) => {
-        const idx = Number(prev[activeBrand] || 0);
-        const next = (idx + 1) % heroImages.length;
-        return { ...prev, [activeBrand]: next };
-      });
-    }, 5000);
-
+    if (heroImages.length < 2) return;
+    const interval = setInterval(() => setHeroIndex((prev) => (prev + 1) % heroImages.length), 5000);
     return () => clearInterval(interval);
-  }, [activeBrand, heroImages]);
+  }, [heroImages]);
 
-  const activePromoTag = activePromoTagByBrand[activeBrand] || "all";
-
-  // Reset pagination to page 1 whenever filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeBrand, activeCategory, activePromoTag]);
+  }, [activeWorkspaceId, activeCategory, activePromoTag]);
 
   const filteredProducts = useMemo(() => {
     const normalizedActiveCategory = normalizeCategory(activeCategory);
-    const acceptedCategories = new Set(
-      (CATEGORY_ALIASES[normalizedActiveCategory] || [normalizedActiveCategory]).map((item) =>
-        normalizeCategory(item)
-      )
-    );
+    const acceptedCategories = new Set((CATEGORY_ALIASES[normalizedActiveCategory] || [normalizedActiveCategory]).map(normalizeCategory));
 
     return products.filter((product) => {
-      const categoryMatch =
-        normalizedActiveCategory === "all" ||
-        acceptedCategories.has(normalizeCategory(product.category));
-
-      const promoMatch = productMatchesPromoTag(product, activePromoTag);
-
-      return categoryMatch && promoMatch;
+      const categoryMatch = normalizedActiveCategory === "all" || acceptedCategories.has(normalizeCategory(product.category));
+      return categoryMatch && productMatchesPromoTag(product, activePromoTag);
     });
   }, [products, activeCategory, activePromoTag]);
 
-  // Calculate Pagination Variables
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
     return filteredProducts.slice(startIndex, startIndex + ITEMS_PER_PAGE);
   }, [filteredProducts, currentPage]);
 
-  const handlePageChange = (newPage) => {
-    setCurrentPage(newPage);
-    // Smooth scroll to top of product grid
-    window.scrollTo({ top: 300, behavior: "smooth" });
-  };
-
-  const activeHeroImage = heroImages.length
-    ? heroImages[Math.min(heroIndexByBrand[activeBrand] || 0, heroImages.length - 1)]
-    : "";
+  const activeHeroImage = heroImages.length ? heroImages[Math.min(heroIndex, heroImages.length - 1)] : "";
 
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5]">
-      {/* 1. HERO SECTION */}
       <section className="relative overflow-hidden bg-white">
         {activeHeroImage ? (
           <div className="relative mx-auto h-[200px] w-full max-w-[1440px] sm:h-[240px] lg:h-[300px]">
-            <img
-              src={activeHeroImage}
-              alt={`${activeBrand} hero`}
-              className="h-full w-full object-cover object-top transition-opacity duration-1000"
-            />
+            <img src={activeHeroImage} alt={`${activeWorkspace?.name || "Workspace"} hero`} className="h-full w-full object-cover object-top transition-opacity duration-1000" />
             <div className="absolute inset-x-0 bottom-0 h-24 lg:h-36 bg-gradient-to-t from-[#f5f5f5] to-transparent pointer-events-none"></div>
-
             {heroImages.length > 1 && (
               <>
-                <button type="button" onClick={goToPrevHero} className="absolute left-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:left-6 text-[#0E2A4A]">
-                  <ChevronLeft size={20} />
-                </button>
-                <button type="button" onClick={goToNextHero} className="absolute right-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:right-6 text-[#0E2A4A]">
-                  <ChevronRight size={20} />
-                </button>
+                <button type="button" onClick={() => setHeroIndex((prev) => (prev - 1 + heroImages.length) % heroImages.length)} className="absolute left-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:left-6 text-[#0E2A4A]"><ChevronLeft size={20} /></button>
+                <button type="button" onClick={() => setHeroIndex((prev) => (prev + 1) % heroImages.length)} className="absolute right-3 top-1/3 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:right-6 text-[#0E2A4A]"><ChevronRight size={20} /></button>
               </>
             )}
           </div>
         ) : (
-          <div className={`relative mx-auto flex h-[200px] w-full max-w-[1440px] items-end justify-between gap-4 sm:h-[240px] lg:h-[300px] ${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"}`}>
+          <div className="relative mx-auto flex h-[200px] w-full max-w-[1440px] items-end justify-between gap-4 sm:h-[240px] lg:h-[300px] bg-[#0E2A4A]">
             <div className="px-6 pb-12 sm:px-10 lg:px-16">
-              <h1 className={`tracking-tighter leading-none ${activeBrand === "Miniput" ? "mk-bebas text-[clamp(36px,6vw,72px)] text-white" : "text-4xl italic font-black text-white"}`}>
-                {activeBrand}
-              </h1>
+              <h1 className="tracking-tighter leading-none mk-bebas text-[clamp(36px,6vw,72px)] text-white">{activeWorkspace?.name || "Workspace"}</h1>
             </div>
             <div className="absolute inset-x-0 bottom-0 h-24 lg:h-36 bg-gradient-to-t from-[#f5f5f5] to-transparent pointer-events-none"></div>
           </div>
         )}
       </section>
 
-      {/* 2. OVERLAPPING CONTENT */}
       <div className="relative z-20 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 -mt-12 lg:-mt-24">
-
-        {/* Filter Panel */}
         <div className="bg-white shadow-sm border border-gray-200 rounded-2xl p-3 mb-6 flex gap-2 overflow-x-auto mk-scroll-hidden">
-          <button
-            type="button"
-            onClick={() => setActivePromoTagByBrand((prev) => ({ ...prev, [activeBrand]: "all" }))}
-            className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black tracking-wide transition ${activePromoTag === "all" ? "border-[#0E2A4A] bg-[#0E2A4A] text-white" : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"}`}
-          >
-            ALL OFFERS
-          </button>
-
+          <button type="button" onClick={() => setActivePromoTag("all")} className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black tracking-wide transition ${activePromoTag === "all" ? "border-[#0E2A4A] bg-[#0E2A4A] text-white" : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"}`}>ALL OFFERS</button>
           {promoTags.map((tag, index) => {
-            const normalizedTag = normalizeText(tag);
-            const isActive = normalizedTag && normalizedTag === normalizeText(activePromoTag);
-
+            const isActive = normalizeText(tag) === normalizeText(activePromoTag);
             return (
-              <button
-                key={`${activeBrand}-promo-${index}`}
-                type="button"
-                onClick={() => setActivePromoTagByBrand((prev) => ({ ...prev, [activeBrand]: tag }))}
-                className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black tracking-wide transition ${isActive ? "border-[#0E2A4A] bg-[#0E2A4A] text-white" : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"}`}
-              >
-                {String(tag || "").toUpperCase()}
-              </button>
+              <button key={`${activeWorkspaceId}-promo-${index}`} type="button" onClick={() => setActivePromoTag(tag)} className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black tracking-wide transition ${isActive ? "border-[#0E2A4A] bg-[#0E2A4A] text-white" : "border-gray-300 bg-white text-gray-600 hover:bg-gray-50"}`}>{String(tag || "").toUpperCase()}</button>
             );
           })}
         </div>
 
-        {/* Product Grid */}
         <main className="pb-16">
           {loading ? (
             <div className="text-center text-gray-400 py-20 font-semibold bg-white rounded-xl shadow-sm">Loading products...</div>
@@ -336,39 +192,17 @@ const HomePage = () => {
             <div className="text-center text-gray-400 py-20 font-semibold bg-white rounded-xl shadow-sm">No products found</div>
           ) : (
             <>
-              {/* Paginated Grid */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 mb-10">
                 {paginatedProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
-                  />
+                  <ProductCard key={product.id} product={product} onClick={(item) => navigate(`/product/${item.id}`, { state: { product: item } })} />
                 ))}
               </div>
 
-              {/* Enterprise Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-4 bg-white px-6 py-4 rounded-full w-max mx-auto shadow-sm border border-gray-100">
-                  <button
-                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                    disabled={currentPage === 1}
-                    className="flex items-center gap-1 text-[11px] font-black uppercase tracking-widest text-[#0E2A4A] hover:bg-gray-50 p-2 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                  >
-                    <ChevronLeft size={16} strokeWidth={3} /> Prev
-                  </button>
-
-                  <div className="text-sm font-black text-gray-400 tracking-wide">
-                    <span className="text-[#0E2A4A]">{currentPage}</span> / {totalPages}
-                  </div>
-
-                  <button
-                    onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                    disabled={currentPage === totalPages}
-                    className="flex items-center gap-1 text-[11px] font-black uppercase tracking-widest text-[#0E2A4A] hover:bg-gray-50 p-2 rounded-lg disabled:opacity-30 disabled:hover:bg-transparent transition-all"
-                  >
-                    Next <ChevronRight size={16} strokeWidth={3} />
-                  </button>
+                <div className="flex items-center justify-center gap-2 pb-6">
+                  <button type="button" onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))} disabled={currentPage === 1} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 disabled:opacity-50">PREV</button>
+                  <span className="text-xs font-bold text-gray-500">{currentPage} / {totalPages}</span>
+                  <button type="button" onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-600 disabled:opacity-50">NEXT</button>
                 </div>
               )}
             </>

@@ -63,7 +63,7 @@ const buildCreateProductPayload = (payload = {}) => {
     category: typeof payload.category === "string" ? payload.category : "",
     price: Number(payload.price) || 0,
     stock: Number(payload.stock) || 0,
-    brand: typeof payload.brand === "string" && payload.brand ? payload.brand : "Miniput",
+    workspaceId: payload.workspaceId || "",
     description: typeof payload.description === "string" ? payload.description : "",
     isHidden: Boolean(payload.isHidden),
     size: normalizedSizes,
@@ -119,8 +119,8 @@ export const deleteUploadedProductImageThunk = createAsyncThunk(
 export const createProductThunk = createAsyncThunk("admin/createProduct", async (payload, { dispatch, getState }) => {
   const requestBody = buildCreateProductPayload(payload);
   const { data } = await axios.post(`${API_BASE_URL}/api/products`, requestBody, { headers: getAdminAuthHeaders() });
-  const activeBrand = getState()?.home?.activeBrand || "Miniput";
-  await dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
+  const activeWorkspaceId = getState()?.workspace?.activeWorkspaceId;
+  await dispatch(fetchProducts({ includeHidden: true, workspaceId: activeWorkspaceId }));
   return data;
 });
 
@@ -133,16 +133,16 @@ export const toggleProductVisibilityThunk = createAsyncThunk(
       { isHidden },
       { headers: getAdminAuthHeaders() }
     );
-    const activeBrand = getState()?.home?.activeBrand || "Miniput";
-    await dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
+    const activeWorkspaceId = getState()?.workspace?.activeWorkspaceId;
+    await dispatch(fetchProducts({ includeHidden: true, workspaceId: activeWorkspaceId }));
     return data;
   }
 );
 
 export const deleteProductThunk = createAsyncThunk("admin/deleteProduct", async (id, { dispatch, getState }) => {
   const { data } = await axios.delete(`${API_BASE_URL}/api/products/${id}`, { headers: getAdminAuthHeaders() });
-  const activeBrand = getState()?.home?.activeBrand || "Miniput";
-  await dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
+  const activeWorkspaceId = getState()?.workspace?.activeWorkspaceId;
+  await dispatch(fetchProducts({ includeHidden: true, workspaceId: activeWorkspaceId }));
   return data;
 });
 
@@ -150,8 +150,8 @@ export const updateProductThunk = createAsyncThunk("admin/updateProduct", async 
   const { id, ...updateData } = payload;
   const requestBody = buildCreateProductPayload(updateData);
   const { data } = await axios.put(`${API_BASE_URL}/api/products/${id}`, requestBody, { headers: getAdminAuthHeaders() });
-  const activeBrand = getState()?.home?.activeBrand || "Miniput";
-  await dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
+  const activeWorkspaceId = getState()?.workspace?.activeWorkspaceId;
+  await dispatch(fetchProducts({ includeHidden: true, workspaceId: activeWorkspaceId }));
   return data;
 });
 
@@ -160,8 +160,8 @@ export const fetchAboutContentThunk = createAsyncThunk("admin/fetchAboutContent"
   return data;
 });
 
-export const fetchBrandHomeContentThunk = createAsyncThunk("admin/fetchBrandHomeContent", async (brand) => {
-  const { data } = await axios.get(`${API_BASE_URL}/api/content/home/${brand.toLowerCase()}`);
+export const fetchWorkspaceHomeContentThunk = createAsyncThunk("admin/fetchWorkspaceHomeContent", async (workspaceId) => {
+  const { data } = await axios.get(`${API_BASE_URL}/api/content/home/workspace/${workspaceId}`);
   return data;
 });
 
@@ -170,8 +170,12 @@ export const updateAboutContentThunk = createAsyncThunk("admin/updateAboutConten
   return data;
 });
 
-export const updateBrandHomeContentThunk = createAsyncThunk("admin/updateBrandHomeContent", async ({ brand, payload }) => {
-  const { data } = await axios.put(`${API_BASE_URL}/api/content/home/${brand.toLowerCase()}`, payload, { headers: getAdminAuthHeaders() });
+export const updateWorkspaceHomeContentThunk = createAsyncThunk("admin/updateWorkspaceHomeContent", async ({ workspaceId, payload }) => {
+  const { data } = await axios.put(
+    `${API_BASE_URL}/api/content/home/workspace/${workspaceId}`,
+    payload,
+    { headers: getAdminAuthHeaders() }
+  );
   return data;
 });
 
@@ -191,7 +195,7 @@ const initialState = {
     articleId: "",
     name: "",
     category: "Kids Wear",
-    brand: "Miniput",
+    workspaceId: "",
     price: "",
     stock: "",
     sizes: [],
@@ -225,7 +229,7 @@ const adminSlice = createSlice({
       state.showAdd = false;
       state.editingProductId = null;
     },
-    setTokens: (state, action) => {},
+    setTokens: (state, action) => { },
     logout: (state) => {
       clearAdminToken();
       state.authed = false;

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useSelector } from "react-redux";
 import {
   X,
   Tag,
@@ -12,7 +13,7 @@ import {
   FileText,
   Save,
   Loader2,
-  Hash
+  Hash,
 } from "lucide-react";
 
 const AddProductModal = ({
@@ -27,43 +28,47 @@ const AddProductModal = ({
   onFieldChange,
   onImageUpload,
   onDeleteImage,
-  isEditing = false
+  isEditing = false,
 }) => {
-  if (!show) {
-    return null;
-  }
+  const { items: workspaces, activeWorkspace, activeWorkspaceId } = useSelector((state) => state.workspace);
 
-  const selectedBrand = newProduct.brand || "Miniput";
+  const selectedWorkspaceId = activeWorkspaceId || "";
 
   const currentSizes = Array.isArray(newProduct.sizes)
     ? newProduct.sizes.map((s) => (typeof s === "object" ? String(s.size) : String(s)))
     : [];
 
   const miniputOptions = [
-    { id: "group-1-10", label: "Sizes 1 to 10", values: ["1", "2", "3", "4", "5", "6", "7", "8"] }
+    { id: "group-1-10", label: "Sizes 1 to 8", values: ["1", "2", "3", "4", "5", "6", "7", "8"] }
   ];
 
   const kwinkOptions = [
     { id: "group-10-16", label: "Sizes 10 to 16", values: ["10", "11", "12", "13", "14", "15", "16"] },
     { id: "group-6-16", label: "Sizes 6 to 16", values: ["6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"] }
   ];
+  const activeWorkspaceName = activeWorkspace?.name?.toLowerCase() || "";
+
+  const isKwinkWorkspace = activeWorkspaceName === "kwink";
+
+  const sizeOptions = isKwinkWorkspace ? kwinkOptions : miniputOptions;
 
   useEffect(() => {
-    if (show && currentSizes.length === 0) {
-      if (selectedBrand === "Miniput") {
-        onFieldChange("sizes", miniputOptions[0].values);
-      } else if (selectedBrand === "Kwink") {
-        onFieldChange("sizes", kwinkOptions[0].values);
-      }
+    if (show && !newProduct.workspaceId && selectedWorkspaceId) {
+      onFieldChange("workspaceId", selectedWorkspaceId);
     }
-  }, [show, selectedBrand, currentSizes.length]);
+  }, [show, newProduct.workspaceId, selectedWorkspaceId, onFieldChange]);
+
+  useEffect(() => {
+    if (!show) return;
+
+    const hasSizes = Array.isArray(newProduct.sizes) && newProduct.sizes.length > 0;
+    if (!hasSizes && sizeOptions.length > 0) {
+      onFieldChange("sizes", sizeOptions[0].values);
+    }
+  }, [show, newProduct.sizes, sizeOptions, onFieldChange]);
 
   const handleGroupChange = (targetValues, isChecked) => {
-    if (isChecked) {
-      onFieldChange("sizes", targetValues);
-    } else {
-      onFieldChange("sizes", []);
-    }
+    onFieldChange("sizes", isChecked ? targetValues : []);
   };
 
   const isGroupSelected = (targetValues) => {
@@ -72,6 +77,10 @@ const AddProductModal = ({
   };
 
   const hasUploadingImages = imageUploads.some((item) => item.uploading);
+
+  if (!show) {
+    return null;
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
@@ -139,30 +148,24 @@ const AddProductModal = ({
               </div>
             </div>
 
-            {/* BRAND */}
-            <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
+            {/* WORKSPACE SELECTION */}
+            <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] bg-[#f8fafc]">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
                 <BadgeCheck size={18} />
               </div>
+
               <div className="flex-1 py-1">
                 <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-0.5 block">
-                  BRAND
+                  ACTIVE WORKSPACE
                 </label>
-                <select
-                  value={selectedBrand}
-                  onChange={(e) => {
-                    onFieldChange("brand", e.target.value);
-                    onFieldChange("sizes", []); // Dynamic default useEffect triggers right after this clean wipe
-                  }}
-                  className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none appearance-none cursor-pointer"
-                >
-                  <option value="Miniput">Miniput</option>
-                  <option value="Kwink">Kwink</option>
-                </select>
+
+                <div className="text-[13px] md:text-[15px] font-black text-[#0E2A4A]">
+                  {activeWorkspace?.name || "No Workspace Selected"}
+                </div>
               </div>
             </div>
 
-            {/* CATEGORY */}
+            {/* CATEGORY SELECTION */}
             <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
                 <Shapes size={18} />
@@ -193,70 +196,46 @@ const AddProductModal = ({
               </div>
               <div className="flex-1 py-1">
                 <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-2 block">
-                  SIZES SELECTION ({selectedBrand.toUpperCase()})
+                  SIZES <span className="text-[#D63031]">*</span>
                 </label>
 
-                {/* Miniput Sizing Configuration Panel */}
-                {selectedBrand === "Miniput" && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    {miniputOptions.map((opt) => {
-                      const isChecked = isGroupSelected(opt.values);
-                      return (
-                        <label
-                          key={opt.id}
-                          className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${isChecked
-                            ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
-                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                            }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => handleGroupChange(opt.values, e.target.checked)}
-                            className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
-                          />
-                          <div className="flex flex-col">
-                            <span>{opt.label}</span>
-                            <span className="text-[10px] text-gray-400 font-normal mt-0.5">
-                              Pack includes sizes: {opt.values.join(", ")}
-                            </span>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
+                <div className="flex flex-col gap-2 mt-1">
+                  {sizeOptions.map((opt) => {
+                    const isChecked = isGroupSelected(opt.values);
 
-                {/* Kwink Sizing Configuration Panel */}
-                {selectedBrand === "Kwink" && (
-                  <div className="flex flex-col gap-2 mt-1">
-                    {kwinkOptions.map((opt) => {
-                      const isChecked = isGroupSelected(opt.values);
-                      return (
-                        <label
-                          key={opt.id}
-                          className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${isChecked
-                            ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
-                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-                            }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => handleGroupChange(opt.values, e.target.checked)}
-                            className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
-                          />
-                          <div className="flex flex-col">
-                            <span>{opt.label}</span>
-                            <span className="text-[10px] text-gray-400 font-normal mt-0.5">
-                              Pack includes sizes: {opt.values.join(", ")}
-                            </span>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                )}
+                    return (
+                      <label
+                        key={opt.id}
+                        className={`flex items-center gap-3 p-3 rounded-xl border text-[12px] md:text-[13px] font-bold cursor-pointer select-none transition-all ${isChecked
+                          ? "bg-[#0E2A4A]/5 border-[#0E2A4A] text-[#0E2A4A]"
+                          : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
+                          }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) =>
+                            handleGroupChange(
+                              opt.values,
+                              e.target.checked,
+                            )
+                          }
+                          className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
+                        />
+
+                        <div className="flex flex-col">
+                          <span>{opt.label}</span>
+
+                          <span className="text-[10px] text-gray-400 font-normal mt-0.5">
+                            Pack includes sizes:
+                            {" "}
+                            {opt.values.join(", ")}
+                          </span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
@@ -506,6 +485,3 @@ const AddProductModal = ({
 };
 
 export default AddProductModal;
-
-
-

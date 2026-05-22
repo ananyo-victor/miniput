@@ -85,7 +85,7 @@ const getPublicIdFromImageUrl = (url) => {
 const InventoryPage = () => {
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { activeBrand } = useSelector((state) => state.home);
+  const { activeWorkspace, activeWorkspaceId } = useSelector((state) => state.workspace);
   const { newProduct, editingProductId, productSaveLoading } = useSelector((state) => state.admin);
 
   const [activeFilter, setActiveFilter] = useState("all");
@@ -98,8 +98,8 @@ const InventoryPage = () => {
   const maxImages = 9;
 
   useEffect(() => {
-    dispatch(fetchProducts({ includeHidden: true, brand: activeBrand }));
-  }, [dispatch, activeBrand]);
+    dispatch(fetchProducts({ includeHidden: true, workspaceId: activeWorkspaceId }));
+  }, [dispatch, activeWorkspaceId]);
 
   const counts = useMemo(() => {
     const map = { all: products.length, "in-stock": 0, limited: 0, low: 0, hidden: 0 };
@@ -134,6 +134,7 @@ const InventoryPage = () => {
   };
 
   const handleOpenModal = () => {
+    dispatch(setNewProductField({ key: "workspaceId", value: activeWorkspaceId || "" }));
     setShowAddModal(true);
   };
 
@@ -141,7 +142,7 @@ const InventoryPage = () => {
     dispatch(setNewProductField({ key: "articleId", value: product.articleId || "" }));
     dispatch(setNewProductField({ key: "name", value: product.name }));
     dispatch(setNewProductField({ key: "category", value: product.category || "Kids Wear" }));
-    dispatch(setNewProductField({ key: "brand", value: product.brand || "Miniput" }));
+    dispatch(setNewProductField({ key: "workspaceId", value: product.workspaceId || activeWorkspaceId || "" }));
     dispatch(setNewProductField({ key: "price", value: product.price }));
     dispatch(setNewProductField({ key: "stock", value: product.stock }));
 
@@ -160,7 +161,7 @@ const InventoryPage = () => {
     dispatch(setNewProductField({ key: "discountEnabled", value: Boolean(product.discountType) }));
     dispatch(setNewProductField({ key: "discountType", value: product.discountType || "percent" }));
     dispatch(setNewProductField({ key: "discountValue", value: product.discountValue || "" }));
-    
+
     const newImageUploads = existingImageUrls.map((url, idx) => ({
       localId: `existing-${product.id}-${idx}`,
       previewUrl: url,
@@ -210,9 +211,15 @@ const InventoryPage = () => {
       ? imageUploads.filter((item) => !item.uploading && item.imageUrl).map((item) => item.imageUrl)
       : newImages.filter((item) => !item.uploading && item.imageUrl).map((item) => item.imageUrl);
 
+    if (!activeWorkspaceId) {
+      window.alert("Please select a workspace.");
+      return;
+    }
+
     const payload = {
       ...newProduct,
-      price: Number(newProduct.price),  
+      workspaceId: activeWorkspaceId,
+      price: Number(newProduct.price),
       stock,
       imageUrls: allImageUrls
     };
@@ -468,7 +475,7 @@ const InventoryPage = () => {
                         {product.name}
                       </div>
                       <div className="inv-brand text-xs font-bold text-[#0E2A4A] mb-1">
-                        {product.brand || "KWINK"}
+                        {product.workspaceId || "-"}
                       </div>
                       <div className="inv-sizes text-xs text-[#666] tracking-wide mb-0.5">
                         SIZE {sizes}

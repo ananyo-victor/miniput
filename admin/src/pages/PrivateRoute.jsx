@@ -1,11 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate, Outlet, useLocation } from "react-router";
+import { useDispatch } from "react-redux";
 import Navbar from "../components/layout/Navbar";
 import TopBar from "../components/layout/TopBar";
 import { clearAdminToken, getAdminAuthFromStorage } from "../utils/adminToken";
+import { fetchWorkspaces } from "../store/workspaceSlice";
 
 const PrivateRoute = () => {
   const location = useLocation();
+  const dispatch = useDispatch();
   const { token, isAdmin } = getAdminAuthFromStorage();
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -14,6 +17,10 @@ const PrivateRoute = () => {
     clearAdminToken();
     return <Navigate to="/" state={{ from: location }} replace />;
   }
+
+  useEffect(() => {
+    dispatch(fetchWorkspaces());
+  }, [dispatch]);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#f5f5f5]">
