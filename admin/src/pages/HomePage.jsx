@@ -7,7 +7,7 @@ import { fetchProducts } from "../store/productsSlice";
 import { setActiveCategory } from "../store/homeSlice";
 import { setActiveWorkspaceLocal } from "../store/userSlice";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import ProductCardSkeleton from "../components/products/ProductCardSkeleton";
+import ProductCardSkeleton from "../components/skeletonLoader/ProductCardSkeleton";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const ITEMS_PER_PAGE = 24;
