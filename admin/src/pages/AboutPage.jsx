@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  fetchAboutContentThunk,
-  updateAboutContentThunk,
-  uploadProductImageThunk,
-  deleteUploadedProductImageThunk,
-  fetchWorkspaceHomeContentThunk,
-  updateWorkspaceHomeContentThunk,
-} from "../store/adminSlice";
+import { fetchAboutContentThunk, fetchWorkspaceHomeContentThunk, updateAboutContentThunk, updateWorkspaceHomeContentThunk } from "../store/aboutSlice";
+import { deleteUploadedProductImageThunk, uploadProductImageThunk } from "../store/productsSlice";
 
 const parseMultiline = (value) =>
   String(value || "")
@@ -34,7 +28,8 @@ const toPublicIdFromImageUrl = (url) => {
 
 const AboutPage = () => {
   const dispatch = useDispatch();
-  const { activeWorkspace, activeWorkspaceId } = useSelector((state) => state.workspace);
+  const activeWorkspace = useSelector((state) => state.user.activeWorkspace);
+  const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");

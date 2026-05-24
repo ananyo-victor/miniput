@@ -3,17 +3,17 @@ import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import { clearAdminToken, getAdminAuthFromStorage } from "../../utils/adminToken";
-import { setAdminField } from "../../store/adminSlice";
 import { setActiveCategory } from "../../store/homeSlice";
-import { setActiveWorkspace } from "../../store/workspaceSlice";
+import { setActiveWorkspaceLocal, updateActiveWorkspaceThunk } from "../../store/userSlice";
+import { setAdminField } from "../../store/authSlice";
 
 const TopBar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const auth = getAdminAuthFromStorage();
-  const { items: workspaces, activeWorkspace } = useSelector((state) => state.workspace);
-
+  const workspaces = useSelector((state) => state.workspace.items);
+  const activeWorkspace = useSelector((state) => state?.user?.activeWorkspace ?? null); 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -25,9 +25,20 @@ const TopBar = () => {
 
   const isHomePage = location.pathname === "/home" || location.pathname.startsWith("/home/") || location.pathname === "/miniput" || location.pathname === "/kwink";
 
-  const handleWorkspaceSwitch = (workspace) => {
-    dispatch(setActiveWorkspace(workspace));
+  const handleWorkspaceSwitch = async (workspace) => {
+    console.log("Switching to workspace:", workspace);
+    dispatch(setActiveWorkspaceLocal(workspace));
     dispatch(setActiveCategory("all"));
+
+    if (auth?.userId) {
+      dispatch(
+        updateActiveWorkspaceThunk({
+          id: auth.userId,
+          workspaceId: workspace.id,
+        })
+      );
+    }
+
     setIsDropdownOpen(false);
 
     if (location.pathname !== "/inventory") {
@@ -66,9 +77,8 @@ const TopBar = () => {
                   <button
                     key={workspace.id}
                     onClick={() => handleWorkspaceSwitch(workspace)}
-                    className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center justify-between transition-colors ${
-                      isActive ? "bg-[#f0f7f8] text-[#0E2A4A]" : "text-gray-600 hover:bg-gray-50"
-                    }`}
+                    className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center justify-between transition-colors ${isActive ? "bg-[#f0f7f8] text-[#0E2A4A]" : "text-gray-600 hover:bg-gray-50"
+                      }`}
                   >
                     <span className="truncate">{workspace.name}</span>
                     {isActive && <div className="w-2 h-2 rounded-full bg-[#0E2A4A]"></div>}
@@ -81,7 +91,7 @@ const TopBar = () => {
 
         <div className="flex items-center gap-2 lg:gap-5 shrink-0 lg:order-3">
           <div className="flex flex-col items-end lg:items-start leading-tight cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
-            <span className="text-[10px] lg:text-[11px] text-gray-500 font-semibold">Hello, {auth?.userId || "Admin"}</span>
+            <span className="text-[10px] lg:text-[11px] text-gray-500 font-semibold">Hello, {auth?.fullName || "Admin"}</span>
             <span className="text-[11px] lg:text-[13px] font-black text-[#0E2A4A] flex items-center gap-1">
               <User size={12} className="lg:hidden" /> Account
             </span>
@@ -107,9 +117,9 @@ const TopBar = () => {
               <option>Pants</option>
               <option>Sets</option>
             </select>
-            <input 
-              type="text" 
-              placeholder="Search products..." 
+            <input
+              type="text"
+              placeholder="Search products..."
               className="flex-1 bg-transparent px-3 lg:px-4 py-2 text-gray-800 text-sm lg:text-base outline-none w-full placeholder:text-gray-400"
             />
           </div>

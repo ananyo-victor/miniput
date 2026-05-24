@@ -26,6 +26,9 @@ export class WorkspaceController {
     return this.workspaceService.findAll();
   }
 
+  //cURL of findAll:
+  // curl -X GET http://localhost:3000/workspace
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.workspaceService.findOne(id);

@@ -94,6 +94,7 @@ export const getAdminAuthFromStorage = () => {
   const payload = decodeAdminToken(accessToken);
   const role = payload?.role || null;
   const userId = payload?.id || null;
+  const fullName = payload?.fullName || null;
 
   return {
     token: accessToken,
@@ -101,6 +102,7 @@ export const getAdminAuthFromStorage = () => {
     refreshToken,
     userId,
     role,
+    fullName,
     isAdmin: hasAdminRole(role)
   };
 };

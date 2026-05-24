@@ -8,7 +8,7 @@ const Navbar = ({ isCollapsed, toggleSidebar }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { activeWorkspace } = useSelector((state) => state.workspace);
+  const activeWorkspace = useSelector((state) => state.user.activeWorkspace);
 
   const navItems = [
     { label: "Home", path: `/home/${activeWorkspace?.slug || "miniput"}`, icon: Store, key: "home" },

@@ -1,10 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
 import OrderFormPage from "./pages/OrderFormPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AboutPage from "./pages/AboutPage";
 import Navbar from "./components/layout/Navbar";
+import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
 
 const Layout = () => {
   const layoutHeights = {
@@ -25,6 +28,13 @@ const Layout = () => {
 };
 
 export default function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    // Initialize axios interceptors for automatic token refresh on 401
+    setupAxiosInterceptors(dispatch);
+  }, [dispatch]);
+
   return (
     <Router>
       <Routes>

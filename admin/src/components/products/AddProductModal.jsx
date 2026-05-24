@@ -30,7 +30,9 @@ const AddProductModal = ({
   onDeleteImage,
   isEditing = false,
 }) => {
-  const { items: workspaces, activeWorkspace, activeWorkspaceId } = useSelector((state) => state.workspace);
+  const workspaces = useSelector((state) => state.workspace.items);
+  const activeWorkspace = useSelector((state) => state.user.activeWorkspace);
+  const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
 
   const selectedWorkspaceId = activeWorkspaceId || "";
 

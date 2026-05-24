@@ -5,8 +5,9 @@ import { useNavigate, useParams } from "react-router";
 import ProductCard from "../components/products/ProductCard";
 import { fetchProducts } from "../store/productsSlice";
 import { setActiveCategory } from "../store/homeSlice";
-import { setActiveWorkspaceBySlug } from "../store/workspaceSlice";
+import { setActiveWorkspaceLocal } from "../store/userSlice";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import ProductCardSkeleton from "../components/products/ProductCardSkeleton";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const ITEMS_PER_PAGE = 24;
@@ -65,7 +66,9 @@ const HomePage = () => {
 
   const { items: products, loading, error } = useSelector((state) => state.products);
   const { activeCategory } = useSelector((state) => state.home);
-  const { items: workspaces, activeWorkspace, activeWorkspaceId } = useSelector((state) => state.workspace);
+  const workspaces = useSelector((state) => state.workspace.items);
+  const activeWorkspace = useSelector((state) => state.user.activeWorkspace);
+  const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
 
   const [homeContent, setHomeContent] = useState({ heroImageUrls: [], promoTags: [] });
   const [activePromoTag, setActivePromoTag] = useState("all");
@@ -73,17 +76,20 @@ const HomePage = () => {
   const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    if (workspaceSlug) {
-      dispatch(setActiveWorkspaceBySlug(workspaceSlug));
-      dispatch(setActiveCategory("all"));
-    }
-  }, [dispatch, workspaceSlug]);
+    if (!workspaceSlug || !workspaces.length) return;
+    const workspace = workspaces.find((item) => item.slug === workspaceSlug);
+    if (!workspace) return;
+    dispatch(setActiveWorkspaceLocal(workspace));
+    dispatch(setActiveCategory("all"));
+  }, [dispatch, workspaceSlug, workspaces]);
 
   useEffect(() => {
-    if (!activeWorkspaceId && workspaces.length) {
-      navigate(`/home/${workspaces[0].slug}`, { replace: true });
+    if (!activeWorkspace && workspaces.length) {
+      navigate(`/home/${workspaces[0].slug}`, {
+        replace: true,
+      });
     }
-  }, [activeWorkspaceId, navigate, workspaces]);
+  }, [activeWorkspace, navigate, workspaces]);
 
   useEffect(() => {
     if (!activeWorkspaceId) return;
@@ -185,7 +191,14 @@ const HomePage = () => {
 
         <main className="pb-16">
           {loading ? (
-            <div className="text-center text-gray-400 py-20 font-semibold bg-white rounded-xl shadow-sm">Loading products...</div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 mb-10">
+              {Array.from({ length: 12 }).map((_, index) => (
+                <ProductCardSkeleton
+                  key={`skeleton-${index}`}
+                />
+              ))}
+            </div>
+
           ) : error ? (
             <div className="text-center text-red-400 py-20 font-semibold bg-white rounded-xl shadow-sm">{error}</div>
           ) : filteredProducts.length === 0 ? (

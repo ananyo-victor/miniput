@@ -164,63 +164,7 @@ export class ProductsService implements OnModuleInit {
   constructor(private readonly uploadsService: UploadsService) { }
 
   async onModuleInit() {
-    await this.ensureDiscountColumnsExist();
     await this.ensureSizeColumnIsIntegerArray();
-  }
-
-  private async ensureDiscountColumnsExist() {
-    try {
-      await pool.query(
-        `
-        ALTER TABLE products
-        ADD COLUMN IF NOT EXISTS "discountType" text,
-        ADD COLUMN IF NOT EXISTS "discountValue" numeric(10,2)
-        `,
-      );
-
-      await pool.query(
-        `
-        ALTER TABLE products
-        DROP CONSTRAINT IF EXISTS products_discount_window_check,
-        DROP COLUMN IF EXISTS "discountStartAt",
-        DROP COLUMN IF EXISTS "discountEndAt"
-        `,
-      );
-
-      await pool.query(
-        `
-        DO $$
-        BEGIN
-          IF NOT EXISTS (
-            SELECT 1
-            FROM pg_constraint
-            WHERE conname = 'products_discount_type_check'
-          ) THEN
-            ALTER TABLE products
-            ADD CONSTRAINT products_discount_type_check
-            CHECK ("discountType" IN ('percent', 'fixed') OR "discountType" IS NULL);
-          END IF;
-
-          IF NOT EXISTS (
-            SELECT 1
-            FROM pg_constraint
-            WHERE conname = 'products_discount_value_check'
-          ) THEN
-            ALTER TABLE products
-            ADD CONSTRAINT products_discount_value_check
-            CHECK ("discountValue" IS NULL OR "discountValue" >= 0);
-          END IF;
-
-        END $$
-        `,
-      );
-
-      this.logger.log('Ensured products discount columns and constraints');
-    } catch (error) {
-      this.logger.warn(
-        `Could not ensure products discount columns: ${error.message}`,
-      );
-    }
   }
 
   private async ensureSizeColumnIsIntegerArray() {
@@ -299,6 +243,7 @@ export class ProductsService implements OnModuleInit {
     if (conditions.length) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
+    query += ` ORDER BY "updatedAt" DESC`;
 
     const { rows } = await pool.query(query, values);
 
@@ -397,31 +342,17 @@ RETURNING *    `;
     const current = currentRows[0];
 
     const merged = {
-      articleId:
-        productData.articleId === undefined
-          ? current.articleId
-          : productData.articleId.trim() || null,
+      articleId: productData.articleId === undefined ? current.articleId : productData.articleId.trim() || null,
       name: productData.name ?? current.name,
       category: productData.category ?? current.category,
       price: productData.price ?? current.price,
-      discountType:
-        productData.discountType === undefined
-          ? normalizeDiscountType(current.discountType)
-          : normalizeDiscountType(productData.discountType),
-      discountValue:
-        productData.discountValue === undefined
-          ? normalizeDiscountValue(current.discountValue)
-          : normalizeDiscountValue(productData.discountValue),
+      discountType: productData.discountType === undefined ? normalizeDiscountType(current.discountType) : normalizeDiscountType(productData.discountType),
+      discountValue: productData.discountValue === undefined ? normalizeDiscountValue(current.discountValue) : normalizeDiscountValue(productData.discountValue),
       stock: productData.stock ?? current.stock,
-      imageUrls: normalizeImageUrls(
-        productData.imageUrls ?? productData.imageUrl ?? current.imageUrl,
-      ),
+      imageUrls: normalizeImageUrls(productData.imageUrls ?? productData.imageUrl ?? current.imageUrl),
       workspaceId: productData.workspaceId ?? current.workspaceId,
       description: productData.description ?? current.description,
-      isHidden:
-        productData.isHidden === undefined
-          ? current.isHidden
-          : !!productData.isHidden,
+      isHidden: productData.isHidden === undefined ? current.isHidden : !!productData.isHidden,
       size: normalizeSize(productData.size ?? current.size),
     };
     await this.validateWorkspaceExists(merged.workspaceId);
@@ -451,13 +382,15 @@ RETURNING *    `;
         "imageUrl" = $9,
         description = $10,
         "isHidden" = $11,
-        "size" = $12::integer[],
-        "piecesPerPack" = $13
+        size = $12,
+        "piecesPerPack" = $13,
+        "updatedAt" = NOW()
       WHERE id = $14
       RETURNING *
     `;
 
     const values = [
+      merged.workspaceId,
       merged.name,
       merged.articleId,
       merged.category,
@@ -466,7 +399,6 @@ RETURNING *    `;
       merged.discountValue,
       merged.stock,
       merged.imageUrls,
-      merged.workspaceId,
       merged.description,
       merged.isHidden,
       merged.size,
@@ -482,7 +414,9 @@ RETURNING *    `;
   async updateVisibility(id: string, isHidden: boolean) {
     const query = `
       UPDATE products
-      SET "isHidden" = $1
+      SET
+        "isHidden" = $1,
+        "updatedAt" = NOW()
       WHERE id = $2
       RETURNING *
     `;

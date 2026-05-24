@@ -1,12 +1,22 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
 import AuthPage from "./pages/AuthPage";
 import PrivateRoute from "./pages/PrivateRoute";
 import InventoryPage from "./pages/InventoryPage";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
+import { fetchWorkspaces } from "./store/workspaceSlice";
 
 export default function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    setupAxiosInterceptors(dispatch);
+  }, [dispatch]);
+
   return (
     <Router>
       <Routes>

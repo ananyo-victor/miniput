@@ -1,19 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchProducts } from "../store/productsSlice";
 import {
   createProductThunk,
-  deleteUploadedProductImageThunk,
   deleteProductThunk,
+  deleteUploadedProductImageThunk,
+  fetchProducts,
   resetNewProduct,
+  setEditingProductId,
   setNewProductField,
   toggleProductVisibilityThunk,
-  uploadProductImageThunk,
   updateProductThunk,
-  setEditingProductId
-} from "../store/adminSlice";
+  uploadProductImageThunk
+} from "../store/productsSlice";
 import AddProductModal from "../components/products/AddProductModal";
 import DeleteProductModal from "../components/products/DeleteProductModal";
+import InventoryProductListSkeleton from "../components/skeletonLoader/InventoryProductListSkeleton";
 
 const statusMeta = (stock) => {
   if (stock > 50) return { key: "in-stock", label: "IN STOCK" };
@@ -84,9 +85,17 @@ const getPublicIdFromImageUrl = (url) => {
 
 const InventoryPage = () => {
   const dispatch = useDispatch();
-  const { items: products, loading, error } = useSelector((state) => state.products);
-  const { activeWorkspace, activeWorkspaceId } = useSelector((state) => state.workspace);
-  const { newProduct, editingProductId, productSaveLoading } = useSelector((state) => state.admin);
+  const {
+    items: products,
+    loading,
+    error,
+    newProduct,
+    editingProductId,
+    productSaveLoading,
+    visibilityUpdatingById
+  } = useSelector((state) => state.products);
+  const activeWorkspace = useSelector((state) => state.user.activeWorkspace);
+  const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
 
   const [activeFilter, setActiveFilter] = useState("all");
   const [showAddModal, setShowAddModal] = useState(false);
@@ -428,9 +437,11 @@ const InventoryPage = () => {
       <div className="inv-list flex-1 overflow-y-auto px-4 py-3 pb-[100px] md:px-8 md:py-4 scrollbar-hide">
         <div className="max-w-7xl mx-auto">
           {loading && (
-            <div className="rounded-2xl bg-white p-6 text-center text-sm font-bold text-[#666] shadow-md">
-              Loading inventory...
-            </div>
+            <>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <InventoryProductListSkeleton key={index} />
+              ))}
+            </>
           )}
           {error && (
             <div className="rounded-2xl bg-[#fff5f5] p-6 text-center text-sm font-bold text-[#D63031] shadow-md">
@@ -447,10 +458,15 @@ const InventoryPage = () => {
             !error &&
             filteredProducts.map((product) => {
               const imageSrc = product.imageUrl || "";
-              const sizes = Array.isArray(product.sizes)
-                ? product.sizes.join(", ")
-                : product.sizes || "-";
+              const sizes = Array.isArray(product.size)
+                ? product.size.join(", ")
+                : product.size || "-";
               const status = statusMeta(Number(product.stock || 0));
+              const isVisibilityUpdating = Object.prototype.hasOwnProperty.call(
+                visibilityUpdatingById,
+                product.id
+              );
+              const targetHiddenState = visibilityUpdatingById[product.id];
 
               return (
                 <div
@@ -475,7 +491,7 @@ const InventoryPage = () => {
                         {product.name}
                       </div>
                       <div className="inv-brand text-xs font-bold text-[#0E2A4A] mb-1">
-                        {product.workspaceId || "-"}
+                        {product.articleId || "-"}
                       </div>
                       <div className="inv-sizes text-xs text-[#666] tracking-wide mb-0.5">
                         SIZE {sizes}
@@ -510,9 +526,12 @@ const InventoryPage = () => {
                     <button
                       type="button"
                       onClick={() => handleToggleVisibility(product)}
-                      className="rounded-lg bg-[#f0f0f0] px-3 py-1.5 text-[11px] font-black text-[#555] hover:bg-[#e8e8e8] transition-colors"
+                      disabled={isVisibilityUpdating}
+                      className="rounded-lg bg-[#f0f0f0] px-3 py-1.5 text-[11px] font-black text-[#555] hover:bg-[#e8e8e8] transition-colors disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                      {product.isHidden ? "UNHIDE" : "HIDE"}
+                      {isVisibilityUpdating
+                        ? (targetHiddenState ? "HIDING..." : "UNHIDING...")
+                        : (product.isHidden ? "UNHIDE" : "HIDE")}
                     </button>
                     <button
                       type="button"

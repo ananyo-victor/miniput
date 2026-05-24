@@ -61,7 +61,7 @@ export const setupAxiosInterceptors = (dispatch) => {
           if (dispatch) {
             dispatch({ type: "admin/logout" });
           }
-          window.location.href = "/admin/login";
+          window.location.href = "/home";
           processQueue(new Error("No refresh token"), null);
           return Promise.reject(error);
         }
@@ -95,7 +95,7 @@ export const setupAxiosInterceptors = (dispatch) => {
           if (dispatch) {
             dispatch({ type: "admin/logout" });
           }
-          window.location.href = "/admin/login";
+          window.location.href = "/home";
           processQueue(refreshError, null);
           return Promise.reject(refreshError);
         }

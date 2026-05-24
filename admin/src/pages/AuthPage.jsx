@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
-import { adminLoginThunk, setAdminField } from "../store/adminSlice";
 import BackgroundImage from "../assests/DecoBG.png";
 import MiniputLogo from "../assests/MINIPUT_LOGO.png";
 import KwinkLogo from "../assests/kwink_LOGO.png";
+import { adminLoginThunk, setAdminField } from "../store/authSlice";
+import { fetchActiveWorkspaceThunk, setActiveWorkspaceLocal } from "../store/userSlice";
+import { fetchWorkspaces } from "../store/workspaceSlice";
 
 const LoginForm = ({
   showCancel = false,
   handleNext,
-  userId,
-  setUserId,
+  username,
+  setusername,
   password,
   setPassword,
   canSubmit,
@@ -22,8 +24,8 @@ const LoginForm = ({
     <input
       type="text"
       required
-      value={userId}
-      onChange={(e) => setUserId(e.target.value)}
+      value={username}
+      onChange={(e) => setusername(e.target.value)}
       className="w-full rounded-lg bg-gray-300 px-4 py-[9px] text-sm font-light tracking-[0.18em] text-[#9ca2a7] placeholder:text-[#7f868c] focus:outline-none focus:border-[#7eb2b6]"
       placeholder="USERNAME"
     />
@@ -77,36 +79,36 @@ const AuthPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { authLoading, authError } = useSelector((state) => state.admin);
+  const authLoading = useSelector((state) => state?.auth?.authLoading ?? false);
+  const authError = useSelector((state) => state?.auth?.authError ?? "");
 
-  const [userId, setUserId] = useState("");
+  const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
-
-  useEffect(() => {
-    // If needed, sync from Redux, but for now, keep local
-  }, []);
 
   const handleNext = async (event) => {
     event.preventDefault();
 
-    if (!userId.trim() || !password.trim()) {
+    if (!username.trim() || !password.trim()) {
       return;
     }
 
-    const result = await dispatch(adminLoginThunk({ userId, password }));
+    const result = await dispatch(adminLoginThunk({ username, password }));
     if (adminLoginThunk.fulfilled.match(result)) {
+      const user = result.payload;
+      await dispatch(fetchWorkspaces());
+      await dispatch(fetchActiveWorkspaceThunk(user.user.id));
       navigate("/inventory");
     }
   };
 
   const handleCancel = () => {
-    setUserId("");
+    setusername("");
     setPassword("");
     dispatch(setAdminField({ key: "authError", value: "" }));
     dispatch(setAdminField({ key: "authStep", value: 1 }));
   };
 
-  const canSubmit = Boolean(userId.trim() && password.trim() && !authLoading);
+  const canSubmit = Boolean(username.trim() && password.trim() && !authLoading);
 
   return (
     <div className="min-h-screen">
@@ -125,8 +127,8 @@ const AuthPage = () => {
             <p className="mt-1 text-sm font-light text-[#a8adb2] mk-montserrat-slim">Enter your credentials to manage</p>
             <LoginForm
               handleNext={handleNext}
-              userId={userId}
-              setUserId={setUserId}
+              username={username}
+              setusername={setusername}
               password={password}
               setPassword={setPassword}
               canSubmit={canSubmit}
@@ -165,8 +167,8 @@ const AuthPage = () => {
               </p>
               <LoginForm
                 handleNext={handleNext}
-                userId={userId}
-                setUserId={setUserId}
+                username={username}
+                setusername={setusername}
                 password={password}
                 setPassword={setPassword}
                 canSubmit={canSubmit}

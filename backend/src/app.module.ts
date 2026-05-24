@@ -5,8 +5,9 @@ import { OrdersModule } from './modules/orders/orders.module';
 import { ProductsModule } from './modules/products/products.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
-  imports: [AuthModule, ContentModule, OrdersModule, ProductsModule, UploadsModule, WorkspaceModule],
+  imports: [AuthModule, ContentModule, OrdersModule, ProductsModule, UploadsModule, WorkspaceModule, UsersModule],
 })
 export class AppModule { }

@@ -70,4 +70,8 @@ export class ProductEntity {
   @IsOptional()
   @IsDate()
   createdAt?: Date;
+
+  @IsOptional()
+  @IsDate()
+  updatedAt?: Date;
 }
