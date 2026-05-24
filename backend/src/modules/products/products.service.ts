@@ -243,10 +243,9 @@ export class ProductsService implements OnModuleInit {
     if (conditions.length) {
       query += ` WHERE ${conditions.join(' AND ')}`;
     }
-    query += ` ORDER BY "updatedAt" DESC`;
+    query += ` ORDER BY "createdAt" DESC`;
 
     const { rows } = await pool.query(query, values);
-
     return rows.map(mapProductRow);
   }
 
@@ -284,29 +283,28 @@ export class ProductsService implements OnModuleInit {
     const productId = uuidv4();
 
     const query = `
-INSERT INTO products (
-  id,
-  "workspaceId",
-  "articleId",
-  name,
-  category,
-  price,
-  "discountType",
-  "discountValue",
-  stock,
-  "imageUrl",
-  description,
-  "isHidden",
-  "size",
-  "piecesPerPack"
-)
-VALUES (
-  $1,$2,$3,$4,$5,$6,
-  $7,$8,$9,$10,$11,
-  $12,$13::integer[],$14
-)
-RETURNING *    `;
-
+      INSERT INTO products (
+        id,
+        "workspaceId",
+        "articleId",
+        name,
+        category,
+        price,
+        "discountType",
+        "discountValue",
+        stock,
+        "imageUrl",
+        description,
+        "isHidden",
+        "size",
+        "piecesPerPack"
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,
+        $7,$8,$9,$10,$11,
+        $12,$13::integer[],$14
+      )
+      RETURNING * `;
     const values = [
       productId,
       workspaceId,
@@ -422,8 +420,7 @@ RETURNING *    `;
     `;
 
     const { rows } = await pool.query(query, [!!isHidden, id]);
-
-    return rows[0];
+    return mapProductRow(rows[0]);
   }
 
   async deleteProduct(id: string) {

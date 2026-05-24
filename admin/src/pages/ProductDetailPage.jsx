@@ -122,13 +122,17 @@ const ProductDetailPage = () => {
   if (!selectedProduct) return null;
 
   return (
-    <div className="absolute inset-0 overflow-hidden bg-[#f5f5f5] font-['Nunito',sans-serif] md:p-6 lg:p-8 flex items-center justify-center">
-      <div className="flex flex-col md:flex-row w-full max-w-[1000px] h-full max-h-[600px] bg-white md:rounded-2xl md:shadow-md md:border md:border-gray-200 overflow-hidden">
-        <div className="relative h-[45%] md:h-full w-full md:w-1/2 shrink-0 bg-[#f0f0f0] group">
+    <div className="absolute inset-0 overflow-hidden bg-[#f5f5f5] font-['Nunito',sans-serif] md:p-6 lg:p-8 flex md:items-center justify-center">
+      <div className="flex flex-col md:flex-row w-full max-w-[1250px] h-full max-h-[800px] bg-white md:rounded-2xl md:shadow-md md:border md:border-gray-200 overflow-hidden">
+        <div className="relative h-[45%] md:h-full w-full md:w-1/2 overflow-hidden shrink-0 group">
+
+          <div className="absolute inset-0 bg-center bg-cover blur-lg scale-110" style={{ backgroundImage: `url(${productImages[currentImageIndex]})` }} />
+
+          <div className="absolute inset-0 bg-black/10" />
+
           <button
             onClick={() => navigate("/home")}
-            className="absolute top-4 left-4 w-10 h-10 bg-white/80 hover:bg-white rounded-full flex items-center justify-center shadow-sm transition-colors z-20 text-[#0E2A4A]"
-            aria-label="Go back"
+            className="absolute top-4 left-4 z-20 w-10 h-10 rounded-full bg-white/80 hover:bg-white flex items-center justify-center shadow-sm transition-colors text-[#0E2A4A]"
           >
             <ArrowLeft size={20} />
           </button>
@@ -137,20 +141,21 @@ const ProductDetailPage = () => {
             src={productImages[currentImageIndex]}
             alt={currentProduct.name}
             onClick={() => setShowPreview(true)}
-            className="w-full h-full object-cover cursor-zoom-in"
+            className="relative z-10 w-full h-full object-contain cursor-zoom-in"
           />
 
           {productImages.length > 1 && (
             <>
               <button
                 onClick={onPrevImage}
-                className="absolute top-1/2 -translate-y-1/2 left-4 w-9 h-9 bg-white/70 hover:bg-white rounded-full flex items-center justify-center shadow-sm transition-colors md:opacity-0 group-hover:opacity-100 text-[#0E2A4A]"
+                className="absolute z-20 top-1/2 left-4 -translate-y-1/2 w-9 h-9 rounded-full bg-white/70 hover:bg-white flex items-center justify-center shadow-sm transition-colors md:opacity-0 group-hover:opacity-100"
               >
                 <ChevronLeft size={20} />
               </button>
+
               <button
                 onClick={onNextImage}
-                className="absolute top-1/2 -translate-y-1/2 right-4 w-9 h-9 bg-white/70 hover:bg-white rounded-full flex items-center justify-center shadow-sm transition-colors md:opacity-0 group-hover:opacity-100 text-[#0E2A4A]"
+                className="absolute z-20 top-1/2 right-4 -translate-y-1/2 w-9 h-9 rounded-full bg-white/70 hover:bg-white flex items-center justify-center shadow-sm transition-colors md:opacity-0 group-hover:opacity-100"
               >
                 <ChevronRight size={20} />
               </button>
@@ -183,44 +188,25 @@ const ProductDetailPage = () => {
               {currentProduct.description || "Premium quality material designed for maximum comfort and durability."}
             </p>
 
-            <div className="text-[11px] font-bold text-[#888] mb-3 uppercase tracking-widest">Available Sizes</div>
+            <div className="text-[11px] font-bold text-[#888] mb-3 uppercase tracking-widest">Included Sizes</div>
             <div className="flex gap-2 mb-8 flex-wrap">
               {availableSizes.map((size) => (
-                <button
+                <div
                   key={size}
-                  type="button"
-                  onClick={() => toggleSize(size)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-black select-none shadow-sm transition-colors ${
-                    selectedSizes.includes(size) ? "bg-[#0E2A4A] text-white" : "bg-gray-100 text-[#1a1a1a]"
-                  }`}
+                  className="size-8 md:min-w-10 md:h-10 px-3 rounded-full flex items-center justify-center text-sm font-black bg-gray-100 text-[#1a1a1a] shadow-sm"
                 >
                   {size}
-                </button>
+                </div>
               ))}
             </div>
 
             <div className="flex items-end justify-between mb-4 border-t border-[#f0f0f0] pt-6 mt-auto">
               <div>
-                <div className="text-[11px] font-bold text-[#888] mb-3 uppercase tracking-widest">Quantity</div>
-                <div className="flex items-center gap-3 bg-gray-50 rounded-full p-1 shadow-inner border border-gray-100">
-                  <button
-                    onClick={() => handleQtyChange(-1)}
-                    className="w-9 h-9 bg-white hover:bg-gray-100 text-[#0E2A4A] rounded-full flex items-center justify-center transition-colors shadow-sm border border-gray-200"
-                  >
-                    <Minus size={16} strokeWidth={2.5} />
-                  </button>
-                  <input
-                    type="text"
-                    value={quantity}
-                    onChange={handleQuantityInput}
-                    className="w-10 text-center text-lg font-black bg-transparent border-none focus:outline-none text-[#1a1a1a]"
-                  />
-                  <button
-                    onClick={() => handleQtyChange(1)}
-                    className="w-9 h-9 bg-white hover:bg-gray-100 text-[#0E2A4A] rounded-full flex items-center justify-center transition-colors shadow-sm border border-gray-200"
-                  >
-                    <Plus size={16} strokeWidth={2.5} />
-                  </button>
+                <div className="text-[11px] font-bold text-[#888] mb-3 uppercase tracking-widest">
+                  {stockInfo.label}
+                </div>
+                <div className={`flex items-center justify-between text-base font-black leading-none rounded-full px-3 py-2 shadow-inner border ${stockInfo.color}`}>
+                    {currentProduct.stock || 0} ITEMS
                 </div>
               </div>
 
@@ -239,10 +225,6 @@ const ProductDetailPage = () => {
               ) : (
                 <div className="text-3xl lg:text-4xl font-black text-[#1a1a1a]">Rs.{currentProduct.price}</div>
               )}
-            </div>
-
-            <div className={`mt-6 inline-flex items-center px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-wider ${stockInfo.color}`}>
-              {stockInfo.label} &bull; {currentProduct.stock || 0} ITEMS
             </div>
           </div>
         </div>

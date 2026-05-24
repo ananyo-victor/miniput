@@ -4,7 +4,7 @@ const DeleteProductModal = ({ show, product, onConfirm, onCancel, isDeleting }) 
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
       <div className="bg-white rounded-2xl shadow-lg p-6 max-w-sm w-full mx-4">
         <h2 className="text-xl font-black text-[#1a1a1a] mb-2">Delete Product</h2>
         <p className="text-sm text-[#666] mb-6">

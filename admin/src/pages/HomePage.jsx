@@ -1,15 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router";
 import ProductCard from "../components/products/ProductCard";
 import { fetchProducts } from "../store/productsSlice";
-import { setActiveCategory } from "../store/homeSlice";
+import { fetchWorkspaceHomeContentThunk, setActiveCategory } from "../store/homeSlice";
 import { setActiveWorkspaceLocal } from "../store/userSlice";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCardSkeleton from "../components/skeletonLoader/ProductCardSkeleton";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const ITEMS_PER_PAGE = 24;
 
 const normalizeText = (value) => String(value || "").trim().toLowerCase();
@@ -59,18 +57,36 @@ const productMatchesPromoTag = (product, tag) => {
     .includes(normalizedTag);
 };
 
+const productMatchesSearchQuery = (product, query) => {
+  const normalizedQuery = normalizeText(query);
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const searchableValues = [
+    product?.name,
+    product?.articleId,
+    product?.category,
+    product?.description
+  ];
+
+  return searchableValues
+    .map((item) => normalizeText(item))
+    .join(" ")
+    .includes(normalizedQuery);
+};
+
 const HomePage = () => {
   const { workspaceSlug } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { activeCategory } = useSelector((state) => state.home);
+  const { activeCategory, searchQuery, homeContent } = useSelector((state) => state.home);
   const workspaces = useSelector((state) => state.workspace.items);
   const activeWorkspace = useSelector((state) => state.user.activeWorkspace);
   const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
 
-  const [homeContent, setHomeContent] = useState({ heroImageUrls: [], promoTags: [] });
   const [activePromoTag, setActivePromoTag] = useState("all");
   const [heroIndex, setHeroIndex] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,25 +110,8 @@ const HomePage = () => {
   useEffect(() => {
     if (!activeWorkspaceId) return;
     dispatch(fetchProducts({ includeHidden: false, workspaceId: activeWorkspaceId }));
+    dispatch(fetchWorkspaceHomeContentThunk(activeWorkspaceId));
   }, [dispatch, activeWorkspaceId]);
-
-  useEffect(() => {
-    if (!activeWorkspaceId) return;
-
-    const loadHomeContent = async () => {
-      try {
-        const res = await axios.get(`${API_BASE_URL}/api/content/home/workspace/${activeWorkspaceId}`);
-        setHomeContent({
-          heroImageUrls: Array.isArray(res?.data?.heroImageUrls) ? res.data.heroImageUrls.slice(0, 4) : [],
-          promoTags: Array.isArray(res?.data?.promoTags) ? res.data.promoTags : [],
-        });
-      } catch {
-        setHomeContent({ heroImageUrls: [], promoTags: [] });
-      }
-    };
-
-    loadHomeContent();
-  }, [activeWorkspaceId]);
 
   const heroImages = homeContent.heroImageUrls || [];
   const promoTags = homeContent.promoTags || [];
@@ -134,7 +133,7 @@ const HomePage = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeWorkspaceId, activeCategory, activePromoTag]);
+  }, [activeWorkspaceId, activeCategory, activePromoTag, searchQuery]);
 
   const filteredProducts = useMemo(() => {
     const normalizedActiveCategory = normalizeCategory(activeCategory);
@@ -142,9 +141,11 @@ const HomePage = () => {
 
     return products.filter((product) => {
       const categoryMatch = normalizedActiveCategory === "all" || acceptedCategories.has(normalizeCategory(product.category));
-      return categoryMatch && productMatchesPromoTag(product, activePromoTag);
+      return categoryMatch
+        && productMatchesPromoTag(product, activePromoTag)
+        && productMatchesSearchQuery(product, searchQuery);
     });
-  }, [products, activeCategory, activePromoTag]);
+  }, [products, activeCategory, activePromoTag, searchQuery]);
 
   const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
   const paginatedProducts = useMemo(() => {
