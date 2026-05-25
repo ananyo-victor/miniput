@@ -87,7 +87,7 @@ const TopBar = () => {
   }, [dispatch, isHomePage, searchInput]);
 
   return (
-    <header className="bg-white text-[#0E2A4A] border-b border-gray-200 flex flex-col lg:flex-row items-center justify-between px-4 py-3 lg:py-0 lg:h-[72px] sticky top-0 z-[40] w-full gap-3 lg:gap-6">
+    <header className="bg-white text-[#0E2A4A] border-b border-gray-200 flex flex-col lg:flex-row items-center justify-between px-4 py-3 lg:py-0 lg:h-[72px] sticky top-0 z-50 w-full gap-3 lg:gap-6">
       <div className="flex items-center justify-between w-full lg:w-auto lg:contents">
         <div className="flex items-center shrink-0 lg:w-[220px] relative" ref={dropdownRef}>
           <button
@@ -123,7 +123,7 @@ const TopBar = () => {
           <div className="flex flex-col items-end lg:items-start leading-tight cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
             <span className="text-[10px] lg:text-[11px] text-gray-500 font-semibold">Hello, {auth?.fullName || "Admin"}</span>
             <span className="text-[11px] lg:text-[13px] font-black text-[#0E2A4A] flex items-center gap-1">
-              <User size={12} className="lg:hidden" /> Account
+              <User size={12} className="lg:hidden" /> Admin
             </span>
           </div>
 
@@ -181,7 +181,7 @@ const TopBar = () => {
               placeholder="Search products..."
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
-              className="flex-1 bg-transparent px-4 font-semibold text-gray-800 text-sm lg:text-base outline-none w-full placeholder:text-gray-400"/>
+              className="flex-1 bg-transparent px-4 font-semibold text-gray-800 text-sm lg:text-base outline-none w-full placeholder:text-gray-400" />
           </div>
         </div>
       )}
