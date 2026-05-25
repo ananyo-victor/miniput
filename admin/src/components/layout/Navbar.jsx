@@ -34,10 +34,7 @@ const Navbar = ({ isCollapsed, toggleSidebar }) => {
 
   return (
     <nav
-      className={`z-40 flex flex-col bg-white transition-all duration-300 
-        border-b border-gray-200 lg:border-b-0 lg:border-r lg:border-gray-200 lg:fixed lg:top-[72px] lg:bottom-0 lg:left-0 
-        ${isCollapsed ? "lg:w-20" : "lg:w-64"}`}
-    >
+      className={`sticky top-16 z-40 flex flex-col bg-white transition-all duration-300 border-b border-gray-200 lg:border-b-0 lg:border-r lg:border-gray-200 lg:fixed lg:top-[72px] lg:bottom-0 lg:left-0 ${isCollapsed ? "lg:w-20" : "lg:w-64"}`}>
       <div className={`hidden lg:flex items-center border-b border-gray-100 ${isCollapsed ? "justify-center p-4" : "justify-between p-4"}`}>
         {!isCollapsed && <span className="font-bold text-xs text-gray-400 uppercase tracking-widest">Navigation</span>}
         <button

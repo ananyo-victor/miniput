@@ -27,6 +27,7 @@ const TopBar = () => {
   const searchQuery = useSelector((state) => state.home.searchQuery);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [searchInput, setSearchInput] = useState(searchQuery);
+  const [showCategories, setShowCategories] = useState(false);
   const dropdownRef = useRef(null);
 
   const handleLogout = () => {
@@ -36,6 +37,8 @@ const TopBar = () => {
   };
 
   const isHomePage = location.pathname === "/home" || location.pathname.startsWith("/home/") || location.pathname === "/miniput" || location.pathname === "/kwink";
+
+  const selectedCategory = categoryOptions.find((item) => item.value === activeCategory) || categoryOptions[0];
 
   const handleWorkspaceSwitch = async (workspace) => {
     console.log("Switching to workspace:", workspace);
@@ -120,11 +123,12 @@ const TopBar = () => {
         </div>
 
         <div className="flex items-center gap-2 lg:gap-5 shrink-0 lg:order-3">
-          <div className="flex flex-col items-end lg:items-start leading-tight cursor-pointer hover:bg-gray-50 p-2 rounded-xl transition-colors">
-            <span className="text-[10px] lg:text-[11px] text-gray-500 font-semibold">Hello, {auth?.fullName || "Admin"}</span>
-            <span className="text-[11px] lg:text-[13px] font-black text-[#0E2A4A] flex items-center gap-1">
-              <User size={12} className="lg:hidden" /> Admin
-            </span>
+          <div className="flex space-x-1 items-center leading-tight cursor-pointer hover:bg-[#f0f7f8] p-4 rounded-xl transition-colors">
+            <User className="size-5" />
+            <div className="flex flex-col md:flex-row space-x-1 items-start">
+              <span className="text-[10px] lg:text-[15px] text-gray-500 font-semibold">Hello, </span>
+              <span className="text-[11px] lg:text-[15px] font-black text-[#0E2A4A] flex items-center gap-1">{auth?.fullName || "Admin"}</span>
+            </div>
           </div>
 
           <button
@@ -140,42 +144,45 @@ const TopBar = () => {
 
       {isHomePage && (
         <div className="flex-1 w-full lg:max-w-3xl order-last lg:order-2">
-          <div className="flex w-full rounded-2xl border border-gray-200 overflow-hidden focus-within:border-[#0E2A4A] focus-within:ring-2 focus-within:ring-[#0E2A4A]/10 transition-all bg-white shadow-sm h-[44px] lg:h-[48px]">
+          <div className="flex w-full rounded-2xl border border-gray-200 overflow-visible focus-within:border-[#0E2A4A] focus-within:ring-2 focus-within:ring-[#0E2A4A]/10 transition-all bg-white shadow-sm h-[44px] lg:h-[48px]">
 
-            <div className="relative hidden md:flex items-center bg-gray-50 border-r border-gray-200">
-              <select
-                value={activeCategory}
-                onChange={(event) =>
-                  dispatch(setActiveCategory(event.target.value))
-                }
-                className="appearance-none bg-transparent text-[#0E2A4A] text-sm font-semibold pl-4 pr-10 h-full outline-none cursor-pointer hover:bg-gray-100 transition-colors min-w-[180px]">
-                {categoryOptions.map((option) => (
-                  <option
-                    key={option.value}
-                    value={option.value}
-                    className="bg-white text-[#0E2A4A]"
-                  >
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute right-3 text-gray-500">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2.5}
+              <div className="relative hidden md:flex items-center bg-gray-50 border-r border-gray-200 min-w-[190px] rounded-l-2xl">
+                <button
+                  onClick={() => setShowCategories((prev) => !prev)}
+                  className="w-full h-full flex items-center justify-between px-4 text-sm font-semibold text-[#0E2A4A] hover:bg-gray-100 transition-colors rounded-l-2xl"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
+                  <span>{selectedCategory?.label}</span>
+                  <ChevronDown
+                    size={16}
+                    className={`transition-transform duration-200 ${showCategories ? "rotate-180" : ""}`}
                   />
-                </svg>
+                </button>
+                {showCategories && (
+                  <div className="absolute top-full mt-2 left-0 w-full bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden z-50">
+                    {categoryOptions.map((option) => {
+                      const isActive = activeCategory === option.value;
+
+                      return (
+                        <button
+                          key={option.value}
+                          onClick={() => {
+                            dispatch(setActiveCategory(option.value));
+                            setShowCategories(false);
+                          }}
+                          className={`w-full text-left px-4 py-3 text-sm font-semibold transition-all flex items-center justify-between ${isActive ? "bg-[#f0f7f8] text-[#0E2A4A]" : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                        >
+                          {option.label}
+
+                          {isActive && (
+                            <div className="w-2 h-2 rounded-full bg-[#0E2A4A]" />
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            </div>
             <input
               type="text"
               placeholder="Search products..."

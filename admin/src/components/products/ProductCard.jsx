@@ -19,7 +19,7 @@ const ProductCard = ({ product, onClick }) => {
             <div className="flex flex-col min-h-[40px] justify-end">
               {product.isDiscountActive ? (
                 <>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center space-x-1.5">
                     <span className="text-[10px] text-gray-300 line-through">Rs.{product.originalPrice ?? product.price}</span>
                     <span className="text-[9px] bg-red-500 text-white px-1 py-0.5 rounded font-bold">{product.discountLabel}</span>
                   </div>
