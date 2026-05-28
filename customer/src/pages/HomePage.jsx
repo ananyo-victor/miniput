@@ -249,41 +249,39 @@ const HomePage = () => {
     : "";
 
   return (
-    <div className="flex-1 flex flex-col bg-[#f5f5f5]">
-      <section className="relative overflow-hidden bg-white">
+    <div className="flex-1 flex flex-col bg-[#f5f5f5] pb-10">
+      {/* HERO SECTION */}
+      <section className="relative overflow-hidden w-full bg-white">
         {activeHeroImage ? (
-          <div className="relative mx-auto h-[210px] w-full max-w-[1440px] sm:h-[300px] lg:h-[380px] xl:h-[420px]">
+          <div className="relative mx-auto h-[260px] w-full max-w-[1440px] sm:h-[400px] lg:h-[500px]">
             <img
               src={activeHeroImage}
               alt={`${activeBrand} hero`}
               className="h-full w-full object-cover object-center transition-opacity duration-1000"
             />
-
             {heroImages.length > 1 && (
               <>
                 <button
                   type="button"
                   onClick={goToPrevHero}
-                  className="absolute left-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:left-6"
+                  className="absolute left-3 top-[40%] hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:left-6 z-20"
                   aria-label="Previous hero"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#0E2A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                   </svg>
                 </button>
-
                 <button
                   type="button"
                   onClick={goToNextHero}
-                  className="absolute right-3 top-1/2 hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:right-6"
+                  className="absolute right-3 top-[40%] hidden -translate-y-1/2 rounded-full bg-white/90 p-2.5 shadow-md transition hover:bg-white sm:block lg:right-6 z-20"
                   aria-label="Next hero"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#0E2A4A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
-
-                <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-white/70 px-2.5 py-1.5 backdrop-blur">
+                <div className="absolute bottom-16 left-1/2 flex -translate-x-1/2 gap-2 rounded-full bg-white/70 px-2.5 py-1.5 backdrop-blur z-20">
                   {heroImages.map((_, i) => {
                     const isActiveDot = i === (heroIndexByBrand[activeBrand] || 0);
                     return (
@@ -299,31 +297,35 @@ const HomePage = () => {
                 </div>
               </>
             )}
+            {/* Gradient Overlay to blend Hero into background */}
+            <div className="absolute inset-x-0 bottom-0 h-32 lg:h-48 bg-gradient-to-t from-[#f5f5f5] to-transparent pointer-events-none z-10" />
           </div>
         ) : (
           <div
-            className={`relative mx-auto flex h-[210px] w-full max-w-[1440px] items-end justify-between gap-4 sm:h-[300px] lg:h-[380px] xl:h-[420px] ${activeBrand === "Miniput" ? "bg-[var(--mk-yellow)]" : "bg-[#5A7A3A]"
-              }`}
+            className={`relative mx-auto flex h-[260px] w-full max-w-[1440px] items-center px-6 sm:h-[400px] lg:h-[500px] sm:px-10 lg:px-16 ${
+              activeBrand === "Miniput" ? "bg-[var(--mk-navy)]" : "bg-[#1f3a1f]"
+            }`}
           >
-            <div className="px-6 pb-10 sm:px-10 lg:px-16 lg:pb-14">
+            <div className="-mt-16">
               <h1
-                className={`tracking-tighter leading-none ${activeBrand === "Miniput"
-                    ? "mk-bebas text-[clamp(36px,6vw,72px)] bg-[linear-gradient(90deg,#E85A1D,#FFB800,#3aa34a,#0E2A4A,#c03fa1)] bg-clip-text text-transparent"
-                    : "text-4xl italic font-black text-white [font-family:'Nunito',sans-serif]"
-                  }`}
+                className={`tracking-tighter leading-none text-white drop-shadow-md ${
+                  activeBrand === "Miniput"
+                    ? "mk-bebas text-[clamp(48px,10vw,120px)]"
+                    : "text-5xl lg:text-7xl italic font-black [font-family:'Nunito',sans-serif]"
+                }`}
               >
-                {activeBrand}
+                {activeBrand.toUpperCase()}
               </h1>
-              <p className="text-xs font-black tracking-[0.3em] opacity-90 mt-2">
-                {activeBrand === "Miniput" ? "KIDS" : "YOUR SHIRT, YOUR STORY"}
-              </p>
             </div>
+            {/* Gradient Overlay to blend Hero into background */}
+            <div className="absolute inset-x-0 bottom-0 h-32 lg:h-48 bg-gradient-to-t from-[#f5f5f5] to-transparent pointer-events-none z-10" />
           </div>
         )}
       </section>
 
-      <div className="sticky top-[100px] z-30 border-b border-gray-100 bg-white">
-        <div className="mx-auto flex max-w-[1440px] gap-2 overflow-x-auto px-4 py-3 sm:px-6 lg:px-8">
+      {/* FLOATING PROMO TAGS */}
+      <div className="sticky top-[60px] lg:top-[75px] z-30 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 lg:-mt-28 mb-4 lg:mb-6">
+        <div className="flex gap-2 overflow-x-auto bg-white rounded-xl lg:rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] p-2.5 lg:p-3 border border-gray-100 items-center">
           <button
             type="button"
             onClick={() =>
@@ -332,10 +334,11 @@ const HomePage = () => {
                 [activeBrand]: "all"
               }))
             }
-            className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wide transition text ${activePromoTag === "all"
+            className={`whitespace-nowrap rounded-full border px-4 py-2 text-[11px] lg:text-[12px] font-black tracking-wide transition ${
+              activePromoTag === "all"
                 ? "border-[#0E2A4A] bg-[#0E2A4A] text-white"
-                : "border-gray-300 bg-white text-gray-600"
-              }`}
+                : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+            }`}
           >
             ALL OFFERS
           </button>
@@ -354,10 +357,11 @@ const HomePage = () => {
                     [activeBrand]: tag
                   }))
                 }
-                className={`whitespace-nowrap rounded-full border px-3 py-1.5 text-[11px] font-black tracking-wide transition ${isActive
+                className={`whitespace-nowrap rounded-full border px-4 py-2 text-[11px] lg:text-[12px] font-black tracking-wide transition ${
+                  isActive
                     ? "border-[#0E2A4A] bg-[#0E2A4A] text-white"
-                    : "border-gray-300 bg-white text-gray-600"
-                  }`}
+                    : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
               >
                 {String(tag || "").toUpperCase()}
               </button>
@@ -366,15 +370,22 @@ const HomePage = () => {
         </div>
       </div>
 
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+      {/* FLOATING PRODUCTS MAIN SECTION */}
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 sm:px-6 lg:px-8 relative z-20">
         {loading ? (
-          <div className="text-center text-gray-400 py-20 font-semibold">Loading products...</div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+            <p className="text-gray-400 font-semibold text-lg">Loading products...</p>
+          </div>
         ) : error ? (
-          <div className="text-center text-red-400 py-20 font-semibold">{error}</div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+            <p className="text-red-400 font-semibold text-lg">{error}</p>
+          </div>
         ) : filteredProducts.length === 0 ? (
-          <div className="text-center text-gray-400 py-20 font-semibold">No products found</div>
+          <div className="bg-white rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.04)] border border-gray-100 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
+            <p className="text-slate-400 font-semibold text-lg">No products found</p>
+          </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}
