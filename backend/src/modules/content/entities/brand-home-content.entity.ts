@@ -1,11 +1,8 @@
-import { IsArray, IsDate, IsIn, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsDate, IsOptional, IsString, IsUUID } from 'class-validator';
 
-export const BRAND_NAMES = ['Miniput', 'Kwink'] as const;
-export type BrandName = (typeof BRAND_NAMES)[number];
-
-export class BrandHomeContentEntity {
-  @IsIn(BRAND_NAMES)
-  brand: BrandName;
+export class WorkspaceHomeContentEntity {
+  @IsUUID()
+  workspaceId: string;
 
   @IsArray()
   @IsString({ each: true })

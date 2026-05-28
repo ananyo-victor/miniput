@@ -101,11 +101,25 @@ const aboutSlice = createSlice({
         state.loading = false;
         state.error = action.error.message;
       })
+      .addCase(updateAboutContentThunk.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateAboutContentThunk.fulfilled, (state, action) => {
         state.aboutContent = action.payload;
       })
+      .addCase(updateAboutContentThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(updateWorkspaceHomeContentThunk.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateWorkspaceHomeContentThunk.fulfilled, (state, action) => {
         state.homeContent = action.payload;
+      })
+      .addCase(updateWorkspaceHomeContentThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       });
   }
 });
