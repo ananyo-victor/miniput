@@ -15,6 +15,7 @@ const PrivateRoute = () => {
   const { token, isAdmin } = getAdminAuthFromStorage();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   if (!token || !isAdmin) {
     clearAdminToken();
@@ -35,13 +36,15 @@ const PrivateRoute = () => {
   return (
     <div className="flex flex-col min-h-screen bg-[#f5f5f5]">
       {/* Enterprise Top Navbar */}
-      <TopBar />
+      <TopBar onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
 
       <div className="flex flex-col lg:flex-row flex-1 min-h-0 relative">
         {/* Navigation Sidebar */}
         <Navbar
           isCollapsed={isSidebarCollapsed}
           toggleSidebar={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          isMobileMenuOpen={isMobileMenuOpen}
+          closeMobileMenu={() => setIsMobileMenuOpen(false)}
         />
 
         {/* Main Content Area */}

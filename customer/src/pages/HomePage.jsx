@@ -1,12 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
 import ProductCard from "../components/products/ProductCard";
 import { fetchProducts } from "../store/productsSlice";
-import { setActiveBrand, setActiveCategory } from "../store/homeSlice";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { fetchHomeContent, setActiveBrand, setActiveCategory } from "../store/homeSlice";
 
 const normalizeText = (value) =>
   String(value || "")
@@ -87,7 +84,7 @@ const HomePage = () => {
   const { brand } = useParams();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { activeBrand, activeCategory } = useSelector((state) => state.home);
+  const { activeBrand, activeCategory, homeContentByBrand } = useSelector((state) => state.home);
 
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
     Miniput: "all",
@@ -97,47 +94,14 @@ const HomePage = () => {
     Miniput: 0,
     Kwink: 0
   });
-  const [homeContentByBrand, setHomeContentByBrand] = useState({
-    Miniput: { ...emptyBrandContent },
-    Kwink: { ...emptyBrandContent }
-  });
 
   useEffect(() => {
     dispatch(fetchProducts(false));
   }, [dispatch]);
 
   useEffect(() => {
-    const loadHomeContent = async () => {
-      try {
-        const [miniputRes, kwinkRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/content/home/miniput`),
-          axios.get(`${API_BASE_URL}/api/content/home/kwink`)
-        ]);
-
-        setHomeContentByBrand({
-          Miniput: {
-            heroImageUrls: Array.isArray(miniputRes?.data?.heroImageUrls)
-              ? miniputRes.data.heroImageUrls.slice(0, 4)
-              : [],
-            promoTags: Array.isArray(miniputRes?.data?.promoTags) ? miniputRes.data.promoTags : []
-          },
-          Kwink: {
-            heroImageUrls: Array.isArray(kwinkRes?.data?.heroImageUrls)
-              ? kwinkRes.data.heroImageUrls.slice(0, 4)
-              : [],
-            promoTags: Array.isArray(kwinkRes?.data?.promoTags) ? kwinkRes.data.promoTags : []
-          }
-        });
-      } catch {
-        setHomeContentByBrand({
-          Miniput: { ...emptyBrandContent },
-          Kwink: { ...emptyBrandContent }
-        });
-      }
-    };
-
-    loadHomeContent();
-  }, []);
+    dispatch(fetchHomeContent());
+  }, [dispatch]);
 
   const urlBrand = useMemo(() => {
     const pathParts = location.pathname.split("/").filter(Boolean);
@@ -251,13 +215,15 @@ const HomePage = () => {
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5] pb-10">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden w-full bg-white">
+      <section className="relative overflow-hidden w-full bg-yellow-300">
         {activeHeroImage ? (
-          <div className="relative mx-auto h-[260px] w-full max-w-[1440px] sm:h-[400px] lg:h-[500px]">
+          <div className="relative bg-red-300 mx-auto w-full md:h-[500px]">
+
+            <div className="absolute inset-0 bg-center bg-cover blur-xl scale-110" style={{ backgroundImage: `url(${activeHeroImage})` }} />
             <img
               src={activeHeroImage}
               alt={`${activeBrand} hero`}
-              className="h-full w-full object-cover object-center transition-opacity duration-1000"
+              className="relative h-full w-full object-contain object-center"
             />
             {heroImages.length > 1 && (
               <>
@@ -325,7 +291,7 @@ const HomePage = () => {
 
       {/* FLOATING PROMO TAGS */}
       <div className="sticky top-[60px] lg:top-[75px] z-30 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 -mt-16 sm:-mt-20 lg:-mt-28 mb-4 lg:mb-6">
-        <div className="flex gap-2 overflow-x-auto bg-white rounded-xl lg:rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.06)] p-2.5 lg:p-3 border border-gray-100 items-center">
+        <div className="flex gap-2 overflow-x-auto bg-white/50 rounded-xl lg:rounded-2xl shadow-sm p-3 border border-gray-100 items-center mk-scroll-hidden">
           <button
             type="button"
             onClick={() =>
@@ -334,7 +300,7 @@ const HomePage = () => {
                 [activeBrand]: "all"
               }))
             }
-            className={`whitespace-nowrap rounded-full border px-4 py-2 text-[11px] lg:text-[12px] font-black tracking-wide transition ${
+            className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black ${
               activePromoTag === "all"
                 ? "border-[#0E2A4A] bg-[#0E2A4A] text-white"
                 : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50"

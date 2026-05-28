@@ -19,10 +19,6 @@ const Navbar = ({ onMenuClick }) => {
   const cart = useSelector((state) => state.customer.cart);
   const cartCount = cart.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
 
-  if (location.pathname.includes("/cart")) {
-    return null;
-  }
-
   const handleNavClick = (item) => {
     if (item.brand) {
       dispatch(setActiveBrand(item.brand));

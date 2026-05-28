@@ -39,7 +39,6 @@ export default function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Initialize axios interceptors for automatic token refresh on 401
     setupAxiosInterceptors(dispatch);
   }, [dispatch]);
 

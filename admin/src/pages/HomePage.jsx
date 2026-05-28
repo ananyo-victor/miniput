@@ -159,7 +159,7 @@ const HomePage = () => {
     <div className="flex-1 flex flex-col bg-[#f5f5f5]">
       <section className="relative overflow-hidden bg-white">
         {activeHeroImage ? (
-          <div className="relative mx-auto h-[200px] w-full max-w-[1440px] sm:h-[240px] lg:h-[300px]">
+          <div className="relative mx-auto w-full md:h-[500px]">
             <img src={activeHeroImage} alt={`${activeWorkspace?.name || "Workspace"} hero`} className="h-full w-full object-cover object-top transition-opacity duration-1000" />
             <div className="absolute inset-x-0 bottom-0 h-24 lg:h-36 bg-gradient-to-t from-[#f5f5f5] to-transparent pointer-events-none"></div>
             {heroImages.length > 1 && (
@@ -180,7 +180,7 @@ const HomePage = () => {
       </section>
 
       <div className="relative z-20 mx-auto w-full max-w-[1440px] px-4 sm:px-6 lg:px-8 -mt-12 lg:-mt-24">
-        <div className="bg-white shadow-sm border border-gray-200 rounded-2xl p-3 mb-6 flex gap-2 overflow-x-auto mk-scroll-hidden">
+        <div className="bg-white/50 shadow-sm border border-gray-200 rounded-2xl p-3 mb-6 flex gap-2 overflow-x-auto mk-scroll-hidden">
           <button type="button" onClick={() => setActivePromoTag("all")} className={`whitespace-nowrap rounded-full border px-4 py-2 text-[10px] font-black tracking-wide transition ${activePromoTag === "all" ? "border-[#0E2A4A] bg-[#0E2A4A] text-white" : "border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100"}`}>ALL OFFERS</button>
           {promoTags.map((tag, index) => {
             const isActive = normalizeText(tag) === normalizeText(activePromoTag);
