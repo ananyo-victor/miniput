@@ -36,6 +36,8 @@ const AboutPage = () => {
   const [success, setSuccess] = useState("");
 
   const [aboutForm, setAboutForm] = useState({
+    miniputDetailsText: "",
+    kwinkDetailsText: "",
     address: "",
     whatsappNumber: "",
     phoneNumber: "",
@@ -44,7 +46,6 @@ const AboutPage = () => {
   const [workspaceForm, setWorkspaceForm] = useState({
     heroImageUrls: [],
     promoTagsText: "",
-    detailsText: "",
   });
 
   const [uploadingCount, setUploadingCount] = useState(0);
@@ -66,6 +67,8 @@ const AboutPage = () => {
       ]);
 
       setAboutForm({
+        miniputDetailsText: joinMultiline(aboutData?.miniputDetails),
+        kwinkDetailsText: joinMultiline(aboutData?.kwinkDetails),
         address: aboutData?.address || "",
         whatsappNumber: aboutData?.whatsappNumber || "",
         phoneNumber: aboutData?.phoneNumber || "",
@@ -76,7 +79,6 @@ const AboutPage = () => {
           ? workspaceData.heroImageUrls.slice(0, 4)
           : [],
         promoTagsText: joinMultiline(workspaceData?.promoTags),
-        detailsText: joinMultiline(workspaceData?.details),
       });
     } catch (loadError) {
       setError(loadError?.error || loadError?.message || "Failed to load content.");
@@ -92,6 +94,27 @@ const AboutPage = () => {
   const handleAboutFieldChange = (field, value) => {
     setAboutForm((prev) => ({ ...prev, [field]: value }));
     setSuccess("");
+  };
+
+  const handleAboutMultilineRowChange = (field, index, value) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(aboutForm[field]));
+    rows[index] = value;
+    handleAboutFieldChange(field, rows.join("\n"));
+  };
+
+  const handleAddAboutMultilineRow = (field) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(aboutForm[field]));
+    handleAboutFieldChange(field, [...rows, ""].join("\n"));
+  };
+
+  const handleDeleteAboutMultilineRow = (field, index) => {
+    const rows = ensureAtLeastOneRow(splitMultilineRaw(aboutForm[field]));
+    const nextRows = rows.filter((_, rowIndex) => rowIndex !== index);
+
+    handleAboutFieldChange(
+      field,
+      ensureAtLeastOneRow(nextRows).join("\n")
+    );
   };
 
   const handleWorkspaceFieldChange = (field, value) => {
@@ -215,6 +238,8 @@ const AboutPage = () => {
       await Promise.all([
         dispatch(
           updateAboutContentThunk({
+            miniputDetails: parseMultiline(aboutForm.miniputDetailsText),
+            kwinkDetails: parseMultiline(aboutForm.kwinkDetailsText),
             address: String(aboutForm.address || "").trim(),
             whatsappNumber: String(aboutForm.whatsappNumber || "").trim(),
             phoneNumber: String(aboutForm.phoneNumber || "").trim(),
@@ -226,7 +251,6 @@ const AboutPage = () => {
             payload: {
               heroImageUrls: workspaceForm.heroImageUrls.slice(0, 4),
               promoTags: parseMultiline(workspaceForm.promoTagsText),
-              details: parseMultiline(workspaceForm.detailsText),
             },
           }),
         ).unwrap(),
@@ -239,9 +263,12 @@ const AboutPage = () => {
       setSaving(false);
     }
   };
-
+  const miniputDetailRows = ensureAtLeastOneRow(splitMultilineRaw(aboutForm.miniputDetailsText));
+  const kwinkDetailRows = ensureAtLeastOneRow(splitMultilineRaw(aboutForm.kwinkDetailsText));
+  const isMiniputWorkspace = activeWorkspace?.name === "Miniput";
+  const aboutDetailsField = isMiniputWorkspace ? "miniputDetailsText" : "kwinkDetailsText";
+  const aboutDetailRows = isMiniputWorkspace ? miniputDetailRows : kwinkDetailRows;
   const promoTagRows = ensureAtLeastOneRow(splitMultilineRaw(workspaceForm.promoTagsText));
-  const detailRows = ensureAtLeastOneRow(splitMultilineRaw(workspaceForm.detailsText));
 
   if (loading) {
     return (
@@ -328,29 +355,31 @@ const AboutPage = () => {
                   Workspace Details (one line = one bullet)
                 </span>
                 <div className="mt-1 space-y-2">
-                  {detailRows.map((rowValue, rowIndex) => (
-                    <div key={`details-row-${rowIndex}`} className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={rowValue}
-                        onChange={(event) =>
-                          handleWorkspaceMultilineRowChange("detailsText", rowIndex, event.target.value)
-                        }
-                        className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#0E2A4A]"
-                        placeholder={rowIndex === 0 ? "Size range: 1 to 8" : "2-piece sets: pant + shirt"}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteWorkspaceMultilineRow("detailsText", rowIndex)}
-                        className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
+                  {aboutDetailRows.map((rowValue, rowIndex) => {
+                    return (
+                      <div key={`details-row-${rowIndex}`} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={rowValue}
+                          onChange={(event) =>
+                            handleAboutMultilineRowChange(aboutDetailsField, rowIndex, event.target.value)
+                          }
+                          className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#0E2A4A]"
+                          placeholder={rowIndex === 0 ? "Size range: 1 to 8" : "2-piece sets: pant + shirt"}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAboutMultilineRow(aboutDetailsField, rowIndex)}
+                          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-100"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    )
+                  })}
                   <button
                     type="button"
-                    onClick={() => handleAddWorkspaceMultilineRow("detailsText")}
+                    onClick={() => handleAddAboutMultilineRow(aboutDetailsField)}
                     className="rounded-lg border border-[#0E2A4A] px-3 py-2 text-xs font-bold text-[#0E2A4A] hover:bg-[#0E2A4A] hover:text-white"
                   >
                     More Points

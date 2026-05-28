@@ -22,8 +22,33 @@ export const verifyCustomerThunk = createAsyncThunk("customer/verify", async (pa
   return data;
 });
 
+const sanitizeOrderPayload = (payload = {}) => {
+  const rest = { ...payload };
+  delete rest.workspaceId;
+  delete rest.brand;
+  delete rest.variantId;
+  const items = Array.isArray(payload?.items) ? payload.items : [];
+  const sanitizedItems = Array.isArray(items)
+    ? items.map((item) => {
+      if (!item || typeof item !== "object") {
+        return item;
+      }
+      const nextItem = { ...item };
+      delete nextItem.brand;
+      delete nextItem.variantId;
+      return nextItem;
+    })
+    : [];
+
+  return {
+    ...rest,
+    items: sanitizedItems,
+  };
+};
+
 export const createOrderThunk = createAsyncThunk("customer/createOrder", async (payload) => {
-  const { data } = await axios.post(`${API_BASE_URL}/api/orders`, payload);
+  const sanitizedPayload = sanitizeOrderPayload(payload);
+  const { data } = await axios.post(`${API_BASE_URL}/api/orders`, sanitizedPayload);
   return data;
 });
 

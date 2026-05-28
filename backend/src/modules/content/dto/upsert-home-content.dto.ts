@@ -20,14 +20,4 @@ export class UpsertHomeContentDto {
   @IsArray()
   @IsString({ each: true })
   promoTags?: string[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  offerTexts?: string[];
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  badges?: string[];
 }

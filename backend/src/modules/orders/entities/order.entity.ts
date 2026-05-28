@@ -19,16 +19,13 @@ export class OrderItemEntity {
   @IsUUID()
   id?: string;
 
+  @IsOptional()
   @IsUUID()
-  workspaceId: string;
+  workspaceId?: string;
 
   @IsOptional()
   @IsUUID()
   productId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  variantId?: string;
 
   @IsOptional()
   @IsString()

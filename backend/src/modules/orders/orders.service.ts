@@ -6,33 +6,57 @@ import { OrderEntity, OrderItemEntity } from './entities/order.entity';
 
 @Injectable()
 export class OrdersService {
-  private async validateWorkspaceExists(
-    workspaceId: string,
-  ) {
-    const { rows } = await pool.query(
-      `SELECT id FROM workspace WHERE id = $1`,
-      [workspaceId],
+  private async resolveWorkspaceIdFromItems(
+    items: OrderItemEntity[],
+  ): Promise<string | null> {
+    const workspaceIdFromItems = items.find(
+      (item) => item.workspaceId,
+    )?.workspaceId;
+
+    if (workspaceIdFromItems) {
+      return workspaceIdFromItems;
+    }
+
+    const productIds = Array.from(
+      new Set(
+        items
+          .map((item) => item.productId || item.id)
+          .filter((id): id is string => Boolean(id)),
+      ),
     );
 
-    if (!rows.length) {
-      throw new Error('Invalid workspaceId');
+    if (!productIds.length) {
+      return null;
     }
+
+    const { rows } = await pool.query(
+      `
+      SELECT "workspaceId"
+      FROM products
+      WHERE id::text = ANY($1::text[])
+      AND "workspaceId" IS NOT NULL
+      LIMIT 1
+      `,
+      [productIds],
+    );
+
+    return rows[0]?.workspaceId || null;
   }
+
   async createOrder(
     orderData: CreateOrderDto,
   ): Promise<OrderEntity> {
-
     const {
-      workspaceId,
       customerPhone,
       items,
       totalPrice,
       address,
     } = orderData;
 
-    await this.validateWorkspaceExists(
-      workspaceId,
-    );
+    const workspaceId =
+      await this.resolveWorkspaceIdFromItems(
+        items,
+      );
 
     const query = `
     INSERT INTO orders (
@@ -83,26 +107,6 @@ export class OrdersService {
         const explicitSize =
           item.size || item.selectedSize || (Array.isArray(item.selectedSizes) ? item.selectedSizes[0] : null);
         const size = explicitSize ? String(explicitSize) : null;
-        const variantId = item.variantId || null;
-
-        if (variantId) {
-          const { rows: updatedVariantRows } = await client.query(
-            `
-            UPDATE product_variants
-            SET stock = stock - $1
-            WHERE id = $2 AND stock >= $1
-            RETURNING product_id
-            `,
-            [quantity, variantId],
-          );
-
-          if (!updatedVariantRows.length) {
-            throw new Error(`Insufficient stock for variant ${variantId}`);
-          }
-
-          touchedProductIds.add(updatedVariantRows[0].product_id);
-          continue;
-        }
 
         if (productId && size) {
           const { rows: updatedVariantRows } = await client.query(
@@ -188,10 +192,9 @@ export class OrdersService {
     return rows[0];
   }
 
-  async getAdminStats(workspaceId?: string) {
+  async getAdminStats() {
     const query = `
     SELECT
-      o."workspaceId",
       item->>'category' AS category,
       SUM(
         (item->>'price')::numeric
@@ -199,19 +202,11 @@ export class OrdersService {
     FROM orders o,
     jsonb_array_elements(o.items) AS item
     WHERE o.status = 'approved'
-    AND (
-      $1::uuid IS NULL
-      OR o."workspaceId" = $1
-    )
     GROUP BY
-      o."workspaceId",
       item->>'category'
   `;
 
-    const { rows } = await pool.query(
-      query,
-      [workspaceId || null],
-    );
+    const { rows } = await pool.query(query);
 
     return rows;
   }

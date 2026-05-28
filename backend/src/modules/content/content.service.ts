@@ -1,16 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import pool from '../../config/database.config';
 import { AboutContentEntity } from './entities/about-content.entity';
-import { BrandHomeContentEntity, BrandName } from './entities/brand-home-content.entity';
 import { UpsertAboutContentDto } from './dto/upsert-about-content.dto';
 import { UpsertHomeContentDto } from './dto/upsert-home-content.dto';
-
-const normalizeBrand = (brand: string): BrandName => {
-  const value = String(brand || '').trim().toLowerCase();
-  if (value === 'miniput') return 'Miniput';
-  if (value === 'kwink') return 'Kwink';
-  throw new Error('Invalid brand. Allowed values: Miniput, Kwink');
-};
 
 const normalizeStringArray = (value: any) => {
   if (!Array.isArray(value)) return null;
@@ -92,9 +84,7 @@ export class ContentService {
 
     const promoTags =
       normalizeStringArray(
-        payload.promoTags ??
-        payload.offerTexts ??
-        payload.badges,
+        payload.promoTags
       );
 
     const { rows: existingRows } =
