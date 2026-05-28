@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { ShoppingCart, ChevronDown, Menu } from "lucide-react";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
-import { setActiveCategory } from "../../store/homeSlice";
+import { setActiveCategory, setActiveBrand } from "../../store/homeSlice";
 
 const CATEGORIES = [
   { label: "All Categories", value: "all" },
@@ -28,8 +28,9 @@ const Topbar = ({ onMenuClick }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  const isCartPage = location.pathname.includes("/cart");
   const isKwink = location.pathname.includes("kwink");
-  const isMiniput = !isKwink; 
+  const isMiniput = !isKwink && !isCartPage;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -46,31 +47,59 @@ const Topbar = ({ onMenuClick }) => {
     setIsDropdownOpen(false);
     
     if (!location.pathname.includes("/home")) {
-      navigate(`/home/${isMiniput ? "miniput" : "kwink"}`);
+      navigate(`/home/miniput`); 
+      dispatch(setActiveBrand("Miniput"));
     }
+  };
+
+  const handleBrandClick = (brand) => {
+    dispatch(setActiveBrand(brand));
+    dispatch(setActiveCategory("all"));
   };
 
   const selectedCategoryLabel = CATEGORIES.find(c => c.value === activeCategory)?.label || "All Categories";
 
   return (
     <div className="hidden lg:flex items-center justify-between px-6 py-3 bg-white border-b border-gray-100 sticky top-0 z-50">
-      {/* Left side: Hamburger + Active Brand Logo */}
-      <div className="flex-shrink-0 w-52 flex items-center gap-4">
+      <div className="flex-shrink-0 w-64 flex items-center gap-4">
         <button 
           onClick={onMenuClick}
           className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <Menu size={24} />
         </button>
-        {isMiniput && (
-          <Link to="/home/miniput" className="flex items-center gap-2">
-            <img src={MiniputSign} alt="Miniput sign" className="h-12 w-auto object-contain" />
-          </Link>
-        )}
-        {isKwink && (
-          <Link to="/home/kwink" className="flex items-center gap-2">
-            <img src={KwinkSign} alt="Kwink sign" className="h-12 w-auto object-contain" />
-          </Link>
+        
+        {isCartPage ? (
+          <div className="flex items-center gap-3">
+            <Link 
+              to="/home/miniput" 
+              onClick={() => handleBrandClick("Miniput")}
+              className="flex items-center hover:opacity-80 transition-opacity"
+            >
+              <img src={MiniputSign} alt="Miniput sign" className="h-10 w-auto object-contain" />
+            </Link>
+            <div className="w-[1.5px] h-6 bg-gray-200"></div>
+            <Link 
+              to="/home/kwink" 
+              onClick={() => handleBrandClick("Kwink")}
+              className="flex items-center hover:opacity-80 transition-opacity"
+            >
+              <img src={KwinkSign} alt="Kwink sign" className="h-10 w-auto object-contain" />
+            </Link>
+          </div>
+        ) : (
+          <>
+            {isMiniput && (
+              <Link to="/home/miniput" className="flex items-center gap-2">
+                <img src={MiniputSign} alt="Miniput sign" className="h-12 w-auto object-contain" />
+              </Link>
+            )}
+            {isKwink && (
+              <Link to="/home/kwink" className="flex items-center gap-2">
+                <img src={KwinkSign} alt="Kwink sign" className="h-12 w-auto object-contain" />
+              </Link>
+            )}
+          </>
         )}
       </div>
 
@@ -115,7 +144,7 @@ const Topbar = ({ onMenuClick }) => {
       </div>
 
       {/* Right side: Cart Option */}
-      <div className="flex-shrink-0 w-52 flex justify-end items-center">
+      <div className="flex-shrink-0 w-64 flex justify-end items-center">
         <Link to="/cart" className="relative p-2.5 bg-gray-100 rounded-full hover:bg-gray-200 transition text-gray-700">
           <ShoppingCart size={20} />
           {cartCount > 0 && (
