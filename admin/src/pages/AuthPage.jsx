@@ -9,7 +9,6 @@ import { fetchActiveWorkspaceThunk, setActiveWorkspaceLocal } from "../store/use
 import { fetchWorkspaces } from "../store/workspaceSlice";
 
 const LoginForm = ({
-  showCancel = false,
   handleNext,
   username,
   setusername,
@@ -17,7 +16,6 @@ const LoginForm = ({
   setPassword,
   canSubmit,
   authLoading,
-  handleCancel,
   authError,
 }) => (
   <form onSubmit={handleNext} className="mt-6 space-y-3 mk-montserrat-slim">
@@ -45,20 +43,6 @@ const LoginForm = ({
     >
       {authLoading ? "AUTHENTICATING..." : "Continue"}
     </button>
-
-    <p className="pt-1 text-center text-base font-light text-[#a9adb2]">Need help?</p>
-
-    {showCancel && (
-      <div className="flex justify-center pt-1">
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="rounded-lg border border-[#dfdfdf] px-8 py-2 text-xs font-light tracking-[0.22em] text-[#d2d2d2]"
-        >
-          CANCEL
-        </button>
-      </div>
-    )}
 
     {authError && <p className="text-center text-xs font-normal text-red-600">{authError}</p>}
   </form>
@@ -101,13 +85,6 @@ const AuthPage = () => {
     }
   };
 
-  const handleCancel = () => {
-    setusername("");
-    setPassword("");
-    dispatch(setAdminField({ key: "authError", value: "" }));
-    dispatch(setAdminField({ key: "authStep", value: 1 }));
-  };
-
   const canSubmit = Boolean(username.trim() && password.trim() && !authLoading);
 
   return (
@@ -133,7 +110,6 @@ const AuthPage = () => {
               setPassword={setPassword}
               canSubmit={canSubmit}
               authLoading={authLoading}
-              handleCancel={handleCancel}
               authError={authError}
             />
           </div>
@@ -173,7 +149,6 @@ const AuthPage = () => {
                 setPassword={setPassword}
                 canSubmit={canSubmit}
                 authLoading={authLoading}
-                handleCancel={handleCancel}
                 authError={authError}
               />
             </div>
