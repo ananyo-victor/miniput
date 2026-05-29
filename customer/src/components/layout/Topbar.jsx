@@ -15,6 +15,28 @@ const CATEGORIES = [
   { label: "Shorts", value: "shorts" }
 ];
 
+const BrandIcon = ({ brand, className = "" }) => {
+  const isMiniput = brand === "Miniput";
+  const iconSrc = isMiniput ? MiniputSign : KwinkSign;
+  const iconAlt = `${brand} sign`;
+
+  return (
+    <span
+      className={`flex h-9 w-9 lg:h-12 lg:w-12 shrink-0 items-center justify-center rounded-full border ${
+        isMiniput
+          ? "border-[var(--mk-sky)]/35 bg-[var(--mk-sky)]/15"
+          : "border-[var(--mk-green)]/35 bg-[var(--mk-green)]/15"
+      } ${className}`}
+    >
+      <img
+        src={iconSrc}
+        alt={iconAlt}
+        className="h-7 w-7 lg:h-10 lg:w-10 object-contain"
+      />
+    </span>
+  );
+};
+
 const Topbar = ({ onMenuClick }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -77,7 +99,7 @@ const Topbar = ({ onMenuClick }) => {
               onClick={() => handleBrandClick("Miniput")}
               className="flex items-center hover:opacity-80 transition-opacity"
             >
-              <img src={MiniputSign} alt="Miniput sign" className="h-6 lg:h-10 w-auto object-contain" />
+              <BrandIcon brand="Miniput" className="h-8 w-8 lg:h-10 lg:w-10" />
             </Link>
             <div className="w-[1px] lg:w-[1.5px] h-4 lg:h-6 bg-gray-200"></div>
             <Link 
@@ -85,19 +107,19 @@ const Topbar = ({ onMenuClick }) => {
               onClick={() => handleBrandClick("Kwink")}
               className="flex items-center hover:opacity-80 transition-opacity"
             >
-              <img src={KwinkSign} alt="Kwink sign" className="h-6 lg:h-10 w-auto object-contain" />
+              <BrandIcon brand="Kwink" className="h-8 w-8 lg:h-10 lg:w-10" />
             </Link>
           </div>
         ) : (
           <>
             {isMiniput && (
               <Link to="/home/miniput" className="flex items-center gap-2">
-                <img src={MiniputSign} alt="Miniput sign" className="h-8 lg:h-12 w-auto object-contain" />
+                <BrandIcon brand="Miniput" />
               </Link>
             )}
             {isKwink && (
               <Link to="/home/kwink" className="flex items-center gap-2">
-                <img src={KwinkSign} alt="Kwink sign" className="h-8 lg:h-12 w-auto object-contain" />
+                <BrandIcon brand="Kwink" />
               </Link>
             )}
           </>
