@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Check, ChevronLeft, ChevronRight, Copy, Minus, Plus, Share2 } from "lucide-react";
 
-const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
+const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNow }) => {
   const currentProduct = useMemo(
     () =>
       product || {
@@ -82,14 +82,6 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
     });
   };
 
-  const getStockStatus = (stock) => {
-    if (stock > 50) return { label: "IN STOCK", color: "text-green-700" };
-    if (stock > 20) return { label: "LIMITED STOCK", color: "text-yellow-600" };
-    return { label: "LOW STOCK", color: "text-red-600" };
-  };
-
-  const stockInfo = getStockStatus(currentProduct.stock || 0);
-
   const copyShareLink = async () => {
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(productShareUrl);
@@ -135,18 +127,25 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-white font-['Nunito',sans-serif] md:p-6 lg:p-10 flex justify-center">
-      <div className="flex flex-col md:flex-row w-full max-w-[1200px] bg-white md:rounded-3xl md:shadow-sm md:overflow-hidden md:border md:border-gray-100">
+  // Calculate dynamic totals based on the selected quantity
+  const unitPrice = Number(currentProduct.isDiscountActive ? currentProduct.finalPrice : currentProduct.price) || 0;
+  const unitOriginalPrice = Number(currentProduct.originalPrice ?? currentProduct.price) || 0;
+  
+  const totalAmount = unitPrice * quantity;
+  const totalOriginalAmount = unitOriginalPrice * quantity;
 
-        {/* Image Section - Adjusts for Desktop/Tablet */}
-        <div className="relative h-[clamp(320px,50vw,480px)] md:h-auto md:min-h-[500px] lg:min-h-[650px] bg-[#e8e8e8] shrink-0 overflow-hidden md:w-1/2 flex items-center justify-center">
+  return (
+    <div className="w-full flex justify-center items-start lg:items-center p-4 md:p-6 lg:p-8 min-h-[calc(100vh-140px)] font-['Nunito',sans-serif]">
+      <div className="flex flex-col md:flex-row w-full max-w-[1100px] bg-white rounded-2xl md:rounded-[24px] shadow-sm overflow-hidden border border-gray-100 lg:h-[calc(100vh-180px)] lg:max-h-[650px]">
+
+        {/* Image Section */}
+        <div className="relative h-[400px] md:h-full bg-[#e8e8e8] shrink-0 overflow-hidden md:w-1/2 flex items-center justify-center">
           <button
             onClick={onBack}
-            className="absolute top-4 left-4 md:top-6 md:left-6 w-10 h-10 bg-white/70 hover:bg-white rounded-full flex items-center justify-center text-lg cursor-pointer z-20 shadow-sm border-none transition-colors"
+            className="absolute top-4 left-4 md:top-5 md:left-5 w-9 h-9 bg-white/70 hover:bg-white rounded-full flex items-center justify-center text-lg cursor-pointer z-20 shadow-sm border-none transition-colors"
             aria-label="Go back"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={18} />
           </button>
 
           <div className="absolute inset-0 bg-center bg-cover blur-lg scale-110 z-0" style={{ backgroundImage: `url(${productImages[currentImageIndex]})` }} />
@@ -159,122 +158,137 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
             className="relative z-10 w-full h-full object-contain cursor-zoom-in"
           />
 
-          {/* Commented out navigation, preserved from original */}
           {productImages.length > 1 && <button
             onClick={onPrevImage}
-            className="absolute top-1/2 -translate-y-1/2 left-2.5 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
+            className="absolute top-1/2 -translate-y-1/2 left-2.5 w-9 h-9 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer z-20"
             aria-label="Previous image"
           >
-            <ChevronLeft size={22} />
+            <ChevronLeft size={20} />
           </button>}
 
           {productImages.length > 1 && <button
             onClick={onNextImage}
-            className="absolute top-1/2 -translate-y-1/2 right-2.5 w-10 h-10 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer"
+            className="absolute top-1/2 -translate-y-1/2 right-2.5 w-9 h-9 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer z-20"
             aria-label="Next image"
           >
-            <ChevronRight size={22} />
+            <ChevronRight size={20} />
           </button>}
         </div>
 
-        {/* Details Section - Stacks on mobile, side-by-side on desktop */}
-        <div className="bg-[#f5f5f5]/50 md:bg-white rounded-t-3xl -mt-6 md:mt-0 md:rounded-none flex-1 p-6 md:p-8 lg:p-12 z-10 relative flex flex-col justify-center w-full md:w-1/2">
+        {/* Details Section */}
+        <div className="bg-white rounded-t-3xl -mt-6 md:mt-0 md:rounded-none flex-1 p-5 md:p-6 lg:p-8 z-10 relative flex flex-col w-full md:w-1/2 overflow-y-auto mk-scroll-hidden">
 
-          <div className="max-w-lg">
-            <div className="flex items-start justify-between gap-3 mb-2">
-              <h1 className="text-2xl lg:text-3xl font-black text-gray-900 uppercase tracking-wide">
-                {currentProduct.name}
-              </h1>
+          <div className="max-w-lg my-auto w-full">
+            
+            {/* UTILITY BAR: Share (Left) & Navigation (Right) */}
+            <div className="flex items-center justify-between mb-3">
+              
+              {/* Share Button */}
               <button
                 onClick={handleShareProduct}
-                className="shrink-0 h-10 px-3 bg-white md:bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full flex items-center gap-2 text-xs font-black text-gray-900 uppercase tracking-wider transition-colors shadow-sm"
+                className="shrink-0 h-7 px-3 bg-white md:bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full flex items-center gap-1.5 text-[9px] font-black text-gray-900 uppercase tracking-wider transition-colors shadow-sm"
                 aria-label="Share product"
                 type="button"
               >
-                {shareStatus === "Link copied" || shareStatus === "Shared" ? <Check size={16} /> : <Share2 size={16} />}
-                <span className="hidden sm:inline">{shareStatus || "Share"}</span>
+                {shareStatus === "Link copied" || shareStatus === "Shared" ? <Check size={12} /> : <Share2 size={12} />}
+                <span>{shareStatus || "Share"}</span>
               </button>
+
+              {/* Product Navigation (PREV / NEXT) */}
+              {(onPrev || onNext) && (
+                <div className="flex items-center gap-2.5 text-[9px] font-black text-gray-400 tracking-widest uppercase">
+                  <button onClick={onPrev} type="button" className="flex items-center gap-0.5 hover:text-gray-900 transition-colors">
+                    <ChevronLeft size={13} strokeWidth={3} /> PREV
+                  </button>
+                  <span className="text-gray-200 font-normal">|</span>
+                  <button onClick={onNext} type="button" className="flex items-center gap-0.5 hover:text-gray-900 transition-colors">
+                    NEXT <ChevronRight size={13} strokeWidth={3} />
+                  </button>
+                </div>
+              )}
             </div>
-            {shareStatus && (
-              <div className="mb-3 flex items-center gap-1.5 text-xs font-bold text-green-700 uppercase tracking-wider">
-                <Copy size={13} />
-                {shareStatus === "Shared" ? "Product shared" : shareStatus}
-              </div>
-            )}
-            <p className="text-sm md:text-base text-gray-500 mb-6 leading-relaxed">
+
+            {/* Title */}
+            <h1 className="text-xl lg:text-2xl font-black text-gray-900 uppercase tracking-wide mb-1.5 leading-tight">
+              {currentProduct.name}
+            </h1>
+            
+            {/* Description */}
+            <p className="text-[13px] md:text-sm text-gray-500 mb-4 leading-snug">
               {currentProduct.description || "Premium quality material designed for maximum comfort and durability."}
             </p>
 
-            <div className="text-sm font-bold text-gray-600 mb-3 uppercase tracking-wider">Available Sizes</div>
-            <div className="flex gap-2 mb-8 flex-wrap">
+            <div className="text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Available Sizes</div>
+            <div className="flex gap-2 mb-5 flex-wrap">
               {availableSizes.map((size) => (
                 <div
                   key={size}
-                  className="size-8 md:size-10 rounded-full flex items-center justify-center text-xs sm:text-base font-black bg-gray-950 text-white select-none"
+                  className="size-8 md:size-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-black bg-gray-950 text-white select-none"
                 >
                   {size}
                 </div>
               ))}
             </div>
 
-            <div className="flex items-end justify-between mb-4 border-t border-gray-200 pt-6">
+            <div className="flex items-end justify-between mb-2 border-t border-gray-200 pt-4">
               <div>
-                <div className="text-sm font-bold text-gray-600 mb-3 uppercase tracking-wider">Quantity</div>
-                <div className="flex items-center gap-4 bg-white md:bg-gray-50 rounded-full p-1 shadow-sm border border-gray-100">
+                <div className="text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Quantity</div>
+                <div className="flex items-center gap-3 bg-white md:bg-gray-50 rounded-full p-1 shadow-sm border border-gray-100">
                   <button
                     onClick={() => handleQtyChange(-1)}
-                    className="size-9 md:size-10 bg-gray-900 hover:bg-gray-700 text-white rounded-full flex items-center justify-center transition-colors"
+                    className="size-8 md:size-9 bg-gray-900 hover:bg-gray-700 text-white rounded-full flex items-center justify-center transition-colors"
                     aria-label="Decrease quantity"
                   >
-                    <Minus size={18} />
+                    <Minus size={16} />
                   </button>
                   <input
                     type="text"
                     value={quantity}
                     onChange={handleQuantityInput}
-                    className="w-12 text-center text-xl font-black bg-transparent border-none focus:outline-none md:text-2xl"
+                    className="w-10 text-center text-lg font-black bg-transparent border-none focus:outline-none"
                   />
                   <button
                     onClick={() => handleQtyChange(1)}
-                    className="size-9 md:size-10 bg-gray-900 hover:bg-gray-700 text-white rounded-full flex items-center justify-center transition-colors"
+                    className="size-8 md:size-9 bg-gray-900 hover:bg-gray-700 text-white rounded-full flex items-center justify-center transition-colors"
                     aria-label="Increase quantity"
                   >
-                    <Plus size={18} />
+                    <Plus size={16} />
                   </button>
                 </div>
               </div>
 
+                {/* Display Dynamic Amounts */}
                 {currentProduct.isDiscountActive ? (
                   <div className="text-right">
-                    <div className="flex items-center justify-end gap-2 mb-1">
-                      <span className="text-base md:text-lg line-through text-gray-400 font-bold">
-                        Rs.{currentProduct.originalPrice ?? currentProduct.price}
+                    <div className="flex items-center justify-end gap-1.5 mb-0.5">
+                      <span className="text-sm line-through text-gray-400 font-bold">
+                        Rs.{totalOriginalAmount.toLocaleString()}
                       </span>
-                      <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                      <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
                         {currentProduct.discountLabel}
                       </span>
                     </div>
-                    <div className="text-[28px] lg:text-4xl font-black text-red-600">
-                      Rs.{currentProduct.finalPrice}
+                    <div className="text-2xl lg:text-3xl font-black text-red-600 leading-none">
+                      Rs.{totalAmount.toLocaleString()}
                     </div>
                   </div>
                 ) : (
-                  <div className="text-[28px] lg:text-4xl font-black text-gray-900">
-                    Rs.{currentProduct.price}
+                  <div className="text-2xl lg:text-3xl font-black text-gray-900 leading-none">
+                    Rs.{totalAmount.toLocaleString()}
                   </div>
                 )}
               </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 mt-auto">
+            <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <button
                 onClick={() => onOrderNow && onOrderNow({ ...currentProduct, quantity, selectedSizes })}
-                className="flex-1 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-2xl p-4 md:p-5 text-sm md:text-base font-black tracking-widest cursor-pointer transition-colors"
+                className="flex-1 bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-50 rounded-[14px] p-3 md:p-3.5 text-xs md:text-sm font-black tracking-widest cursor-pointer transition-colors"
               >
                 ORDER NOW
               </button>
               <button
                 onClick={() => onAddToCart && onAddToCart({ ...currentProduct, quantity, selectedSizes })}
-                className="flex-1 bg-gray-900 hover:bg-gray-800 hover:-translate-y-1 text-[#FFB800] border-none rounded-2xl p-4 md:p-5 text-sm md:text-base font-black tracking-widest cursor-pointer transition-all shadow-lg"
+                className="flex-1 bg-gray-900 hover:bg-gray-800 hover:-translate-y-1 text-[#FFB800] border-none rounded-[14px] p-3 md:p-3.5 text-xs md:text-sm font-black tracking-widest cursor-pointer transition-all shadow-lg"
               >
                 ADD TO CART
               </button>

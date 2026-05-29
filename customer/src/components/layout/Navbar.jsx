@@ -13,6 +13,12 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
+  const isHiddenRoute = location.pathname.includes("/cart") || location.pathname.includes("/product");
+
+  if (isHiddenRoute) {
+    return null;
+  }
+
   const handleNavClick = (item) => {
     if (item.brand) {
       dispatch(setActiveBrand(item.brand));
