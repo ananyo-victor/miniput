@@ -493,7 +493,7 @@ const AboutPage = () => {
                   ? "Saving..."
                   : uploadingCount > 0
                     ? "Wait For Uploads To Finish"
-                    : "SAVE ABOUT + WORKSPACE CONTENT"}
+                    : "SAVE ABOUT + HOME CONTENT"}
               </button>
             </div>
           </div>

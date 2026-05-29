@@ -7,6 +7,10 @@ import { setActiveCategory, setSearchQuery } from "../../store/homeSlice";
 import { setActiveWorkspaceLocal, updateActiveWorkspaceThunk } from "../../store/userSlice";
 import { setAdminField } from "../../store/authSlice";
 
+// Import brand icons
+import MiniputSign from "../../assests/MINIPUT_SIGN.png";
+import KwinkSign from "../../assests/kwink_SIGN.png";
+
 const categoryOptions = [
   { value: "all", label: "All Categories" },
   { value: "tshirt", label: "T-Shirts" },
@@ -88,11 +92,15 @@ const TopBar = ({ onOpenMobileMenu }) => {
     return () => window.clearTimeout(timer);
   }, [dispatch, isHomePage, searchInput]);
 
+  // Determine active icon for mobile view
+  const isMiniput = activeWorkspace?.slug?.toLowerCase() === 'miniput';
+  const activeIconSrc = isMiniput ? MiniputSign : KwinkSign;
+
   return (
     <header className="bg-white text-[#0E2A4A] border-b border-gray-200 flex flex-row items-center justify-between px-2 md:px-4 h-[60px] lg:h-[72px] sticky top-0 z-50 w-full gap-2 lg:gap-6">
       
       {/* LEFT SECTION: Hamburger Menu (Mobile) / Workspace Switcher (Desktop) */}
-      <div className="flex items-center shrink-0 relative lg:w-[220px]" ref={dropdownRef}>
+      <div className="flex items-center shrink-0 relative lg:w-[220px] gap-2 lg:gap-0" ref={dropdownRef}>
         {/* Mobile Hamburger Button */}
         <button
           type="button"
@@ -101,6 +109,17 @@ const TopBar = ({ onOpenMobileMenu }) => {
         >
           <Menu size={24} strokeWidth={2.5} />
         </button>
+
+        {/* Active Workspace Icon (Mobile Only) */}
+        {activeWorkspace && (
+          <div className="lg:hidden flex items-center justify-center pl-1">
+            <img 
+              src={activeIconSrc} 
+              alt={activeWorkspace.name} 
+              className="h-7 w-auto max-w-[32px] object-contain"
+            />
+          </div>
+        )}
 
         {/* Desktop Workspace Switcher (Hidden on Mobile) */}
         <button
