@@ -66,6 +66,7 @@ const homeSlice = createSlice({
   initialState: {
     activeBrand: "Miniput",
     activeCategory: "all",
+    searchQuery: "",
     homeContentByBrand: {
       Miniput: { ...emptyBrandContent },
       Kwink: { ...emptyBrandContent }
@@ -79,6 +80,9 @@ const homeSlice = createSlice({
     },
     setActiveCategory: (state, action) => {
       state.activeCategory = action.payload;
+    },
+    setSearchQuery: (state, action) => {
+      state.searchQuery = String(action.payload || "");
     }
   },
   extraReducers: (builder) => {
@@ -102,5 +106,5 @@ const homeSlice = createSlice({
   }
 });
 
-export const { setActiveBrand, setActiveCategory } = homeSlice.actions;
+export const { setActiveBrand, setActiveCategory, setSearchQuery } = homeSlice.actions;
 export default homeSlice.reducer;

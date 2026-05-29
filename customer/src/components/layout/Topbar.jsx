@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { ShoppingCart, ChevronDown, Menu } from "lucide-react";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
-import { setActiveCategory, setActiveBrand } from "../../store/homeSlice";
+import { setActiveCategory, setActiveBrand, setSearchQuery } from "../../store/homeSlice";
 
 const CATEGORIES = [
   { label: "All Categories", value: "all" },
@@ -45,14 +45,18 @@ const Topbar = ({ onMenuClick }) => {
 
   const cart = useSelector((state) => state.customer.cart);
   const activeCategory = useSelector((state) => state.home.activeCategory);
+  const storedSearchQuery = useSelector((state) => state.home.searchQuery);
   
-  const cartCount = cart.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
-  const [searchQuery, setSearchQuery] = useState("");
+  const cartCount = cart.length
+  const [searchInput, setSearchInput] = useState(storedSearchQuery);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const isCartPage = location.pathname.includes("/cart");
   const isKwink = location.pathname.includes("kwink");
   const isMiniput = !isKwink && !isCartPage;
+  const isOrderPage = location.pathname.includes("/order");
+  const isProductDetailPage = location.pathname.includes("/product/");
+  const hideSearchAndCategory = isCartPage || isOrderPage || isProductDetailPage;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -63,6 +67,22 @@ const Topbar = ({ onMenuClick }) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    setSearchInput(storedSearchQuery);
+  }, [storedSearchQuery]);
+
+  useEffect(() => {
+    if (hideSearchAndCategory) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      dispatch(setSearchQuery(searchInput));
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [dispatch, hideSearchAndCategory, searchInput]);
 
   const handleCategorySelect = (value) => {
     dispatch(setActiveCategory(value));
@@ -127,6 +147,7 @@ const Topbar = ({ onMenuClick }) => {
       </div>
 
       {/* Middle: Search Bar with Categories */}
+      {!hideSearchAndCategory && (
       <div className="flex-1 max-w-2xl lg:mx-8 relative" ref={dropdownRef}>
         <div className="flex items-center w-full bg-white border border-[#0E2A4A]/20 rounded-xl focus-within:border-[var(--mk-navy)] transition-colors h-[38px] lg:h-[44px]">
           {/* Category Dropdown - Hidden on mobile screens */}
@@ -141,8 +162,8 @@ const Topbar = ({ onMenuClick }) => {
           
           <input
             type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search products..."
             className="flex-1 px-3 lg:px-4 h-full text-[12px] lg:text-[14px] bg-transparent outline-none rounded-xl md:rounded-l-none md:rounded-r-xl text-gray-700 placeholder:text-gray-400 w-full"
           />
@@ -167,11 +188,12 @@ const Topbar = ({ onMenuClick }) => {
           </div>
         )}
       </div>
+      )}
 
       {/* Right side: Cart Option */}
       <div className="flex-shrink-0 flex justify-end items-center">
         <Link to="/cart" className="relative p-2 lg:p-2.5 bg-gray-100 rounded-full hover:bg-gray-200 transition text-gray-700">
-          <ShoppingCart className="w-5 h-5 lg:w-6 lg:h-6" />
+          <svg className="size-5.5 md:size-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M24-16C10.7-16 0-5.3 0 8S10.7 32 24 32l45.3 0c3.9 0 7.2 2.8 7.9 6.6l52.1 286.3c6.2 34.2 36 59.1 70.8 59.1L456 384c13.3 0 24-10.7 24-24s-10.7-24-24-24l-255.9 0c-11.6 0-21.5-8.3-23.6-19.7l-5.1-28.3 303.6 0c30.8 0 57.2-21.9 62.9-52.2L568.9 69.9C572.6 50.2 557.5 32 537.4 32l-412.7 0-.4-2c-4.8-26.6-28-46-55.1-46L24-16zM208 512a48 48 0 1 0 0-96 48 48 0 1 0 0 96zm224 0a48 48 0 1 0 0-96 48 48 0 1 0 0 96z"/></svg>
           {cartCount > 0 && (
             <span className="absolute -top-1 -right-1 lg:-top-1.5 lg:-right-1.5 bg-[var(--mk-red)] text-white text-[9px] lg:text-[10px] font-bold w-4 h-4 lg:w-5 lg:h-5 rounded-full flex items-center justify-center border-2 border-white">
               {cartCount}

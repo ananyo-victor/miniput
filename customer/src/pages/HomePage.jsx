@@ -42,6 +42,26 @@ const getNumericValue = (value) => {
   return Number.isFinite(num) ? num : 0;
 };
 
+const productMatchesSearchQuery = (product, query) => {
+  const normalizedQuery = normalizeText(query);
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const searchableValues = [
+    product?.name,
+    product?.articleId,
+    product?.category,
+    product?.description,
+    product?.brand
+  ];
+
+  return searchableValues
+    .map((item) => normalizeText(item))
+    .join(" ")
+    .includes(normalizedQuery);
+};
+
 const productMatchesPromoTag = (product, tag) => {
   const normalizedTag = normalizeText(tag);
   if (!normalizedTag || normalizedTag === "all") {
@@ -84,7 +104,7 @@ const HomePage = () => {
   const { brand } = useParams();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { activeBrand, activeCategory, homeContentByBrand } = useSelector((state) => state.home);
+  const { activeBrand, activeCategory, searchQuery, homeContentByBrand } = useSelector((state) => state.home);
   const workspaces = useSelector((state) => state.workspace.items);
 
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
@@ -218,10 +238,11 @@ const HomePage = () => {
         acceptedCategories.has(normalizeCategory(product.category));
 
       const promoMatch = productMatchesPromoTag(product, activePromoTag);
+      const searchMatch = productMatchesSearchQuery(product, searchQuery);
 
-      return brandMatch && categoryMatch && promoMatch;
+      return brandMatch && categoryMatch && promoMatch && searchMatch;
     });
-  }, [products, activeBrand, activeCategory, activePromoTag]);
+  }, [products, activeBrand, activeCategory, activePromoTag, activeWorkspaceId, searchQuery]);
 
   const activeHeroImage = heroImages.length
     ? heroImages[Math.min(heroIndexByBrand[activeBrand] || 0, heroImages.length - 1)]

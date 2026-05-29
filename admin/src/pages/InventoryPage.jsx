@@ -474,12 +474,14 @@ const InventoryPage = () => {
                   className="inv-item flex flex-col bg-white rounded-2xl p-3.5 mb-2.5 shadow-md transition-transform hover:scale-[1.01]"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="inv-img flex items-center justify-center flex-shrink-0 w-16 h-16 rounded-xl bg-[#e8e8e8] text-[28px] overflow-hidden">
+                    <div className="relative inv-img flex items-center justify-center flex-shrink-0 w-16 h-16 rounded-xl bg-[#e8e8e8] text-[28px] overflow-hidden">
+                      <div className="absolute inset-0 bg-center bg-cover blur-lg scale-100" style={{ backgroundImage: `url(${imageSrc})` }} />
+
                       {imageSrc ? (
                         <img
                           src={imageSrc}
                           alt={product.name}
-                          className="h-full w-full object-cover"
+                          className="relative h-full w-full object-contain"
                         />
                       ) : (
                         product.name?.charAt(0)?.toUpperCase() || "P"

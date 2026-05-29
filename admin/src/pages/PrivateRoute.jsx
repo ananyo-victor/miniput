@@ -24,7 +24,6 @@ const PrivateRoute = () => {
 
   useEffect(() => {
     const initializeWorkspace = async () => {
-      console.log("Initializing workspace for user:", auth);
       if (!auth?.userId) return;
       await dispatch(fetchWorkspaces());
       await dispatch(fetchActiveWorkspaceThunk(auth.userId));

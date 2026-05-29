@@ -93,7 +93,7 @@ const TopBar = ({ onOpenMobileMenu }) => {
   }, [dispatch, isHomePage, searchInput]);
 
   // Determine active icon for mobile view
-  const isMiniput = activeWorkspace?.slug?.toLowerCase() === 'miniput';
+  const isMiniput = activeWorkspace?.name === 'Miniput';
   const activeIconSrc = isMiniput ? MiniputSign : KwinkSign;
 
   return (

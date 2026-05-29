@@ -8,7 +8,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.customer.cart);
-  const cartCount = cart.reduce((total, item) => total + (Number(item.quantity) || 0), 0);
+  const cartCount = cart.length
 
   const isActiveBrand = (path) => location.pathname.includes(path);
   const isExactPath = (path) => location.pathname === path;

@@ -136,7 +136,7 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
 
   return (
     <div className="w-full flex justify-center items-start lg:items-center p-4 md:p-6 lg:p-8 min-h-[calc(100vh-140px)] font-['Nunito',sans-serif]">
-      <div className="flex flex-col md:flex-row w-full max-w-[1100px] bg-white rounded-2xl md:rounded-[24px] shadow-sm overflow-hidden border border-gray-100 lg:h-[calc(100vh-180px)] lg:max-h-[650px]">
+      <div className="flex flex-col md:flex-row w-full max-w-[1250px] bg-white rounded-2xl md:rounded-[24px] shadow-sm overflow-hidden border border-gray-100 lg:h-[calc(100vh-140px)] lg:max-h-[800px]">
 
         {/* Image Section */}
         <div className="relative h-[400px] md:h-full bg-[#e8e8e8] shrink-0 overflow-hidden md:w-1/2 flex items-center justify-center">
@@ -218,12 +218,12 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
               {currentProduct.description || "Premium quality material designed for maximum comfort and durability."}
             </p>
 
-            <div className="text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Available Sizes</div>
+            <div className="text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Included Sizes</div>
             <div className="flex gap-2 mb-5 flex-wrap">
               {availableSizes.map((size) => (
                 <div
                   key={size}
-                  className="size-8 md:size-9 rounded-full flex items-center justify-center text-xs sm:text-sm font-black bg-gray-950 text-white select-none"
+                  className="size-8 md:min-w-10 md:h-10 px-3 rounded-full flex items-center justify-center text-sm font-black bg-gray-100 text-[#1a1a1a] shadow-sm"
                 >
                   {size}
                 </div>

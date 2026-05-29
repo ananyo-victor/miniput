@@ -1,19 +1,80 @@
-import React from "react";
-import { useDispatch } from "react-redux";
-import { addToCart } from "../../store/customerSlice";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 const ProductCard = ({ product, onClick }) => {
-  const dispatch = useDispatch();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const touchStartRef = useRef(null);
+  const suppressClickRef = useRef(false);
+
+  const productImages = useMemo(() => {
+    const imageList = Array.isArray(product?.imageUrls) && product.imageUrls.length
+      ? product.imageUrls
+      : Array.isArray(product?.imageUrl)
+        ? product.imageUrl
+        : [product?.imageUrl];
+
+    const normalized = imageList.filter((url) => typeof url === "string" && url.trim());
+    return normalized.length ? normalized : ["https://via.placeholder.com/640x860?text=No+Image"];
+  }, [product?.imageUrl, product?.imageUrls]);
+
+  useEffect(() => {
+    setCurrentImageIndex(0);
+  }, [product?.id, productImages.length]);
+
+  const handleCardClick = () => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+
+    if (onClick) {
+      onClick(product);
+    }
+  };
+
+  const handleTouchStart = (event) => {
+    if (productImages.length < 2) return;
+    const touch = event.touches?.[0];
+    if (!touch) return;
+
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+    suppressClickRef.current = false;
+  };
+
+  const handleTouchEnd = (event) => {
+    if (productImages.length < 2 || !touchStartRef.current) return;
+    const touch = event.changedTouches?.[0];
+    if (!touch) return;
+
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    const hasHorizontalSwipe = Math.abs(deltaX) > 35 && Math.abs(deltaX) > Math.abs(deltaY);
+
+    if (hasHorizontalSwipe) {
+      suppressClickRef.current = true;
+      setCurrentImageIndex((prev) => (
+        deltaX < 0
+          ? (prev + 1) % productImages.length
+          : (prev - 1 + productImages.length) % productImages.length
+      ));
+    }
+
+    touchStartRef.current = null;
+  };
+
+  const activeImage = productImages[currentImageIndex] || productImages[0];
 
   return (
     <div
-      onClick={() => onClick && onClick(product)}
+      onClick={handleCardClick}
       className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-xl md:rounded-2xl"
     >
-      {/* Changed aspect-[3/4] to aspect-[4/5] for mobile, and md:aspect-[3/4] for desktop */}
-      <div className="relative aspect-[4/5] md:aspect-[3/4] relative bg-gray-100">
-      <div className="absolute inset-0 bg-center bg-cover blur-lg scale-130" style={{ backgroundImage: `url(${product.imageUrl})` }} />
-        <img src={product.imageUrl} alt={product.name} className="relative w-full h-full object-contain object-center" />
+      <div
+        className="relative aspect-[4/5] md:aspect-[3/4] bg-gray-100 touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="absolute inset-0 bg-center bg-cover blur-lg scale-130" style={{ backgroundImage: `url(${activeImage})` }} />
+        <img src={activeImage} alt={product.name} className="relative w-full h-full object-contain object-center" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex flex-col justify-end p-3 md:p-4 text-white">
           <p className="text-[10px] md:text-[11px] font-black tracking-wider uppercase leading-tight line-clamp-2">{product.name}</p>
           <div className="flex justify-between items-end mt-1">
@@ -32,6 +93,16 @@ const ProductCard = ({ product, onClick }) => {
             </div>
           </div>
         </div>
+        {productImages.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/40 px-2 py-1 md:hidden">
+            {productImages.map((_, index) => (
+              <span
+                key={`product-${product.id}-dot-${index}`}
+                className={`h-1.5 w-1.5 rounded-full ${index === currentImageIndex ? "bg-white" : "bg-white/45"}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
