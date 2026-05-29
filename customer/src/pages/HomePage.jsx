@@ -352,7 +352,7 @@ const HomePage = () => {
       </div>
 
       {/* FLOATING PRODUCTS MAIN SECTION */}
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-4 sm:px-6 lg:px-8 relative z-20">
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-6 sm:px-8 lg:px-10 relative z-20">
         {loading ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
             <p className="text-gray-400 font-semibold text-lg">Loading products...</p>
@@ -366,7 +366,7 @@ const HomePage = () => {
             <p className="text-slate-400 font-semibold text-lg">No products found</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {filteredProducts.map((product) => (
               <ProductCard
                 key={product.id}

@@ -149,11 +149,14 @@ const ProductDetail = ({ product, onBack, onAddToCart, onOrderNow }) => {
             <ArrowLeft size={20} />
           </button>
 
+          <div className="absolute inset-0 bg-center bg-cover blur-lg scale-110 z-0" style={{ backgroundImage: `url(${productImages[currentImageIndex]})` }} />
+          <div className="absolute inset-0 bg-black/10 z-0" />
+
           <img
             src={productImages[currentImageIndex]}
             alt={currentProduct.name}
             onClick={() => setShowPreview(true)}
-            className="w-full h-full object-contain cursor-zoom-in"
+            className="relative z-10 w-full h-full object-contain cursor-zoom-in"
           />
 
           {/* Commented out navigation, preserved from original */}
