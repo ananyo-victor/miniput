@@ -230,9 +230,9 @@ const HomePage = () => {
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5] pb-10">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden w-full bg-yellow-300">
+      <section className="relative overflow-hidden w-full">
         {activeHeroImage ? (
-          <div className="relative bg-red-300 mx-auto w-full md:h-[500px]">
+          <div className="relative mx-auto w-full md:h-[500px]">
 
             <div className="absolute inset-0 bg-center bg-cover blur-xl scale-110" style={{ backgroundImage: `url(${activeHeroImage})` }} />
             <img
