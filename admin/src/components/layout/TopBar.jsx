@@ -98,7 +98,7 @@ const TopBar = ({ onOpenMobileMenu }) => {
 
   return (
     <header className="bg-white text-[#0E2A4A] border-b border-gray-200 flex flex-row items-center justify-between px-2 md:px-4 h-[60px] lg:h-[72px] sticky top-0 z-50 w-full gap-2 lg:gap-6">
-      
+
       {/* LEFT SECTION: Hamburger Menu (Mobile) / Workspace Switcher (Desktop) */}
       <div className="flex items-center shrink-0 relative lg:w-[220px] gap-2 lg:gap-0" ref={dropdownRef}>
         {/* Mobile Hamburger Button */}
@@ -113,9 +113,9 @@ const TopBar = ({ onOpenMobileMenu }) => {
         {/* Active Workspace Icon (Mobile Only) */}
         {activeWorkspace && (
           <div className="lg:hidden flex items-center justify-center pl-1">
-            <img 
-              src={activeIconSrc} 
-              alt={activeWorkspace.name} 
+            <img
+              src={activeIconSrc}
+              alt={activeWorkspace.name}
               className="h-7 w-auto max-w-[32px] object-contain"
             />
           </div>
@@ -127,7 +127,16 @@ const TopBar = ({ onOpenMobileMenu }) => {
           className="hidden lg:flex px-3 py-1.5 rounded-xl items-center justify-between h-[48px] cursor-pointer w-full transition-colors hover:bg-gray-50 border border-gray-200"
           onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         >
-          <span className="font-black text-sm truncate">{activeWorkspace?.name || "Workspace"}</span>
+          <div className="flex items-center gap-2 overflow-hidden">
+            {activeWorkspace && (
+              <img
+                src={activeIconSrc}
+                alt={activeWorkspace.name}
+                className="w-5 h-5 object-contain shrink-0"
+              />
+            )}
+            <span className="font-black text-sm truncate">{activeWorkspace?.name || "Workspace"}</span>
+          </div>
           <ChevronDown size={18} className={`text-gray-400 transition-transform duration-200 ${isDropdownOpen ? "rotate-180" : ""}`} />
         </button>
 
@@ -136,6 +145,11 @@ const TopBar = ({ onOpenMobileMenu }) => {
           <div className="hidden lg:block absolute top-full left-0 mt-2 w-full min-w-[180px] bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 z-50">
             {workspaces.map((workspace) => {
               const isActive = workspace.id === activeWorkspace?.id;
+
+              // Determine the correct icon for the current item in the map loop
+              const isWorkspaceMiniput = workspace.slug.toLowerCase() === 'miniput';
+              const itemIconSrc = isWorkspaceMiniput ? MiniputSign : KwinkSign;
+
               return (
                 <button
                   key={workspace.id}
@@ -143,8 +157,15 @@ const TopBar = ({ onOpenMobileMenu }) => {
                   className={`w-full text-left px-4 py-3 text-sm font-bold flex items-center justify-between transition-colors ${isActive ? "bg-[#f0f7f8] text-[#0E2A4A]" : "text-gray-600 hover:bg-gray-50"
                     }`}
                 >
-                  <span className="truncate">{workspace.name}</span>
-                  {isActive && <div className="w-2 h-2 rounded-full bg-[#0E2A4A]"></div>}
+                  <div className="flex items-center gap-2 overflow-hidden">
+                    <img
+                      src={itemIconSrc}
+                      alt={workspace.name}
+                      className="w-5 h-5 object-contain shrink-0"
+                    />
+                    <span className="truncate">{workspace.name}</span>
+                  </div>
+                  {isActive && <div className="w-2 h-2 rounded-full bg-[#0E2A4A] shrink-0"></div>}
                 </button>
               );
             })}
@@ -197,7 +218,7 @@ const TopBar = ({ onOpenMobileMenu }) => {
               placeholder="Search products..."
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
-              className="flex-1 bg-transparent px-3 lg:px-4 font-semibold text-gray-800 text-xs lg:text-base outline-none w-full placeholder:text-gray-400 rounded-xl lg:rounded-r-2xl" 
+              className="flex-1 bg-transparent px-3 lg:px-4 font-semibold text-gray-800 text-xs lg:text-base outline-none w-full placeholder:text-gray-400 rounded-xl lg:rounded-r-2xl"
             />
           </div>
         </div>
