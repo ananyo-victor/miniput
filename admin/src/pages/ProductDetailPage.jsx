@@ -124,7 +124,7 @@ const ProductDetailPage = () => {
   return (
     <div className="absolute inset-0 overflow-hidden bg-[#f5f5f5] font-['Nunito',sans-serif] md:p-6 lg:p-8 flex md:items-center justify-center">
       <div className="flex flex-col md:flex-row w-full max-w-[1250px] h-full max-h-[800px] bg-white md:rounded-2xl md:shadow-md md:border md:border-gray-200 overflow-hidden">
-        <div className="relative h-[45%] md:h-full w-full md:w-1/2 overflow-hidden shrink-0 group">
+        <div className="relative h-[clamp(320px,50vw,480px)] md:h-full w-full md:w-1/2 overflow-hidden shrink-0 group">
 
           <div className="absolute inset-0 bg-center bg-cover blur-lg scale-110" style={{ backgroundImage: `url(${productImages[currentImageIndex]})` }} />
 
