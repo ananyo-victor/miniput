@@ -85,6 +85,7 @@ const HomePage = () => {
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
   const { activeBrand, activeCategory, homeContentByBrand } = useSelector((state) => state.home);
+  const workspaces = useSelector((state) => state.workspace.items);
 
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
     Miniput: "all",
@@ -94,10 +95,6 @@ const HomePage = () => {
     Miniput: 0,
     Kwink: 0
   });
-
-  useEffect(() => {
-    dispatch(fetchProducts(false));
-  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchHomeContent());
@@ -128,6 +125,22 @@ const HomePage = () => {
   useEffect(() => {
     dispatch(setActiveCategory("all"));
   }, [activeBrand, dispatch]);
+
+  const activeWorkspace = useMemo(() => {
+    const activeBrandSlug = normalizeCategory(activeBrand);
+
+    return workspaces.find((workspace) => {
+      const workspaceSlug = normalizeCategory(workspace?.slug || workspace?.name);
+      return workspaceSlug === activeBrandSlug;
+    });
+  }, [activeBrand, workspaces]);
+
+  const activeWorkspaceId = activeWorkspace?.id || "";
+
+  useEffect(() => {
+    if (!activeWorkspaceId) return;
+    dispatch(fetchProducts({ includeHidden: false, workspaceId: activeWorkspaceId }));
+  }, [activeWorkspaceId, dispatch]);
 
   const currentBrandContent = homeContentByBrand[activeBrand] || emptyBrandContent;
   const heroImages = Array.isArray(currentBrandContent.heroImageUrls)
@@ -196,7 +209,9 @@ const HomePage = () => {
     );
 
     return products.filter((product) => {
-      const brandMatch = normalizeText(product.brand) === normalizeText(activeBrand);
+      const brandMatch = activeWorkspaceId
+        ? product.workspaceId === activeWorkspaceId
+        : normalizeText(product.brand) === normalizeText(activeBrand);
 
       const categoryMatch =
         normalizedActiveCategory === "all" ||

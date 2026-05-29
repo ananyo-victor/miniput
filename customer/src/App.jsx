@@ -10,6 +10,7 @@ import Navbar from "./components/layout/Navbar";
 import Topbar from "./components/layout/Topbar"; 
 import Sidebar from "./components/layout/Sidebar"; 
 import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
+import { fetchWorkspaces } from "./store/workspaceSlice";
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -40,6 +41,10 @@ export default function App() {
 
   useEffect(() => {
     setupAxiosInterceptors(dispatch);
+  }, [dispatch]);
+
+  useEffect(() => {
+    dispatch(fetchWorkspaces());
   }, [dispatch]);
 
   return (

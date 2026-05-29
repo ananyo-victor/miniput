@@ -4,6 +4,7 @@ import adminReducer from "./adminSlice";
 import productsReducer from "./productsSlice";
 import homeReducer from "./homeSlice";
 import aboutReducer from "./aboutSlice";
+import workspaceReducer from "./workspaceSlice";
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     admin: adminReducer,
     products: productsReducer,
     home: homeReducer,
-    about: aboutReducer
+    about: aboutReducer,
+    workspace: workspaceReducer
   }
 });
