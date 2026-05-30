@@ -1,11 +1,20 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import * as jwt from 'jsonwebtoken';
 import 'dotenv/config';
 import pool from '../../config/database.config';
+import { WhatsappClientService } from '../whatsapp/whatsapp-client.service';
+import { UsersService } from '../users/users.service';
 
 @Injectable()
 export class AuthService {
+
+  private otpStore = new Map<string, { otp: string, expiresAt: number }>();
+
+  constructor(
+    private readonly whatsappClient: WhatsappClientService,
+    private readonly usersService: UsersService
+  ) { }
   async validateAdminCredentials(
     username: string,
     password: string,
@@ -76,7 +85,7 @@ export class AuthService {
         role: user.role,
       },
       process.env.JWT_REFRESH_SECRET ||
-        process.env.JWT_SECRET!,
+      process.env.JWT_SECRET!,
       {
         expiresIn: '7d',
       },
@@ -88,7 +97,7 @@ export class AuthService {
       return jwt.verify(
         token,
         process.env.JWT_REFRESH_SECRET ||
-          process.env.JWT_SECRET!,
+        process.env.JWT_SECRET!,
       ) as any;
     } catch {
       return null;
@@ -107,5 +116,62 @@ export class AuthService {
     );
 
     return rows[0] || null;
+  }
+
+  async sendCustomerOtp(phone: string) {
+    // Generate a 4-digit OTP
+    const otp = Math.floor(1000 + Math.random() * 9000).toString();
+
+    // Store OTP with 5 min expiration
+    this.otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+
+    // Send via WhatsApp
+    const message = `Your Miniput login OTP is ${otp}. It is valid for 5 minutes.`;
+    await this.whatsappClient.sendTextMessage(phone, message);
+
+    // Check if user already exists
+    const { rows } = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
+
+    return { success: true, exists: rows.length > 0 };
+  }
+
+  async verifyCustomerOtp(phone: string, otp: string) {
+    const record = this.otpStore.get(phone);
+
+    if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
+      throw new BadRequestException('Invalid or expired OTP');
+    }
+
+    // OTP is valid, clear it
+    this.otpStore.delete(phone);
+
+    // Find or create user
+    let { rows } = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
+    let user = rows[0];
+
+    if (!user) {
+      // Create new customer
+      user = await this.usersService.create({
+        username: `user_${phone}`, // default username
+        phone: phone,
+        password: Math.random().toString(36).slice(-8), // random dummy password
+        fullName: 'Customer',
+        role: 'CUSTOMER', // Enforce CUSTOMER role
+      });
+    }
+
+    // Generate token (Optional: you might want a separate token for customers)
+    const accessToken = this.generateAccessToken(user);
+
+    return {
+      success: true,
+      accessToken,
+      user: {
+        id: user.id,
+        phone: user.phone,
+        name: user.full_name,
+        role: user.role,
+      }
+    };
   }
 }

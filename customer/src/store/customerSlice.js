@@ -16,50 +16,23 @@ const loadCartFromStorage = () => {
 // MOCKED THUNKS FOR LOCAL DEVELOPMENT
 // ==========================================
 
-export const checkCustomerThunk = createAsyncThunk("customer/check", async (phone) => {
-  // --- REAL CODE (Commented out for now) ---
-  // const { data } = await axios.post(`${API_BASE_URL}/api/auth/customer/check`, { phone });
-  // return data;
-
-  // --- MOCK CODE ---
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      console.log(`[Mock Backend] OTP '1111' sent to ${phone}`);
-      // Returning exists: true simulates a returning user. 
-      // Change to false to simulate a brand new user.
-      resolve({ exists: true, success: true });
-    }, 800); // 800ms delay to simulate network
-  });
+export const checkCustomerThunk = createAsyncThunk("customer/check", async (phone, { rejectWithValue }) => {
+  try {
+    const { data } = await axios.post(`${API_BASE_URL}/api/auth/customer/check`, { phone });
+    return data;
+  } catch (error) {
+     return rejectWithValue(error.response?.data?.message || "Failed to send OTP");
+  }
 });
 
 export const verifyCustomerThunk = createAsyncThunk("customer/verify", async (payload, { rejectWithValue }) => {
-  // --- REAL CODE (Commented out for now) ---
-  // try {
-  //   const { data } = await axios.post(`${API_BASE_URL}/api/auth/customer/verify`, payload);
-  //   return data;
-  // } catch (error) {
-  //   return rejectWithValue(error.response?.data?.message || "Verification failed");
-  // }
-
-  // --- MOCK CODE ---
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (payload.otp === "1111") {
-        console.log(`[Mock Backend] OTP Verified for ${payload.phone}`);
-        resolve({
-          success: true,
-          user: {
-            phone: payload.phone,
-            name: "Local Tester", // Mock name
-            email: "tester@local.com",
-            profilePic: ""
-          }
-        });
-      } else {
-        reject(new Error("Invalid OTP. Please use 1111 for testing."));
-      }
-    }, 1000);
-  }).catch((error) => rejectWithValue(error.message));
+  try {
+    const { data } = await axios.post(`${API_BASE_URL}/api/auth/customer/verify`, payload);
+    // Optionally save the customer token to localStorage here if needed for guarded routes
+    return data;
+  } catch (error) {
+    return rejectWithValue(error.response?.data?.message || "Verification failed");
+  }
 });
 
 const sanitizeOrderPayload = (payload = {}) => {

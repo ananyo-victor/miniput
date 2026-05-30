@@ -9,5 +9,6 @@ import { WhatsappClientService } from './whatsapp-client.service';
     WhatsappService,
     WhatsappClientService,
   ],
+  exports: [WhatsappClientService]
 })
 export class WhatsappModule {}

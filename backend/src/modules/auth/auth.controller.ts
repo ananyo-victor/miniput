@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common';
 
 import { AuthService } from './auth.service';
-
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { RefreshAdminTokenDto } from './dto/refresh-admin-token.dto';
 
@@ -162,5 +161,23 @@ export class AuthController {
         },
       );
     }
+  }
+
+  @Post('customer/check')
+  @HttpCode(HttpStatus.OK)
+  async customerCheck(@Body() body: { phone: string }) {
+    // 1. Generate OTP
+    // 2. Save OTP temporarily (in Redis or a DB table/cache)
+    // 3. Send OTP via WhatsApp
+    return this.authService.sendCustomerOtp(body.phone);
+  }
+
+  @Post('customer/verify')
+  @HttpCode(HttpStatus.OK)
+  async customerVerify(@Body() body: { phone: string, otp: string }) {
+    // 1. Verify the OTP
+    // 2. Find existing user OR create a new user with role 'CUSTOMER'
+    // 3. Generate tokens
+    return this.authService.verifyCustomerOtp(body.phone, body.otp);
   }
 }
