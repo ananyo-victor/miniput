@@ -4,8 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { LogOut, User, ChevronDown, Menu } from "lucide-react";
 import { clearAdminToken, getAdminAuthFromStorage } from "../../utils/adminToken";
 import { setActiveCategory, setSearchQuery } from "../../store/homeSlice";
-import { setActiveWorkspaceLocal, updateActiveWorkspaceThunk } from "../../store/userSlice";
 import { setAdminField } from "../../store/authSlice";
+import { isHomeRoute } from "../../utils/workspaceRouting";
 
 // Import brand icons
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
@@ -20,7 +20,7 @@ const categoryOptions = [
   { value: "shorts", label: "Shorts" }
 ];
 
-const TopBar = ({ onOpenMobileMenu }) => {
+const TopBar = ({ onOpenMobileMenu, onWorkspaceSwitch }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -40,33 +40,16 @@ const TopBar = ({ onOpenMobileMenu }) => {
     navigate("/");
   };
 
-  const isHomePage = location.pathname === "/home" || location.pathname.startsWith("/home/") || location.pathname === "/miniput" || location.pathname === "/kwink";
+  const isHomePage = isHomeRoute(location.pathname);
 
   const selectedCategory = categoryOptions.find((item) => item.value === activeCategory) || categoryOptions[0];
 
-  const handleWorkspaceSwitch = async (workspace) => {
-    dispatch(setActiveWorkspaceLocal(workspace));
-    dispatch(setActiveCategory("all"));
-    dispatch(setSearchQuery(""));
-    setSearchInput("");
-
-    if (auth?.userId) {
-      dispatch(
-        updateActiveWorkspaceThunk({
-          id: auth.userId,
-          workspaceId: workspace.id,
-        })
-      );
+  const handleWorkspaceSwitch = (workspace) => {
+    if (onWorkspaceSwitch) {
+      onWorkspaceSwitch(workspace);
     }
-
+    setShowCategories(false);
     setIsDropdownOpen(false);
-
-    const shouldStayOnCurrentPage =
-      location.pathname === "/inventory" || location.pathname === "/about";
-
-    if (!shouldStayOnCurrentPage) {
-      navigate(`/home/${workspace.slug}`);
-    }
   };
 
   useEffect(() => {
@@ -96,7 +79,7 @@ const TopBar = ({ onOpenMobileMenu }) => {
   }, [dispatch, isHomePage, searchInput]);
 
   // Determine active icon for mobile view
-  const isMiniput = activeWorkspace?.name === 'Miniput';
+  const isMiniput = String(activeWorkspace?.slug || activeWorkspace?.name || "").toLowerCase() === "miniput";
   const activeIconSrc = isMiniput ? MiniputSign : KwinkSign;
 
   return (
