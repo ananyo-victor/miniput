@@ -35,6 +35,7 @@ export class ContentService {
       throw new Error('Invalid workspaceId');
     }
   }
+
   async getHomeContent(workspaceId: string) {
     await this.validateWorkspaceExists(workspaceId);
 
@@ -148,7 +149,7 @@ export class ContentService {
   async getAboutContent(): Promise<AboutContentEntity> {
     const { rows } = await pool.query(
       `
-      SELECT id, miniput_details, kwink_details, address, whatsapp_number, phone_number, "updatedAt"
+      SELECT id, miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url, "updatedAt"
       FROM about_content
       WHERE id = 1
       `,
@@ -160,6 +161,7 @@ export class ContentService {
       address: '',
       whatsapp_number: '',
       phone_number: '',
+      location_url: '',
     };
 
     return {
@@ -168,6 +170,7 @@ export class ContentService {
       address: row.address,
       whatsappNumber: row.whatsapp_number,
       phoneNumber: row.phone_number,
+      locationUrl: row.location_url || '',
       updatedAt: row.updatedAt,
     };
   }
@@ -179,17 +182,19 @@ export class ContentService {
     const address = payload.address === undefined ? null : String(payload.address || '').trim();
     const whatsappNumber = payload.whatsappNumber === undefined ? null : String(payload.whatsappNumber || '').trim();
     const phoneNumber = payload.phoneNumber === undefined ? null : String(payload.phoneNumber || '').trim();
+    const locationUrl = payload.locationUrl === undefined ? null : String(payload.locationUrl || '').trim();
 
     const { rows } = await pool.query(
       `
-      INSERT INTO about_content (id, miniput_details, kwink_details, address, whatsapp_number, phone_number)
+      INSERT INTO about_content (id, miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url)
       VALUES (
         1,
         COALESCE($1, '{}'::TEXT[]),
         COALESCE($2, '{}'::TEXT[]),
         COALESCE($3, ''),
         COALESCE($4, ''),
-        COALESCE($5, '')
+        COALESCE($5, ''),
+        COALESCE($6, '')
       )
       ON CONFLICT (id)
       DO UPDATE SET
@@ -198,8 +203,9 @@ export class ContentService {
         address = COALESCE($3, about_content.address),
         whatsapp_number = COALESCE($4, about_content.whatsapp_number),
         phone_number = COALESCE($5, about_content.phone_number),
+        location_url = COALESCE($6, about_content.location_url),
         "updatedAt" = NOW()
-      RETURNING miniput_details, kwink_details, address, whatsapp_number, phone_number, "updatedAt"
+      RETURNING miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url, "updatedAt"
       `,
       [
         miniputDetails,
@@ -207,6 +213,7 @@ export class ContentService {
         address,
         whatsappNumber,
         phoneNumber,
+        locationUrl,
       ],
     );
 
@@ -216,6 +223,7 @@ export class ContentService {
       address: rows[0].address,
       whatsappNumber: rows[0].whatsapp_number,
       phoneNumber: rows[0].phone_number,
+      locationUrl: rows[0].location_url || '',
       updatedAt: rows[0].updatedAt,
     };
   }

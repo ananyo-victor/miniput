@@ -41,7 +41,7 @@ const AboutPage = () => {
   }, [about.phoneNumber]);
 
   if (loading) {
-   return <AboutPageSkeleton />;
+    return <AboutPageSkeleton />;
   }
 
   return (
@@ -69,15 +69,38 @@ const AboutPage = () => {
 
         <div className="space-y-4 px-4 pt-5 sm:space-y-5 sm:px-6 sm:pt-6">
           <section className="rounded-2xl bg-white p-5 shadow-[0_14px_26px_rgba(0,0,0,0.2)] sm:p-7">
-            <div className="flex items-start justify-between gap-5">
-              <div className="min-w-0">
-                <p className="text-3xl sm:text-4xl font-['Bebas_Neue',_sans-serif] tracking-widest text-[#2d2d2d]">ADDRESS</p>
-                <p className="mt-3 whitespace-pre-line text-lg sm:text-3xl leading-[1.25] text-[#5b5b5b] font-medium">
+            <div className="flex items-center justify-between gap-4 sm:gap-5">
+              {/* Left Side: Address Text */}
+              <div className="min-w-0 flex-1">
+                <p className="text-2xl sm:text-4xl font-['Bebas_Neue',_sans-serif] tracking-widest text-[#2d2d2d]">
+                  ADDRESS
+                </p>
+                <p className="mt-1.5 sm:mt-3 whitespace-pre-line text-sm sm:text-2xl leading-[1.4] text-[#5b5b5b] font-bold uppercase tracking-wide">
                   {about.address || "Address will be updated soon."}
                 </p>
               </div>
-              <div className="hidden sm:flex h-28 w-28 shrink-0 items-center justify-center rounded-3xl bg-[#ececec] text-[#5c6f8b]">
-                <MapPinned size={52} strokeWidth={2.2} />
+
+              {/* Right Side: Interactive Google Map */}
+              <div className="shrink-0 shadow-[0_4px_12px_rgba(0,0,0,0.1)] rounded-[12px] sm:rounded-[20px] overflow-hidden border border-gray-100 h-[72px] w-[72px] sm:h-28 sm:w-28 bg-[#ececec] relative group">
+                {about.locationUrl ? (
+                  <>
+                    <iframe
+                      src={about.locationUrl}
+                      className="absolute inset-0 w-full h-full"
+                      style={{ border: 0 }}
+                      allowFullScreen=""
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      title="Store Location"
+                    ></iframe>
+                    {/* Optional: invisible overlay to prevent accidental scrolling while reading on mobile, but clicking opens maps if you wrap it */}
+                    <div className="absolute inset-0 pointer-events-none group-hover:pointer-events-auto"></div>
+                  </>
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-[#5c6f8b]">
+                    <MapPinned size={32} strokeWidth={2.2} />
+                  </div>
+                )}
               </div>
             </div>
           </section>

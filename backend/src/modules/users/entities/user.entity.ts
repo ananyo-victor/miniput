@@ -44,6 +44,9 @@ export class UserEntity {
   @IsDate()
   lastLoginAt?: Date | null;
 
+  @IsOptional()
+  isWhatsappReceiver?: boolean;
+
   @IsDate()
   createdAt: Date;
 

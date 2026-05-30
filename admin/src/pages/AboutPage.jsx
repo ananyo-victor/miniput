@@ -42,6 +42,7 @@ const AboutPage = () => {
     address: "",
     whatsappNumber: "",
     phoneNumber: "",
+    locationUrl: "",
   });
 
   const [workspaceForm, setWorkspaceForm] = useState({
@@ -73,6 +74,7 @@ const AboutPage = () => {
         address: aboutData?.address || "",
         whatsappNumber: aboutData?.whatsappNumber || "",
         phoneNumber: aboutData?.phoneNumber || "",
+        locationUrl: aboutData?.locationUrl || "",
       });
 
       setWorkspaceForm({
@@ -244,6 +246,7 @@ const AboutPage = () => {
             address: String(aboutForm.address || "").trim(),
             whatsappNumber: String(aboutForm.whatsappNumber || "").trim(),
             phoneNumber: String(aboutForm.phoneNumber || "").trim(),
+            locationUrl: String(aboutForm.locationUrl || "").trim(),
           }),
         ).unwrap(),
         dispatch(
@@ -334,6 +337,18 @@ const AboutPage = () => {
                   className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#0E2A4A]"
                   placeholder="9826040823"
                 />
+              </label>
+
+              <label className="block">
+                <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Google Map Embed Link</span>
+                <input
+                  type="text"
+                  value={aboutForm.locationUrl}
+                  onChange={(event) => handleAboutFieldChange("locationUrl", event.target.value)}
+                  className="mt-1 w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 outline-none focus:border-[#0E2A4A]"
+                  placeholder="https://www.google.com/maps/embed?pb=..."
+                />
+                <p className="mt-1 text-[10px] text-gray-400">Paste the URL from Google Maps (Share {">"} Embed a map {">"} src attribute)</p>
               </label>
             </div>
           </section>

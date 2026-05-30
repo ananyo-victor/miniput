@@ -19,6 +19,10 @@ export class AboutContentEntity {
   phoneNumber: string;
 
   @IsOptional()
+  @IsString()
+  locationUrl?: string;
+
+  @IsOptional()
   @IsDate()
   updatedAt?: Date;
 }

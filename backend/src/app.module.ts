@@ -6,8 +6,9 @@ import { ProductsModule } from './modules/products/products.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
 import { UsersModule } from './modules/users/users.module';
+import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 
 @Module({
-  imports: [AuthModule, ContentModule, OrdersModule, ProductsModule, UploadsModule, WorkspaceModule, UsersModule],
+  imports: [AuthModule, ContentModule, OrdersModule, ProductsModule, UploadsModule, WorkspaceModule, UsersModule, WhatsappModule],
 })
 export class AppModule { }

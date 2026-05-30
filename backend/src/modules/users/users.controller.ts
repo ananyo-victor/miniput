@@ -7,10 +7,13 @@ import {
   Patch,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { AuthGuard } from '../../common/guards/auth.guard';
+import { UpdateWhatsappReceiverDto } from './dto/update-whatsapp-receiver.dto';
 
 @Controller('users')
 export class UsersController {
@@ -67,13 +70,15 @@ export class UsersController {
     return this.usersService.getActiveWorkspace(id);
   }
 
-  //cURL of getActiveWorkspace:
-  // curl -X GET http://localhost:3000/users/{userId}/workspace
-
-  // @Delete(':id')
-  // remove(
-  //   @Param('id') id: string,
-  // ) {
-  //   return this.usersService.remove(id);
-  // }
+  @Patch(':id/whatsapp-receiver')
+  @UseGuards(AuthGuard)
+  async updateWhatsappReceiver(
+    @Param('id') id: string,
+    @Body() body: UpdateWhatsappReceiverDto,
+  ) {
+    return this.usersService.updateWhatsappReceiver(
+      id,
+      body.isWhatsappReceiver,
+    );
+  }
 }

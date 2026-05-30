@@ -310,4 +310,34 @@ export class UsersService {
         'User deleted successfully',
     };
   }
+
+  async updateWhatsappReceiver(
+    userId: string,
+    isWhatsappReceiver: boolean,
+  ) {
+    if (isWhatsappReceiver) {
+      await pool.query(
+        `
+      UPDATE users
+      SET "isWhatsappReceiver" = FALSE
+      `,
+      );
+    }
+
+    const { rows } = await pool.query(
+      `
+    UPDATE users
+    SET "isWhatsappReceiver" = $1
+    WHERE id = $2
+    RETURNING *
+    `,
+      [isWhatsappReceiver, userId],
+    );
+
+    if (!rows.length) {
+      throw new Error('User not found');
+    }
+
+    return rows[0];
+  }
 } 

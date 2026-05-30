@@ -22,4 +22,8 @@ export class UpsertAboutContentDto {
   @IsOptional()
   @IsString()
   phoneNumber?: string;
+
+  @IsOptional()
+  @IsString()
+  locationUrl?: string;
 }
