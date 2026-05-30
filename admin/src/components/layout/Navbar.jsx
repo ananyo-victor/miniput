@@ -5,7 +5,7 @@ import { setActiveCategory } from "../../store/homeSlice";
 import { setActiveWorkspaceLocal, updateActiveWorkspaceThunk } from "../../store/userSlice";
 import { clearAdminToken, getAdminAuthFromStorage } from "../../utils/adminToken";
 import { setAdminField } from "../../store/authSlice";
-import { Package, Info, Store, ChevronLeft, Menu, X, LogOut } from "lucide-react";
+import { Package, Info, Store, ChevronLeft, Menu, X, LogOut, ShoppingBag } from "lucide-react";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
 
@@ -19,6 +19,7 @@ const Navbar = ({ isCollapsed, toggleSidebar, isMobileMenuOpen, closeMobileMenu 
 
   const navItems = [
     { label: "Home", path: `/home/${activeWorkspace?.slug || "miniput"}`, icon: Store, key: "home", desktopOnly: true },
+    { label: "Orders", path: "/orders", icon: ShoppingBag, key: "orders" },
     { label: "Inventory", path: "/inventory", icon: Package, key: "inventory" },
     { label: "About", path: "/about", icon: Info, key: "about" },
   ];
@@ -63,6 +64,7 @@ const Navbar = ({ isCollapsed, toggleSidebar, isMobileMenuOpen, closeMobileMenu 
       return location.pathname.startsWith("/home/") || location.pathname === "/home" || location.pathname === "/miniput" || location.pathname === "/kwink";
     }
     if (item.path === "/inventory") return location.pathname === "/inventory";
+    if (item.path === "/orders") return location.pathname === "/orders";
     if (item.path === "/about") return location.pathname === "/about";
     return false;
   };

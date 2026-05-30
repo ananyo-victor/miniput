@@ -9,6 +9,7 @@ import AboutPage from "./pages/AboutPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
 import { fetchWorkspaces } from "./store/workspaceSlice";
+import OrdersPage from "./pages/OrdersPage";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -28,6 +29,7 @@ export default function App() {
           <Route path="/kwink" element={<Navigate to="/home/kwink" replace />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Route>
 
