@@ -7,6 +7,7 @@ import MiniputSign from "../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../assests/kwink_SIGN.png";
 import MiniputLogo from "../assests/MINIPUT_LOGO.png";
 import KwinkLogo from "../assests/kwink_LOGO.png";
+import AboutPageSkeleton from "../components/skeletonLoader/AboutPageSkeleton";
 
 
 const normalizePhone = (value) => String(value || "").replace(/\D+/g, "");
@@ -40,11 +41,7 @@ const AboutPage = () => {
   }, [about.phoneNumber]);
 
   if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-[#f5f5f5] p-6">
-        <p className="text-sm font-semibold text-gray-600">Loading showroom details...</p>
-      </div>
-    );
+   return <AboutPageSkeleton />;
   }
 
   return (

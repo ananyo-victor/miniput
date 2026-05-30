@@ -61,7 +61,10 @@ const TopBar = ({ onOpenMobileMenu }) => {
 
     setIsDropdownOpen(false);
 
-    if (location.pathname !== "/inventory") {
+    const shouldStayOnCurrentPage =
+      location.pathname === "/inventory" || location.pathname === "/about";
+
+    if (!shouldStayOnCurrentPage) {
       navigate(`/home/${workspace.slug}`);
     }
   };

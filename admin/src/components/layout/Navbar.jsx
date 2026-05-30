@@ -42,7 +42,13 @@ const Navbar = ({ isCollapsed, toggleSidebar, isMobileMenuOpen, closeMobileMenu 
         })
       );
     }
-    navigate(`/home/${workspace.slug}`);
+
+    const shouldStayOnCurrentPage =
+      location.pathname === "/inventory" || location.pathname === "/about";
+
+    if (!shouldStayOnCurrentPage) {
+      navigate(`/home/${workspace.slug}`);
+    }
     if (closeMobileMenu) closeMobileMenu();
   };
 

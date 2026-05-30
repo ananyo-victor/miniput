@@ -387,7 +387,7 @@ const InventoryPage = () => {
     <div className="flex flex-col min-h-screen bg-[#f5f5f5] font-['Nunito',_sans-serif]">
       <div className="sticky top-0 z-10 flex items-center justify-between bg-white border-b border-[#f0f0f0] px-5 py-4 md:px-8">
         <div>
-          <h1 className="text-3xl md:text-4xl text-[#0E2A4A] tracking-[2px] font-['Bebas_Neue',_sans-serif] leading-none">
+          <h1 className="text-xl md:text-4xl text-[#0E2A4A] tracking-[2px] font-['Bebas_Neue',_sans-serif] leading-none">
             MANAGE PRODUCTS
           </h1>
         </div>
@@ -395,7 +395,7 @@ const InventoryPage = () => {
         <button
           type="button"
           onClick={handleOpenModal}
-          className="rounded-[12px] bg-[#0E2A4A] px-5 py-3 text-[13px] md:text-[15px] font-extrabold text-white shadow-md transition-transform hover:scale-[1.02] hover:bg-[#1a3d6e]"
+          className="rounded-[12px] bg-[#0E2A4A] px-5 py-3 text-[11px] md:text-[15px] font-extrabold text-white shadow-md transition-transform hover:scale-[1.02] hover:bg-[#1a3d6e]"
         >
           + ADD PRODUCT
         </button>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAboutContentThunk, fetchWorkspaceHomeContentThunk, updateAboutContentThunk, updateWorkspaceHomeContentThunk } from "../store/aboutSlice";
 import { deleteUploadedProductImageThunk, uploadProductImageThunk } from "../store/productsSlice";
+import AboutPageSkeleton from "../components/skeletonLoader/AboutPageSkeleton";
 
 const parseMultiline = (value) =>
   String(value || "")
@@ -271,11 +272,7 @@ const AboutPage = () => {
   const promoTagRows = ensureAtLeastOneRow(splitMultilineRaw(workspaceForm.promoTagsText));
 
   if (loading) {
-    return (
-      <div className="flex-1 flex items-center justify-center bg-[#f5f5f5] p-6">
-        <p className="text-sm font-bold text-[#666]">Loading content...</p>
-      </div>
-    );
+    return <AboutPageSkeleton />;
   }
 
   return (
