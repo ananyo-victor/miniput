@@ -46,21 +46,20 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Sliding Panel */}
       <div
-        className={`fixed top-0 left-0 h-full w-[280px] md:w-[320px] bg-white z-[70] transform transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "-translate-x-full"
-        } shadow-2xl flex flex-col`}
+        className={`fixed top-0 left-0 h-full w-[280px] md:w-[320px] bg-white z-[70] transform transition-transform duration-300 ease-in-out ${isOpen ? "translate-x-0" : "-translate-x-full"
+          } shadow-2xl flex flex-col`}
       >
         {/* Top Header: User Profile Section */}
         <div className="flex items-center justify-between p-5 bg-[var(--mk-navy)] text-white">
-          <div 
+          <div
             className="flex items-center gap-3 cursor-pointer"
             onClick={handleAccountClick}
           >
             {authed && profilePic ? (
-              <img 
-                src={profilePic} 
-                alt="Profile" 
-                className="w-11 h-11 rounded-full object-cover border-2 border-white/20 shadow-sm" 
+              <img
+                src={profilePic}
+                alt="Profile"
+                className="w-11 h-11 rounded-full object-cover border-2 border-white/20 shadow-sm"
               />
             ) : (
               <div className="w-11 h-11 rounded-full bg-white/10 flex items-center justify-center">
@@ -81,7 +80,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
         {/* Scrollable Links Body */}
         <div className="flex-1 overflow-y-auto flex flex-col pb-6">
-          
+
           {/* Section 1: Discover */}
           <div className="flex flex-col py-3">
             <Link to="/home" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
@@ -103,13 +102,12 @@ const Sidebar = ({ isOpen, onClose }) => {
           {/* Section 2: Brands */}
           <div className="flex flex-col py-3">
             <h3 className="px-6 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Shop By Brand</h3>
-            
+
             <Link
               to="/home/miniput"
               onClick={() => handleBrandClick("Miniput")}
-              className={`flex items-center gap-4 px-6 py-3.5 font-bold transition-colors ${
-                isActiveBrand("miniput") ? "bg-[var(--mk-sky)]/10 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`flex items-center gap-4 px-6 py-3.5 font-bold transition-colors ${isActiveBrand("miniput") ? "bg-[var(--mk-sky)]/10 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
+                }`}
             >
               <div className="w-6 h-6 flex items-center justify-center bg-[var(--mk-sky)]/20 rounded-full border border-[var(--mk-sky)]/40 shrink-0">
                 <img src={MiniputSign} alt="Miniput" className="w-4 h-4 object-contain" />
@@ -120,9 +118,8 @@ const Sidebar = ({ isOpen, onClose }) => {
             <Link
               to="/home/kwink"
               onClick={() => handleBrandClick("Kwink")}
-              className={`flex items-center gap-4 px-6 py-3.5 font-bold transition-colors ${
-                isActiveBrand("kwink") ? "bg-[var(--mk-green)]/10 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`flex items-center gap-4 px-6 py-3.5 font-bold transition-colors ${isActiveBrand("kwink") ? "bg-[var(--mk-green)]/10 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
+                }`}
             >
               <div className="w-6 h-6 flex items-center justify-center bg-[var(--mk-green)]/20 rounded-full border border-[var(--mk-green)]/40 shrink-0">
                 <img src={KwinkSign} alt="Kwink" className="w-4 h-4 object-contain" />
@@ -136,11 +133,22 @@ const Sidebar = ({ isOpen, onClose }) => {
           {/* Utility Links (Cart) */}
           <div className="flex flex-col py-3">
             <Link
+              to="/orders"
+              onClick={onClose}
+              className={`flex items-center justify-between px-6 py-3.5 font-bold transition-colors ${isExactPath("/orders") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
+                }`}
+            >
+              <div className="flex items-center gap-4">
+                <ShoppingCart size={20} className="text-gray-500" />
+                Your Orders
+              </div>
+            </Link>
+
+            <Link
               to="/cart"
               onClick={onClose}
-              className={`flex items-center justify-between px-6 py-3.5 font-bold transition-colors ${
-                isExactPath("/cart") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`flex items-center justify-between px-6 py-3.5 font-bold transition-colors ${isExactPath("/cart") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
+                }`}
             >
               <div className="flex items-center gap-4">
                 <ShoppingCart size={20} className="text-gray-500" />
@@ -154,12 +162,13 @@ const Sidebar = ({ isOpen, onClose }) => {
             </Link>
           </div>
 
+
           <div className="border-t border-gray-100 mx-4"></div>
 
           {/* Section 3: Help & Settings */}
           <div className="flex flex-col py-3">
             <h3 className="px-6 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Help & Settings</h3>
-            
+
             <button
               onClick={handleAccountClick}
               className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 text-left w-full transition-colors"
@@ -171,9 +180,8 @@ const Sidebar = ({ isOpen, onClose }) => {
             <Link
               to="/about"
               onClick={onClose}
-              className={`flex items-center gap-4 px-6 py-3.5 font-bold transition-colors ${
-                isExactPath("/about") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
-              }`}
+              className={`flex items-center gap-4 px-6 py-3.5 font-bold transition-colors ${isExactPath("/about") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
+                }`}
             >
               <Info size={20} className="text-gray-500" />
               About Us
@@ -197,7 +205,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               </button>
             )}
           </div>
-          
+
         </div>
       </div>
     </>

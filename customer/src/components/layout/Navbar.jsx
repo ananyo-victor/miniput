@@ -13,7 +13,10 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const isHiddenRoute = location.pathname.includes("/cart") || location.pathname.includes("/product");
+  const isHiddenRoute = 
+    location.pathname.includes("/cart") || 
+    location.pathname.includes("/product") || 
+    location.pathname.includes("/order");
 
   if (isHiddenRoute) {
     return null;
@@ -41,7 +44,6 @@ const Navbar = () => {
 
   return (
     <div className="sticky top-[54px] lg:static z-40">
-      {/* Navigation tabs remain visible on all screens (Brand switchers) */}
       <div className="flex bg-white border-b border-gray-100 sticky top-[54px] lg:top-[73px] z-40 shadow-sm">
         {navItems.map((item) => (
           <button

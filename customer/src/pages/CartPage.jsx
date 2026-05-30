@@ -8,7 +8,7 @@ import { fetchAboutThunk } from "../store/aboutSlice";
 const CartPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const cart = useSelector((state) => state.customer.cart);
+  const { cart, authed } = useSelector((state) => state.customer);
 
   const subtotal = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 1), 0);
 
