@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
 import ProductDetail from "../components/products/ProductDetail";
-import { addToCart } from "../store/customerSlice";
+import { addToCart, openAuthModal } from "../store/customerSlice";
 import { fetchProducts } from "../store/productsSlice";
 
 const ProductDetailPage = () => {
@@ -11,6 +11,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading } = useSelector((state) => state.products);
+  const authed = useSelector((state) => state.customer.authed);
   const [hasRequestedProducts, setHasRequestedProducts] = useState(false);
   const isWaitingForProducts = !products.length && !hasRequestedProducts;
 
@@ -53,11 +54,15 @@ const ProductDetailPage = () => {
       onNext={() => goToIndex(currentIndex + 1)}
       onAddToCart={(payload) => dispatch(addToCart(payload))}
       onOrderNow={(payload) => {
-        navigate("/order", {
-          state: {
-            directOrderItem: payload,
-          },
-        });
+        if (authed) {
+          navigate("/order", {
+            state: {
+              directOrderItem: payload,
+            },
+          });
+        } else {
+          dispatch(openAuthModal());
+        }
       }}
     />
   );

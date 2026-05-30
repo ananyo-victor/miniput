@@ -9,6 +9,8 @@ import AboutPage from "./pages/AboutPage";
 import Navbar from "./components/layout/Navbar";
 import Topbar from "./components/layout/Topbar"; 
 import Sidebar from "./components/layout/Sidebar"; 
+import AuthModal from "./components/auth/AuthModal";
+import ProfileModal from "./components/auth/ProfileModal";
 import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
 import { fetchWorkspaces } from "./store/workspaceSlice";
 
@@ -23,6 +25,8 @@ const Layout = () => {
   return (
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#f5f5f5]" style={layoutHeights}>
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <AuthModal /> 
+      <ProfileModal />
       
       <div className="flex-1 flex flex-col min-h-0">
         <Topbar onMenuClick={() => setIsSidebarOpen(true)} />

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Trash2 } from 'lucide-react';
 import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { clearCart, removeFromCart, updateQuantity } from "../store/customerSlice";
+import { clearCart, removeFromCart, updateQuantity, openAuthModal } from "../store/customerSlice";
 import { fetchAboutThunk } from "../store/aboutSlice";
 
 const CartPage = () => {
@@ -76,7 +76,7 @@ const CartPage = () => {
                           onClick={() => dispatch(removeFromCart(rowId))}
                           className="text-[var(--mk-red)] tracking-wider shrink-0 mt-1"
                         >
-                          <Trash2 className="size-5"/>
+                          <Trash2 className="size-5" />
                         </button>
                       </div>
 
@@ -145,7 +145,13 @@ const CartPage = () => {
 
               <button
                 type="button"
-                onClick={() => navigate("/order")}
+                onClick={() => {
+                  if (authed) {
+                    navigate("/order");
+                  } else {
+                    dispatch(openAuthModal());
+                  }
+                }}
                 className="w-full mt-5 py-3 rounded-xl bg-[var(--mk-navy)] text-[var(--mk-yellow)] text-xs font-black tracking-[0.09em]"
               >
                 PLACE ORDER
