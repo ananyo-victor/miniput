@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import {
   X,
@@ -14,6 +14,7 @@ import {
   Save,
   Loader2,
   Hash,
+  ChevronDown,
 } from "lucide-react";
 
 const AddProductModal = ({
@@ -33,6 +34,7 @@ const AddProductModal = ({
   const workspaces = useSelector((state) => state.workspace.items);
   const activeWorkspace = useSelector((state) => state.user.activeWorkspace);
   const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
+  const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
 
   const selectedWorkspaceId = activeWorkspaceId || "";
 
@@ -48,6 +50,16 @@ const AddProductModal = ({
     { id: "group-10-16", label: "Sizes 10 to 16", values: ["10", "11", "12", "13", "14", "15", "16"] },
     { id: "group-6-16", label: "Sizes 6 to 16", values: ["6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"] }
   ];
+
+  const productCategoryOptions = [
+    { value: "shirt", label: "Shirt" },
+    { value: "pant", label: "Pant" },
+    { value: "jacket", label: "Jacket" },
+    { value: "set", label: "Set" },
+    { value: "other", label: "Other" }
+  ];
+  const defaultCategory = productCategoryOptions[0]?.value || "";
+
   const activeWorkspaceName = activeWorkspace?.name?.toLowerCase() || "";
 
   const isKwinkWorkspace = activeWorkspaceName === "kwink";
@@ -68,6 +80,14 @@ const AddProductModal = ({
       onFieldChange("sizes", sizeOptions[0].values);
     }
   }, [show, newProduct.sizes, sizeOptions, onFieldChange]);
+
+  useEffect(() => {
+    if (!show) return;
+
+    if (!newProduct.category && defaultCategory) {
+      onFieldChange("category", defaultCategory);
+    }
+  }, [show, newProduct.category, onFieldChange, defaultCategory]);
 
   const handleGroupChange = (targetValues, isChecked) => {
     onFieldChange("sizes", isChecked ? targetValues : []);
@@ -168,26 +188,55 @@ const AddProductModal = ({
             </div>
 
             {/* CATEGORY SELECTION */}
-            <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
+            <div className="flex items-center gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[50px] md:min-h-[60px] focus-within:bg-[#fffdf5] transition-colors relative">
               <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0">
                 <Shapes size={18} />
               </div>
-              <div className="flex-1 py-1">
-                <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-0.5 block">
+              <div className="flex-1 py-1 relative">
+                <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-1 block">
                   CATEGORY
                 </label>
-                <select
-                  value={newProduct.category || ""}
-                  onChange={(e) => onFieldChange("category", e.target.value)}
-                  className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none appearance-none cursor-pointer"
-                >
-                  <option value="">Select Category...</option>
-                  <option value="shirt">Shirt</option>
-                  <option value="pant">Pant</option>
-                  <option value="jacket">Jacket</option>
-                  <option value="set">Set</option>
-                  <option value="other">Other</option>
-                </select>
+
+                {/* Custom Dropdown matching TopBar.jsx */}
+                <div className="relative w-full">
+                  <button
+                    type="button"
+                    onClick={() => setShowCategoryDropdown((prev) => !prev)}
+                    className="w-full flex items-center justify-between text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none bg-transparent"
+                  >
+                    <span>
+                      {productCategoryOptions.find(opt => opt.value === newProduct.category)?.label
+                        || productCategoryOptions[0]?.label}
+                    </span>
+                    <ChevronDown
+                      size={16}
+                      className={`text-gray-400 transition-transform duration-200 ${showCategoryDropdown ? "rotate-180 text-[#0E2A4A]" : ""}`}
+                    />
+                  </button>
+
+                  {showCategoryDropdown && (
+                    <div className="absolute top-full mt-3 left-0 w-full bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden z-50">
+                      {productCategoryOptions.map((option) => {
+                        const isActive = newProduct.category === option.value;
+                        return (
+                          <button
+                            type="button"
+                            key={option.value}
+                            onClick={() => {
+                              onFieldChange("category", option.value);
+                              setShowCategoryDropdown(false);
+                            }}
+                            className={`w-full text-left px-4 py-3 text-[12px] md:text-[14px] font-bold transition-all flex items-center justify-between ${isActive ? "bg-[#f0f7f8] text-[#0E2A4A]" : "text-gray-700 hover:bg-gray-50"
+                              }`}
+                          >
+                            {option.label}
+                            {isActive && <div className="w-2 h-2 rounded-full bg-[#0E2A4A]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
