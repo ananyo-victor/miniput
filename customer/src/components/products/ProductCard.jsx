@@ -69,7 +69,7 @@ const ProductCard = ({ product, onClick }) => {
       className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-sm transition-shadow hover:shadow-xl md:rounded-2xl"
     >
       <div
-        className="relative aspect-[4/5] md:aspect-[3/4] bg-gray-100 touch-pan-y"
+        className="relative aspect-[4/5] md:aspect-[4/5] bg-gray-100 touch-pan-y"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
