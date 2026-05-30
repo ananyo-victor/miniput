@@ -31,7 +31,7 @@ const OrderFormPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [step, setStep] = useState(1);
-  const cart = useSelector((state) => state.customer.cart);
+  const cart = useSelector((state) => state.cart.items);
   const { about } = useSelector((state) => state.about);
   const directOrderItem = location.state?.directOrderItem;
   const isDirectOrder = Boolean(directOrderItem);

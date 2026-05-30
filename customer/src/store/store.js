@@ -1,6 +1,8 @@
 import { configureStore } from "@reduxjs/toolkit";
-import customerReducer from "./customerSlice";
-import adminReducer from "./adminSlice";
+import authReducer from "./customerSlice";
+import customerAccountReducer from "./customerAccountSlice";
+import cartReducer from "./cartSlice";
+import ordersReducer from "./orderSlice";
 import productsReducer from "./productsSlice";
 import homeReducer from "./homeSlice";
 import aboutReducer from "./aboutSlice";
@@ -8,8 +10,10 @@ import workspaceReducer from "./workspaceSlice";
 
 export const store = configureStore({
   reducer: {
-    customer: customerReducer,
-    admin: adminReducer,
+    auth: authReducer,
+    customerAccount: customerAccountReducer,
+    cart: cartReducer,
+    orders: ordersReducer,
     products: productsReducer,
     home: homeReducer,
     about: aboutReducer,

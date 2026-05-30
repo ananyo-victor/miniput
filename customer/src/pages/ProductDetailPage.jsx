@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
 import ProductDetail from "../components/products/ProductDetail";
-import { addToCart, openAuthModal } from "../store/customerSlice";
+import { openAuthModal } from "../store/customerSlice";
+import { addToCart } from "../store/cartSlice";
 import { fetchProducts } from "../store/productsSlice";
 
 const ProductDetailPage = () => {
@@ -11,7 +12,7 @@ const ProductDetailPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading } = useSelector((state) => state.products);
-  const authed = useSelector((state) => state.customer.authed);
+  const authed = useSelector((state) => state.auth.authed);
   const [hasRequestedProducts, setHasRequestedProducts] = useState(false);
   const isWaitingForProducts = !products.length && !hasRequestedProducts;
 

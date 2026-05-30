@@ -19,7 +19,7 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-export const setupAxiosInterceptors = (dispatch) => {
+export const setupAxiosInterceptors = () => {
   // Request Interceptor: Add token to headers
   axios.interceptors.request.use(
     (config) => {
@@ -40,7 +40,10 @@ export const setupAxiosInterceptors = (dispatch) => {
     async (error) => {
       const originalRequest = error.config;
 
-      if (error.response?.status === 401 && !originalRequest._retry) {
+      const isUnauthorized = error.response?.status === 401;
+      const hasAdminContext = Boolean(getAdminAccessToken());
+
+      if (isUnauthorized && !originalRequest._retry && hasAdminContext) {
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -56,12 +59,7 @@ export const setupAxiosInterceptors = (dispatch) => {
         const refreshToken = getAdminRefreshToken();
 
         if (!refreshToken) {
-          // No refresh token, need to logout
           clearAdminToken();
-          if (dispatch) {
-            dispatch({ type: "admin/logout" });
-          }
-          window.location.href = "/home";
           processQueue(new Error("No refresh token"), null);
           return Promise.reject(error);
         }
@@ -74,28 +72,12 @@ export const setupAxiosInterceptors = (dispatch) => {
           if (data.success && data.accessToken) {
             setAdminTokens(data.accessToken, data.refreshToken);
             originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-            
-            // Update Redux state with new tokens
-            if (dispatch) {
-              dispatch({
-                type: "admin/setTokens",
-                payload: {
-                  accessToken: data.accessToken,
-                  refreshToken: data.refreshToken
-                }
-              });
-            }
-            
+
             processQueue(null, data.accessToken);
             return axios(originalRequest);
           }
         } catch (refreshError) {
-          // Refresh failed, logout user
           clearAdminToken();
-          if (dispatch) {
-            dispatch({ type: "admin/logout" });
-          }
-          window.location.href = "/home";
           processQueue(refreshError, null);
           return Promise.reject(refreshError);
         }

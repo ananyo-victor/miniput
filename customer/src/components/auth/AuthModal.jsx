@@ -3,14 +3,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { X, ArrowRight } from "lucide-react";
 import {
   closeAuthModal,
-  setCustomerField,
+  setAuthField,
   checkCustomerThunk,
   verifyCustomerThunk
 } from "../../store/customerSlice";
 
 const AuthModal = () => {
   const dispatch = useDispatch();
-  const { isAuthModalOpen, authStep, phone, otp, exists, authError } = useSelector((state) => state.customer);
+  const { isAuthModalOpen, authStep, phone, otp, authError } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
 
   if (!isAuthModalOpen) return null;
@@ -69,7 +69,7 @@ const AuthModal = () => {
                     type="tel"
                     maxLength={10}
                     value={phone}
-                    onChange={(e) => dispatch(setCustomerField({ key: "phone", value: e.target.value.replace(/\D/g, "") }))}
+                    onChange={(e) => dispatch(setAuthField({ key: "phone", value: e.target.value.replace(/\D/g, "") }))}
                     placeholder="Enter 10 digit number"
                     className="flex-1 bg-transparent border-none outline-none font-bold text-gray-900"
                     autoFocus
@@ -94,7 +94,7 @@ const AuthModal = () => {
                   type="text"
                   maxLength={6}
                   value={otp}
-                  onChange={(e) => dispatch(setCustomerField({ key: "otp", value: e.target.value.replace(/\D/g, "") }))}
+                  onChange={(e) => dispatch(setAuthField({ key: "otp", value: e.target.value.replace(/\D/g, "") }))}
                   placeholder="Enter OTP"
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none font-bold text-gray-900 text-center tracking-[0.5em] focus:border-[var(--mk-navy)] focus:bg-white transition-colors"
                   autoFocus
@@ -116,7 +116,7 @@ const AuthModal = () => {
               <div className="flex items-center justify-between mt-2">
                 <button
                   type="button"
-                  onClick={() => dispatch(setCustomerField({ key: "authStep", value: "mobile" }))}
+                  onClick={() => dispatch(setAuthField({ key: "authStep", value: "mobile" }))}
                   className="text-[11px] font-bold text-gray-400 hover:text-[var(--mk-navy)] uppercase tracking-wider transition-colors"
                 >
                   ← Change Number
@@ -134,7 +134,7 @@ const AuthModal = () => {
 
               <button
                 type="button"
-                onClick={() => dispatch(setCustomerField({ key: "authStep", value: "mobile" }))}
+                onClick={() => dispatch(setAuthField({ key: "authStep", value: "mobile" }))}
                 className="text-[11px] font-bold text-gray-400 hover:text-gray-600 text-center uppercase tracking-wider"
               >
                 ← Change Number

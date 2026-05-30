@@ -2,13 +2,15 @@ import React, { useEffect } from "react";
 import { Trash2 } from 'lucide-react';
 import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { clearCart, removeFromCart, updateQuantity, openAuthModal } from "../store/customerSlice";
+import { clearCart, removeFromCart, updateQuantity } from "../store/cartSlice";
+import { openAuthModal } from "../store/customerSlice";
 import { fetchAboutThunk } from "../store/aboutSlice";
 
 const CartPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { cart, authed } = useSelector((state) => state.customer);
+  const cart = useSelector((state) => state.cart.items);
+  const authed = useSelector((state) => state.auth.authed);
 
   const subtotal = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 1), 0);
 

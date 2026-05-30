@@ -43,7 +43,9 @@ const Topbar = ({ onMenuClick }) => {
   const dispatch = useDispatch();
   const dropdownRef = useRef(null);
 
-  const { cart, authed, phone, name, profilePic } = useSelector((state) => state.customer);
+  const cart = useSelector((state) => state.cart.items);
+  const { authed, phone } = useSelector((state) => state.auth);
+  const { name, profilePic } = useSelector((state) => state.customerAccount.profile);
   const activeCategory = useSelector((state) => state.home.activeCategory);
   const storedSearchQuery = useSelector((state) => state.home.searchQuery);
 

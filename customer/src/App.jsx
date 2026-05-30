@@ -44,8 +44,8 @@ export default function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    setupAxiosInterceptors(dispatch);
-  }, [dispatch]);
+    setupAxiosInterceptors();
+  }, []);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());

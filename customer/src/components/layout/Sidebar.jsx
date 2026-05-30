@@ -10,7 +10,9 @@ import KwinkSign from "../../assests/kwink_SIGN.png";
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
   const dispatch = useDispatch();
-  const { cart, authed, name, phone, profilePic } = useSelector((state) => state.customer);
+  const cart = useSelector((state) => state.cart.items);
+  const { authed, phone } = useSelector((state) => state.auth);
+  const { name, profilePic } = useSelector((state) => state.customerAccount.profile);
   const cartCount = cart.length;
 
   const isActiveBrand = (path) => location.pathname.includes(path);

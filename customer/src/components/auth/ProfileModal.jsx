@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Camera, LogOut } from "lucide-react";
-import { closeProfileModal, updateProfile, logoutCustomer } from "../../store/customerSlice";
+import { closeProfileModal, logoutCustomer } from "../../store/customerSlice";
+import { updateProfile } from "../../store/customerAccountSlice";
 
 const ProfileModal = () => {
   const dispatch = useDispatch();
-  const { isProfileModalOpen, phone, name: savedName, profilePic: savedPic } = useSelector((state) => state.customer);
+  const { isProfileModalOpen, phone } = useSelector((state) => state.auth);
+  const { name: savedName, profilePic: savedPic } = useSelector((state) => state.customerAccount.profile);
 
   const [localName, setLocalName] = useState("");
   const [localPic, setLocalPic] = useState("");
