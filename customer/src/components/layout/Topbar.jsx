@@ -55,8 +55,9 @@ const Topbar = ({ onMenuClick }) => {
   const isKwink = location.pathname.includes("kwink");
   const isMiniput = !isKwink && !isCartPage;
   const isOrderPage = location.pathname.includes("/order");
+  const isAboutPage = location.pathname.includes("/about");
   const isProductDetailPage = location.pathname.includes("/product/");
-  const hideSearchAndCategory = isCartPage || isOrderPage || isProductDetailPage;
+  const hideSearchAndCategory = isCartPage || isOrderPage || isProductDetailPage || isAboutPage;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -112,7 +113,7 @@ const Topbar = ({ onMenuClick }) => {
           <Menu size={24} />
         </button>
         
-        {isCartPage ? (
+        {isCartPage || isAboutPage ? (
           <div className="flex items-center gap-2 lg:gap-3">
             <Link 
               to="/home/miniput" 

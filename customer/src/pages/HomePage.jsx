@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
 import ProductCard from "../components/products/ProductCard";
+import ProductCardSkeleton from "../components/skeletonLoader/ProductCardSkeleton";
 import { fetchProducts } from "../store/productsSlice";
 import { fetchHomeContent, setActiveBrand, setActiveCategory } from "../store/homeSlice";
 
@@ -375,9 +376,7 @@ const HomePage = () => {
       {/* FLOATING PRODUCTS MAIN SECTION */}
       <main className="mx-auto w-full max-w-[1440px] flex-1 px-6 sm:px-8 lg:px-10 relative z-20">
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
-            <p className="text-gray-400 font-semibold text-lg">Loading products...</p>
-          </div>
+          <ProductCardSkeleton count={12} />
         ) : error ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
             <p className="text-red-400 font-semibold text-lg">{error}</p>
@@ -407,3 +406,4 @@ const HomePage = () => {
 };
 
 export default HomePage;
+
