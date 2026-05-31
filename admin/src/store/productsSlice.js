@@ -62,7 +62,10 @@ const buildCreateProductPayload = (payload = {}) => {
     size: normalizedSizes,
     imageUrls: normalizeImageUrlList(payload.imageUrls, payload.imageUrl),
     discountType: discountEnabled ? payload.discountType || "percent" : null,
-    discountValue: discountEnabled ? Number(payload.discountValue) || null : null
+    discountValue: discountEnabled ? Number(payload.discountValue) || null : null,
+    isTrending: Boolean(payload.isTrending),
+    isBestseller: Boolean(payload.isBestseller),
+    isNewRelease: Boolean(payload.isNewRelease)
   };
 };
 
@@ -222,7 +225,10 @@ const initialState = {
     description: "",
     discountEnabled: false,
     discountType: "percent",
-    discountValue: ""
+    discountValue: "",
+    isTrending: false,
+    isBestseller: false,
+    isNewRelease: false
   }
 };
 

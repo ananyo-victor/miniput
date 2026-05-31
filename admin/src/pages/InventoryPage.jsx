@@ -170,6 +170,9 @@ const InventoryPage = () => {
     dispatch(setNewProductField({ key: "discountEnabled", value: Boolean(product.discountType) }));
     dispatch(setNewProductField({ key: "discountType", value: product.discountType || "percent" }));
     dispatch(setNewProductField({ key: "discountValue", value: product.discountValue || "" }));
+    dispatch(setNewProductField({ key: "isTrending", value: Boolean(product.isTrending) }));
+    dispatch(setNewProductField({ key: "isBestseller", value: Boolean(product.isBestseller) }));
+    dispatch(setNewProductField({ key: "isNewRelease", value: Boolean(product.isNewRelease) }));
 
     const newImageUploads = existingImageUrls.map((url, idx) => ({
       localId: `existing-${product.id}-${idx}`,

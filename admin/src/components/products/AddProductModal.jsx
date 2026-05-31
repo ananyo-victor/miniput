@@ -15,6 +15,7 @@ import {
   Loader2,
   Hash,
   ChevronDown,
+  Star
 } from "lucide-react";
 
 const AddProductModal = ({
@@ -414,6 +415,47 @@ const AddProductModal = ({
                   className="w-full bg-transparent border-none text-[12px] md:text-[14px] font-bold text-[#1a1a1a] outline-none placeholder:text-[#ccc] resize-none h-14 md:h-20"
                   placeholder="Product details and special notes..."
                 />
+              </div>
+            </div>
+
+            {/* PRODUCT BADGES / TAGS */}
+            <div className="flex items-start gap-2 md:gap-3 px-3 py-2 md:px-4 md:py-3 border-b border-[#f2f2f2] min-h-[60px] focus-within:bg-[#fffdf5] transition-colors">
+              <div className="text-[#0E2A4A] w-[24px] md:w-[28px] text-center shrink-0 mt-1">
+                <Star size={18} />
+              </div>
+              <div className="flex-1 py-1">
+                <label className="text-[7px] md:text-[9px] font-black tracking-[1.5px] text-[#888] uppercase mb-2 block">
+                  PRODUCT BADGES
+                </label>
+                <div className="flex flex-wrap gap-4 mt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.isTrending || false}
+                      onChange={(e) => onFieldChange("isTrending", e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
+                    />
+                    <span className="text-[10px] md:text-[12px] font-bold text-[#1a1a1a]">Trending</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.isBestseller || false}
+                      onChange={(e) => onFieldChange("isBestseller", e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
+                    />
+                    <span className="text-[10px] md:text-[12px] font-bold text-[#1a1a1a]">Bestseller</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newProduct.isNewRelease || false}
+                      onChange={(e) => onFieldChange("isNewRelease", e.target.checked)}
+                      className="w-4 h-4 rounded border-gray-300 text-[#0E2A4A] focus:ring-[#0E2A4A]"
+                    />
+                    <span className="text-[10px] md:text-[12px] font-bold text-[#1a1a1a]">New Release</span>
+                  </label>
+                </div>
               </div>
             </div>
 
