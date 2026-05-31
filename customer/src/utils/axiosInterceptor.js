@@ -1,5 +1,11 @@
 import axios from "axios";
-import { getAdminAccessToken, getAdminRefreshToken, setAdminTokens, clearAdminToken } from "./adminToken";
+import { 
+  getCustomerAccessToken, 
+  getCustomerRefreshToken, 
+  setCustomerTokens, 
+  clearCustomerToken 
+} from "./customerToken";
+import { logoutCustomer } from "../store/authSlice";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -21,39 +27,33 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-export const setupAxiosInterceptors = () => {
+export const setupCustomerAxiosInterceptors = (dispatch) => {
   if (requestInterceptorId !== null || responseInterceptorId !== null) {
     return;
   }
 
-  // Request Interceptor: Add token to headers
   requestInterceptorId = axios.interceptors.request.use(
     (config) => {
-      const token = getAdminAccessToken();
+      const token = getCustomerAccessToken();
       if (token) {
         config.headers = config.headers || {};
         config.headers.Authorization = `Bearer ${token}`;
       }
       return config;
     },
-    (error) => {
-      return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
   );
 
-  // Response Interceptor: Handle 401 and refresh token
   responseInterceptorId = axios.interceptors.response.use(
     (response) => response,
     async (error) => {
       const originalRequest = error.config;
+
       if (!originalRequest) {
         return Promise.reject(error);
       }
 
-      const isUnauthorized = error.response?.status === 401;
-      const hasAdminContext = Boolean(getAdminAccessToken());
-
-      if (isUnauthorized && !originalRequest._retry && hasAdminContext) {
+      if (error.response?.status === 401 && !originalRequest._retry) {
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -67,29 +67,31 @@ export const setupAxiosInterceptors = () => {
         originalRequest._retry = true;
         isRefreshing = true;
 
-        const refreshToken = getAdminRefreshToken();
+        const refreshToken = getCustomerRefreshToken();
 
         if (!refreshToken) {
-          clearAdminToken();
+          clearCustomerToken();
+          if (dispatch) dispatch(logoutCustomer());
           processQueue(new Error("No refresh token"), null);
           return Promise.reject(error);
         }
 
         try {
-          const { data } = await axios.post(`${API_BASE_URL}/api/auth/admin/refresh`, {
+          const { data } = await axios.post(`${API_BASE_URL}/api/auth/customer/refresh`, {
             refreshToken
           });
 
           if (data.success && data.accessToken) {
-            setAdminTokens(data.accessToken, data.refreshToken);
+            setCustomerTokens(data.accessToken, data.refreshToken);
             originalRequest.headers = originalRequest.headers || {};
             originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-
+            
             processQueue(null, data.accessToken);
             return axios(originalRequest);
           }
         } catch (refreshError) {
-          clearAdminToken();
+          clearCustomerToken();
+          if (dispatch) dispatch(logoutCustomer());
           processQueue(refreshError, null);
           return Promise.reject(refreshError);
         }

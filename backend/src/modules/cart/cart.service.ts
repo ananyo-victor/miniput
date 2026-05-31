@@ -5,11 +5,9 @@ import { AddToCartDto } from './dto/add-to-cart.dto';
 
 @Injectable()
 export class CartService {
-  
   async addToCart(userId: string, dto: AddToCartDto) {
     const { productId, size, quantity } = dto;
 
-    // 1. Verify product exists
     const productCheck = await pool.query(
       'SELECT id FROM products WHERE id = $1',
       [productId]
@@ -18,14 +16,12 @@ export class CartService {
       throw new NotFoundException('Product not found');
     }
 
-    // 2. Check if this exact product item with the same size is already in the cart
     const existing = await pool.query(
       'SELECT id, quantity FROM cart_items WHERE user_id = $1 AND product_id = $2 AND size = $3',
       [userId, productId, size]
     );
 
     if (existing.rows.length) {
-      // Update quantity on duplicate combo
       const newQuantity = existing.rows[0].quantity + quantity;
       await pool.query(
         'UPDATE cart_items SET quantity = $1 WHERE id = $2',
@@ -33,7 +29,6 @@ export class CartService {
       );
       return { success: true, message: 'Cart item quantity updated' };
     } else {
-      // Insert fresh item
       const id = uuidv4();
       await pool.query(
         `INSERT INTO cart_items (id, user_id, product_id, size, quantity, created_at)
@@ -92,7 +87,6 @@ export class CartService {
       [userId]
     );
 
-    // Formats numbers & structures prices cleanly aligned with your mapping setups
     return rows.map((row) => ({
       cartItemId: row.cartItemId,
       selectedSize: row.selectedSize,

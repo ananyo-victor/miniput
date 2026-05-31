@@ -26,13 +26,7 @@ export const fetchCart = createAsyncThunk(
 
 export const addToCart = createAsyncThunk(
   "cart/addToCart",
-  async (
-    {
-      productId,
-      size,
-      quantity,
-    },
-    { dispatch, rejectWithValue }
+  async ({productId,size,quantity}, { dispatch, rejectWithValue }
   ) => {
     try {
       await axios.post(`${API_BASE_URL}/api/cart`, {
@@ -129,11 +123,9 @@ const cartSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
       .addCase(clearCart.fulfilled, (state) => {
         state.items = [];
       })
-
       .addCase(addToCart.rejected, (state, action) => {
         state.error = action.payload;
       })

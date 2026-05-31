@@ -169,10 +169,12 @@ export class AuthService {
     }
 
     const accessToken = this.generateAccessToken(user);
+    const refreshToken = this.generateRefreshToken(user);
 
     return {
       success: true,
       accessToken,
+      refreshToken,
       user: {
         id: user.id,
         phone: user.phone,

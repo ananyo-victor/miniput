@@ -166,18 +166,46 @@ export class AuthController {
   @Post('customer/check')
   @HttpCode(HttpStatus.OK)
   async customerCheck(@Body() body: { phone: string }) {
-    // 1. Generate OTP
-    // 2. Save OTP temporarily (in Redis or a DB table/cache)
-    // 3. Send OTP via WhatsApp
     return this.authService.sendCustomerOtp(body.phone);
   }
 
   @Post('customer/verify')
   @HttpCode(HttpStatus.OK)
   async customerVerify(@Body() body: { phone: string, otp: string }) {
-    // 1. Verify the OTP
-    // 2. Find existing user OR create a new user with role 'CUSTOMER'
-    // 3. Generate tokens
     return this.authService.verifyCustomerOtp(body.phone, body.otp);
+  }
+
+  @Post('customer/refresh')
+  @HttpCode(HttpStatus.OK)
+  async refreshCustomerToken(@Body() body: { refreshToken: string }) {
+    try {
+      const { refreshToken } = body;
+      if (!refreshToken) throw new UnauthorizedException({ success: false, message: 'Refresh token required' });
+
+      const decoded = this.authService.verifyRefreshToken(refreshToken);
+      if (!decoded) throw new UnauthorizedException({ success: false, message: 'Invalid or expired refresh token' });
+
+      const user = await this.authService.getUserById(decoded.id);
+      if (!user || !user.is_active) throw new UnauthorizedException({ success: false, message: 'User no longer exists' });
+
+      const newAccessToken = this.authService.generateAccessToken(user);
+      const newRefreshToken = this.authService.generateRefreshToken(user);
+
+      return {
+        success: true,
+        message: 'Token refreshed',
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+        user: {
+          id: user.id,
+          phone: user.phone,
+          name: user.full_name,
+          role: user.role,
+        },
+      };
+    } catch (error) {
+      if (error instanceof UnauthorizedException) throw error;
+      throw new InternalServerErrorException({ success: false, message: 'Token refresh failed', error: error.message });
+    }
   }
 }

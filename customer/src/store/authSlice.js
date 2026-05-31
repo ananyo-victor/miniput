@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { clearAdminToken, getAdminAccessToken, setAdminTokens } from "../utils/adminToken";
+import { clearCustomerToken, getCustomerAccessToken, setCustomerTokens } from "../utils/customerToken";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -33,7 +33,7 @@ const initialState = {
   phone: "",
   otp: "",
   exists: false,
-  authed: Boolean(getAdminAccessToken()),
+  authed: Boolean(getCustomerAccessToken()),
   isAuthModalOpen: false,
   isProfileModalOpen: false,
   authError: "",
@@ -63,7 +63,7 @@ const authSlice = createSlice({
       state.isProfileModalOpen = false;
     },
     logoutCustomer: (state) => {
-      clearAdminToken();
+      clearCustomerToken();
       state.authed = false;
       state.phone = "";
       state.otp = "";
@@ -81,7 +81,7 @@ const authSlice = createSlice({
       })
       .addCase(verifyCustomerThunk.fulfilled, (state, action) => {
         if (action.payload?.accessToken) {
-          setAdminTokens(action.payload.accessToken);
+          setCustomerTokens(action.payload.accessToken, action.payload.refreshToken);
         }
         state.authed = true;
         state.phone = action.payload?.user?.phone || state.phone;

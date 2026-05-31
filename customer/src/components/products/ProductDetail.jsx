@@ -22,6 +22,7 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
   const favorites = useSelector((state) => state.favorites.items);
   const isFavorite = favorites.some((item) => item.id === currentProduct.id);
 
+  console.log("Rendering ProductDetail for product:", currentProduct)
   const [quantity, setQuantity] = useState(1);
   const availableSizes = useMemo(
     () => currentProduct.size || currentProduct.sizes || [],
@@ -337,7 +338,7 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
                 ORDER NOW
               </button>
               <button
-                onClick={() => onAddToCart && onAddToCart({ ...currentProduct, quantity, selectedSizes })}
+                onClick={() => onAddToCart && onAddToCart({ productId: currentProduct.id, quantity, size:selectedSizes })}
                 className="flex-1 bg-gray-900 hover:bg-gray-800 hover:-translate-y-1 text-[#FFB800] border-none rounded-[14px] p-3 md:p-3.5 text-xs md:text-sm font-black tracking-widest cursor-pointer transition-all shadow-lg"
               >
                 ADD TO CART
