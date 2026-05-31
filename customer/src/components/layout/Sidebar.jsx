@@ -34,7 +34,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   };
 
   // Get first name or fallback to phone / "Sign In"
-  const firstName = authed ? (name ? name.split(" ")[0] : phone) : "Sign In";
+  const firstName = authed ? (name ? name.split(" ")[0] : phone) : "";
 
   return (
     <>
@@ -69,7 +69,7 @@ const Sidebar = ({ isOpen, onClose }) => {
               </div>
             )}
             <span className="text-xl font-black tracking-wide">
-              Hello, {firstName}
+              {authed ? `Hello, ${firstName}` : "Sign In"}
             </span>
           </div>
           <button
@@ -135,7 +135,7 @@ const Sidebar = ({ isOpen, onClose }) => {
           {/* Utility Links (Cart & Favorites) */}
           <div className="flex flex-col py-3">
             <h3 className="px-6 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Utility</h3>
-           
+
             <Link
               to="/favorites"
               onClick={onClose}

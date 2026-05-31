@@ -24,8 +24,8 @@ const BrandIcon = ({ brand, className = "" }) => {
   return (
     <span
       className={`flex h-9 w-9 lg:h-12 lg:w-12 shrink-0 items-center justify-center rounded-full border ${isMiniput
-          ? "border-[var(--mk-sky)]/35 bg-[var(--mk-sky)]/15"
-          : "border-[var(--mk-green)]/35 bg-[var(--mk-green)]/15"
+        ? "border-[var(--mk-sky)]/35 bg-[var(--mk-sky)]/15"
+        : "border-[var(--mk-green)]/35 bg-[var(--mk-green)]/15"
         } ${className}`}
     >
       <img
@@ -198,7 +198,6 @@ const Topbar = ({ onMenuClick }) => {
         {authed ? (
           <div
             onClick={() => dispatch(openProfileModal())}
-            // ⬇️ CHANGED: Removed "hidden sm:flex" and replaced with "flex"
             className="flex items-center gap-1.5 lg:gap-2 cursor-pointer hover:bg-gray-50 p-1 lg:p-1.5 rounded-xl transition-colors"
           >
             {profilePic ? (
@@ -218,10 +217,15 @@ const Topbar = ({ onMenuClick }) => {
         ) : (
           <button
             onClick={() => dispatch(openAuthModal())}
-            className="flex items-center justify-center p-2 lg:p-2.5 bg-gray-100 rounded-full hover:bg-gray-200 transition text-gray-700"
+            className="flex items-center gap-1.5 lg:gap-2 cursor-pointer hover:bg-gray-50 p-1 lg:p-1.5 rounded-xl transition-colors"
             title="Login"
           >
-            <User className="size-5 md:size-7" />
+            <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-700 border border-gray-200 shrink-0">
+              <User size={16} className="lg:w-[18px] lg:h-[18px]" />
+            </div>
+            <span className="text-[11px] lg:text-sm font-black text-gray-700 mr-0.5 lg:mr-1">
+              Sign In
+            </span>
           </button>
         )}
 
