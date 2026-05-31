@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { Camera, LogOut, ArrowLeft } from "lucide-react";
 import { logoutCustomer } from "../store/authSlice";
-import { updateProfile } from "../store/userSlice";
+import { updateProfile, uploadProfilePictureThunk } from "../store/userSlice";
 
 // Reusable FormField matching your Order Form UI exactly
 const FormField = ({ icon, label, required, optional, className, children }) => (
@@ -49,6 +49,7 @@ const ProfilePage = () => {
   const [localName, setLocalName] = useState(savedName || "");
   const [localEmail, setLocalEmail] = useState(savedEmail || "");
   const [localPic, setLocalPic] = useState(savedPic || "");
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   // Business Info States
   const [localPartyName, setLocalPartyName] = useState(savedPartyName || "");
@@ -68,12 +69,22 @@ const ProfilePage = () => {
     }
   }, [authed, navigate]);
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setLocalPic(reader.result);
+      reader.onloadend = async () => {
+        const base64Data = reader.result;
+        setLocalPic(base64Data); // Show immediate preview
+        setIsUploadingImage(true);
+        try {
+          const uploadedUrl = await dispatch(uploadProfilePictureThunk(base64Data)).unwrap();
+          setLocalPic(uploadedUrl); // Replace preview with uploaded S3 URL
+        } catch (error) {
+          console.error("Failed to upload image:", error);
+        } finally {
+          setIsUploadingImage(false);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -144,17 +155,23 @@ const ProfilePage = () => {
               {/* Avatar Upload */}
               <div className="flex flex-col items-center justify-center mb-8 relative">
                 <div
-                  className="w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group"
-                  onClick={() => fileInputRef.current?.click()}
+                  className={`w-28 h-28 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-[0_4px_12px_rgba(0,0,0,0.08)] bg-gray-100 flex items-center justify-center overflow-hidden cursor-pointer group relative ${isUploadingImage ? 'pointer-events-none' : ''}`}
+                  onClick={() => !isUploadingImage && fileInputRef.current?.click()}
                 >
                   {localPic ? (
                     <img src={localPic} alt="Profile" className="w-full h-full object-cover" />
                   ) : (
                     <Camera size={40} className="text-gray-400 group-hover:text-gray-600 transition-colors" />
                   )}
-                  <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full">
-                    <span className="text-xs font-bold text-white uppercase tracking-wider">Upload</span>
-                  </div>
+                  {isUploadingImage ? (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                      <span className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></span>
+                    </div>
+                  ) : (
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full z-10">
+                      <span className="text-xs font-bold text-white uppercase tracking-wider">Upload</span>
+                    </div>
+                  )}
                 </div>
                 <input
                   type="file"
@@ -337,9 +354,10 @@ const ProfilePage = () => {
             </p>
             <button
               type="submit"
-              className="w-full sm:w-auto px-10 py-4 rounded-xl bg-[#0E2A4A] text-[#FFB800] text-sm font-black tracking-[0.09em] transition-transform hover:scale-[1.02] shadow-md shrink-0"
+              disabled={isUploadingImage}
+              className={`w-full sm:w-auto px-10 py-4 rounded-xl bg-[#0E2A4A] text-[#FFB800] text-sm font-black tracking-[0.09em] transition-transform shadow-md shrink-0 ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
             >
-              SAVE CHANGES
+              {isUploadingImage ? "UPLOADING..." : "SAVE CHANGES"}
             </button>
           </div>
 
