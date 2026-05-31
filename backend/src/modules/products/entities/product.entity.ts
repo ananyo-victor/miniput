@@ -67,6 +67,15 @@ export class ProductEntity {
   @Min(1)
   piecesPerPack: number;
 
+  @IsBoolean()
+  isTrending: boolean;
+
+  @IsBoolean()
+  isBestseller: boolean;
+
+  @IsBoolean()
+  isNewRelease: boolean;
+
   @IsOptional()
   @IsDate()
   createdAt?: Date;

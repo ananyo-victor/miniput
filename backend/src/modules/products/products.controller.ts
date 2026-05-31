@@ -29,11 +29,13 @@ export class ProductsController {
   async getProducts(
     @Query('includeHidden') includeHidden?: string,
     @Query('workspaceId') workspaceId?: string,
+    @Query('badge') badge?: string,
   ) {
     try {
       return await this.productsService.getAllProducts(
         includeHidden === 'true',
         workspaceId,
+        badge
       );
     } catch (error) {
       throw new InternalServerErrorException({

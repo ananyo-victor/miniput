@@ -153,6 +153,9 @@ const mapProductRow = (product: any) => {
     imageUrl: product?.imageUrl?.[0] || null,
     piecesPerPack: normalizedSize.length || product?.piecesPerPack,
     sizeRange: getSizeRange(normalizedSize),
+    isTrending: !!product?.isTrending,
+    isBestseller: !!product?.isBestseller,
+    isNewRelease: !!product?.isNewRelease,
     ...discountMeta,
   };
 };
@@ -224,9 +227,9 @@ export class ProductsService implements OnModuleInit {
   async getAllProducts(
     includeHidden: boolean,
     workspaceId?: string,
+    badge?: string,
   ) {
     let query = 'SELECT * FROM products';
-
     const conditions: string[] = [];
     const values: any[] = [];
 
@@ -238,6 +241,14 @@ export class ProductsService implements OnModuleInit {
     if (workspaceId) {
       values.push(workspaceId);
       conditions.push(`"workspaceId" = $${values.length}`);
+    }
+
+    if (badge === 'trending') {
+      conditions.push(`"isTrending" = true`);
+    } else if (badge === 'bestsellers') {
+      conditions.push(`"isBestseller" = true`);
+    } else if (badge === 'new-releases') {
+      conditions.push(`"isNewRelease" = true`);
     }
 
     if (conditions.length) {
@@ -264,6 +275,9 @@ export class ProductsService implements OnModuleInit {
       description,
       isHidden,
       size,
+      isTrending,
+      isBestseller,
+      isNewRelease,
     } = productData;
 
 
@@ -284,25 +298,12 @@ export class ProductsService implements OnModuleInit {
 
     const query = `
       INSERT INTO products (
-        id,
-        "workspaceId",
-        "articleId",
-        name,
-        category,
-        price,
-        "discountType",
-        "discountValue",
-        stock,
-        "imageUrl",
-        description,
-        "isHidden",
-        "size",
-        "piecesPerPack"
+        id, "workspaceId", "articleId", name, category, price, "discountType", "discountValue", stock, "imageUrl", description, "isHidden", "size", "piecesPerPack",
+        "isTrending", "isBestseller", "isNewRelease"
       )
       VALUES (
-        $1,$2,$3,$4,$5,$6,
-        $7,$8,$9,$10,$11,
-        $12,$13::integer[],$14
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::integer[],$14,
+        $15,$16,$17
       )
       RETURNING * `;
     const values = [
@@ -320,6 +321,9 @@ export class ProductsService implements OnModuleInit {
       !!isHidden,
       normalizedSize,
       piecesPerPack,
+      !!isTrending,
+      !!isBestseller,
+      !!isNewRelease,
     ];
 
     const { rows } = await pool.query(query, values);
@@ -352,6 +356,9 @@ export class ProductsService implements OnModuleInit {
       description: productData.description ?? current.description,
       isHidden: productData.isHidden === undefined ? current.isHidden : !!productData.isHidden,
       size: normalizeSize(productData.size ?? current.size),
+      isTrending: productData.isTrending === undefined ? current.isTrending : !!productData.isTrending,
+      isBestseller: productData.isBestseller === undefined ? current.isBestseller : !!productData.isBestseller,
+      isNewRelease: productData.isNewRelease === undefined ? current.isNewRelease : !!productData.isNewRelease,
     };
     await this.validateWorkspaceExists(merged.workspaceId);
     if (!merged.discountType) {
@@ -382,8 +389,11 @@ export class ProductsService implements OnModuleInit {
         "isHidden" = $11,
         size = $12,
         "piecesPerPack" = $13,
+        "isTrending" = $14,
+        "isBestseller" = $15,
+        "isNewRelease" = $16,
         "updatedAt" = NOW()
-      WHERE id = $14
+      WHERE id = $17
       RETURNING *
     `;
 
@@ -401,6 +411,9 @@ export class ProductsService implements OnModuleInit {
       merged.isHidden,
       merged.size,
       piecesPerPack,
+      merged.isTrending,
+      merged.isBestseller,
+      merged.isNewRelease,
       id,
     ];
 

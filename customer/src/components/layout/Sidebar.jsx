@@ -87,15 +87,15 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Section 1: Discover */}
           <div className="flex flex-col py-3">
-            <Link to="/discover/trending" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+            <Link to="/discover/trending" onClick={onClose} className={`flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors ${isExactPath("/discover/trending") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"}`}>
               <Flame size={20} className="text-orange-500" />
               Trending
             </Link>
-            <Link to="/discover/bestsellers" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+            <Link to="/discover/bestsellers" onClick={onClose} className={`flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors ${isExactPath("/discover/bestsellers") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"}`}>
               <Star size={20} className="text-yellow-500" />
               Bestsellers
             </Link>
-            <Link to="/discover/new-releases" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+            <Link to="/discover/new-releases" onClick={onClose} className={`flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors ${isExactPath("/discover/new-releases") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"}`}>
               <Zap size={20} className="text-blue-500" />
               New Releases
             </Link>
@@ -194,7 +194,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
             <button
               onClick={handleAccountClick}
-              className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 text-left w-full transition-colors"
+              className={`flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 text-left w-full transition-colors ${isExactPath("/profile") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"}`}
             >
               <UserCircle size={20} className="text-gray-500" />
               Your Account

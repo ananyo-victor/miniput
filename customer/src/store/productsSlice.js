@@ -14,27 +14,25 @@ const normalizeFetchOptions = (value = false) => {
   if (value && typeof value === "object") {
     return {
       includeHidden: Boolean(value.includeHidden),
-      workspaceId: typeof value.workspaceId === "string" ? value.workspaceId : ""
+      workspaceId: typeof value.workspaceId === "string" ? value.workspaceId : "",
+      badge: typeof value.badge === "string" ? value.badge : ""
     };
   }
 
   return {
     includeHidden: false,
-    workspaceId: ""
+    workspaceId: "",
+    badge: ""
   };
 };
 
 export const fetchProducts = createAsyncThunk("products/fetch", async (options = false) => {
-  const { includeHidden, workspaceId } = normalizeFetchOptions(options);
+  const { includeHidden, workspaceId, badge } = normalizeFetchOptions(options);
   const query = new URLSearchParams();
 
-  if (includeHidden) {
-    query.set("includeHidden", "true");
-  }
-
-  if (workspaceId) {
-    query.set("workspaceId", workspaceId);
-  }
+  if (includeHidden) query.set("includeHidden", "true");
+  if (workspaceId) query.set("workspaceId", workspaceId);
+  if (badge) query.set("badge", badge);
 
   const queryString = query.toString();
   const { data } = await axios.get(`${API_BASE_URL}/api/products${queryString ? `?${queryString}` : ""}`);

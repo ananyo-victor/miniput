@@ -17,35 +17,15 @@ const DiscoverPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
+  console.log("Fetched products:", products);
 
-  // Validate the tab from the URL, fallback to 'trending'
   const activeTabId = TABS.find((t) => t.id === tab) ? tab : "trending";
-
-  // Fetch products if not already loaded
+  console.log("Active Tab ID:", activeTabId);
   useEffect(() => {
-    if (!products.length) {
-      dispatch(fetchProducts());
-    }
-  }, [dispatch, products.length]);
+    dispatch(fetchProducts({ badge: activeTabId }));
+  }, [dispatch, activeTabId]);
 
-  // Apply basic sorting/filtering logic to differentiate the tabs visually
-  // (In a real app, this might trigger different API endpoints)
-  const displayProducts = useMemo(() => {
-    if (!products.length) return [];
-    const copy = [...products];
-    
-    if (activeTabId === "trending") {
-      // Sort by highest price for trending demo
-      return copy.sort((a, b) => (b.price || 0) - (a.price || 0));
-    } else if (activeTabId === "bestsellers") {
-      // Sort by lowest stock for bestsellers demo
-      return copy.sort((a, b) => (a.stock || 0) - (b.stock || 0));
-    } else if (activeTabId === "new-releases") {
-      // Reverse order for new releases demo
-      return copy.reverse();
-    }
-    return copy;
-  }, [products, activeTabId]);
+  const displayProducts = products;
 
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5] pb-10 min-h-full">
@@ -63,11 +43,10 @@ const DiscoverPage = () => {
                 <button
                   key={t.id}
                   onClick={() => navigate(`/discover/${t.id}`)}
-                  className={`flex items-center gap-2 pb-3 px-1 border-b-[3px] transition-colors whitespace-nowrap ${
-                    isActive
-                      ? "border-[var(--mk-navy)] text-[var(--mk-navy)] font-black"
-                      : "border-transparent text-gray-500 hover:text-gray-800 font-bold"
-                  }`}
+                  className={`flex items-center gap-2 pb-3 px-1 border-b-[3px] transition-colors whitespace-nowrap ${isActive
+                    ? "border-[var(--mk-navy)] text-[var(--mk-navy)] font-black"
+                    : "border-transparent text-gray-500 hover:text-gray-800 font-bold"
+                    }`}
                 >
                   <Icon size={18} className={isActive ? t.iconColor : "text-gray-400"} />
                   {t.label}

@@ -76,4 +76,16 @@ export class CreateProductDto {
   @IsNumber({}, { each: true })
   @Min(0, { each: true })
   size: number[];
+
+  @IsOptional()
+  @IsBoolean()
+  isTrending?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isBestseller?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isNewRelease?: boolean;
 }
