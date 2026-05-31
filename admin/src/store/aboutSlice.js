@@ -1,18 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { getAdminAccessToken } from "../utils/adminToken";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-const getAdminAuthHeaders = () => {
-  if (typeof window === "undefined") {
-    return {};
-  }
-
-  const token = getAdminAccessToken();
-
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 export const fetchAboutContentThunk = createAsyncThunk(
   "about/fetchAboutContent",
@@ -41,10 +30,7 @@ export const updateAboutContentThunk = createAsyncThunk(
   async (payload) => {
     const { data } = await axios.put(
       `${API_BASE_URL}/api/content/about`,
-      payload,
-      {
-        headers: getAdminAuthHeaders()
-      }
+      payload
     );
 
     return data;
@@ -56,10 +42,7 @@ export const updateWorkspaceHomeContentThunk = createAsyncThunk(
   async ({ workspaceId, payload }) => {
     const { data } = await axios.put(
       `${API_BASE_URL}/api/content/home/workspace/${workspaceId}`,
-      payload,
-      {
-        headers: getAdminAuthHeaders()
-      }
+      payload
     );
 
     return data;

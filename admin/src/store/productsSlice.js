@@ -1,18 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { getAdminAccessToken } from "../utils/adminToken";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-const getAdminAuthHeaders = () => {
-  if (typeof window === "undefined") {
-    return {};
-  }
-
-  const token = getAdminAccessToken();
-
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
@@ -125,10 +114,7 @@ export const uploadProductImageThunk = createAsyncThunk(
     const imageData = await fileToDataUrl(file);
     const { data } = await axios.post(
       `${API_BASE_URL}/api/uploads/product-image`,
-      { imageData },
-      {
-        headers: getAdminAuthHeaders()
-      }
+      { imageData }
     );
 
     return data;
@@ -140,10 +126,7 @@ export const deleteUploadedProductImageThunk = createAsyncThunk(
   async (publicId) => {
     const { data } = await axios.post(
       `${API_BASE_URL}/api/uploads/delete-image`,
-      { publicId },
-      {
-        headers: getAdminAuthHeaders()
-      }
+      { publicId }
     );
 
     return data;
@@ -156,10 +139,7 @@ export const createProductThunk = createAsyncThunk(
     const requestBody = buildCreateProductPayload(payload);
     const { data } = await axios.post(
       `${API_BASE_URL}/api/products`,
-      requestBody,
-      {
-        headers: getAdminAuthHeaders()
-      }
+      requestBody
     );
 
     const activeWorkspaceId = getState()?.workspace?.activeWorkspaceId;
@@ -179,10 +159,7 @@ export const updateProductThunk = createAsyncThunk(
     const requestBody = buildCreateProductPayload(updateData);
     const { data } = await axios.put(
       `${API_BASE_URL}/api/products/${id}`,
-      requestBody,
-      {
-        headers: getAdminAuthHeaders()
-      }
+      requestBody
     );
 
     const activeWorkspaceId = getState()?.workspace?.activeWorkspaceId;
@@ -198,11 +175,7 @@ export const updateProductThunk = createAsyncThunk(
 export const deleteProductThunk = createAsyncThunk(
   "products/delete",
   async (id, { dispatch, getState }) => {
-    const { data } = await axios.delete(`${API_BASE_URL}/api/products/${id}`,
-      {
-        headers: getAdminAuthHeaders()
-      }
-    );
+    const { data } = await axios.delete(`${API_BASE_URL}/api/products/${id}`);
 
     const activeWorkspaceId = getState()?.workspace?.activeWorkspaceId;
     await dispatch(fetchProducts({
@@ -219,10 +192,7 @@ export const toggleProductVisibilityThunk = createAsyncThunk(
   async ({ id, isHidden }) => {
     const { data } = await axios.patch(
       `${API_BASE_URL}/api/products/${id}/visibility`,
-      { isHidden },
-      {
-        headers: getAdminAuthHeaders()
-      }
+      { isHidden }
     );
 
     return { ...data, id, isHidden };

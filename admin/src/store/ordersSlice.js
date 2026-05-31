@@ -1,20 +1,14 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { getAdminAccessToken } from "../utils/adminToken";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-const getAdminAuthHeaders = () => {
-  const token = getAdminAccessToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 // Fetch Orders
 export const fetchOrdersThunk = createAsyncThunk(
   "orders/fetch",
   async (workspaceId) => {
     // Replace with your actual API endpoint once backend is ready
-    // const { data } = await axios.get(`${API_BASE_URL}/api/orders?workspaceId=${workspaceId}`, { headers: getAdminAuthHeaders() });
+    // const { data } = await axios.get(`${API_BASE_URL}/api/orders?workspaceId=${workspaceId}`);
     // return data;
 
     // Mock data for UI development
@@ -30,7 +24,7 @@ export const fetchOrdersThunk = createAsyncThunk(
 export const updateOrderStatusThunk = createAsyncThunk(
   "orders/updateStatus",
   async ({ orderId, status }) => {
-    // const { data } = await axios.patch(`${API_BASE_URL}/api/orders/${orderId}/status`, { status }, { headers: getAdminAuthHeaders() });
+    // const { data } = await axios.patch(`${API_BASE_URL}/api/orders/${orderId}/status`, { status });
     // return data;
     
     // Returning mock payload to update state

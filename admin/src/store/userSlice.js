@@ -1,18 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { getAdminAccessToken } from "../utils/adminToken";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
-const getAdminAuthHeaders = () => {
-  if (typeof window === "undefined") {
-    return {};
-  }
-
-  const token = getAdminAccessToken();
-
-  return token ? { Authorization: `Bearer ${token}` } : {};
-};
 
 export const changePasswordThunk = createAsyncThunk(
   "user/changePassword",
@@ -20,10 +9,7 @@ export const changePasswordThunk = createAsyncThunk(
     try {
       const { data } = await axios.put(
         `${API_BASE_URL}/api/users/change-password`,
-        payload,
-        {
-          headers: getAdminAuthHeaders()
-        }
+        payload
       );
 
       return data;
@@ -42,10 +28,7 @@ export const updateActiveWorkspaceThunk = createAsyncThunk(
     try {
       const { data } = await axios.patch(
         `${API_BASE_URL}/api/users/${id}/workspace/${workspaceId}`,
-        {},
-        {
-          headers: getAdminAuthHeaders()
-        }
+        {}
       );
 
       return data;
@@ -62,12 +45,7 @@ export const fetchActiveWorkspaceThunk = createAsyncThunk(
   "user/fetchActiveWorkspace",
   async (id, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(
-        `${API_BASE_URL}/api/users/${id}/workspace`,
-        {
-          headers: getAdminAuthHeaders()
-        }
-      );
+      const { data } = await axios.get(`${API_BASE_URL}/api/users/${id}/workspace`);
       return data;
     } catch (error) {
       return rejectWithValue(

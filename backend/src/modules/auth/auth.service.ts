@@ -15,6 +15,12 @@ export class AuthService {
     private readonly whatsappClient: WhatsappClientService,
     private readonly usersService: UsersService
   ) { }
+
+  private isLocalEnv(): boolean {
+    const env = (process.env.IS_LOCAL || '').trim().toLowerCase();
+    return env === 'true' || env === '1';
+  }
+
   async validateAdminCredentials(
     username: string,
     password: string,
@@ -119,17 +125,18 @@ export class AuthService {
   }
 
   async sendCustomerOtp(phone: string) {
-    // Generate a 4-digit OTP
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-    // Store OTP with 5 min expiration
     this.otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
 
-    // Send via WhatsApp
     const message = `Your Miniput login OTP is ${otp}. It is valid for 5 minutes.`;
-    await this.whatsappClient.sendTextMessage(phone, message);
 
-    // Check if user already exists
+    if (this.isLocalEnv()) {
+      console.log(`[LOCAL DEV] WhatsApp bypassed. OTP for ${phone} is: ${otp} (You can also use 1111)`);
+    } else {
+      await this.whatsappClient.sendTextMessage(phone, message);
+    }
+
     const { rows } = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
 
     return { success: true, exists: rows.length > 0 };
@@ -138,29 +145,29 @@ export class AuthService {
   async verifyCustomerOtp(phone: string, otp: string) {
     const record = this.otpStore.get(phone);
 
-    if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
-      throw new BadRequestException('Invalid or expired OTP');
+    const isLocalBypass = this.isLocalEnv() && otp === '1111';
+
+    if (!isLocalBypass) {
+      if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
+        throw new BadRequestException('Invalid or expired OTP');
+      }
     }
 
-    // OTP is valid, clear it
     this.otpStore.delete(phone);
 
-    // Find or create user
     let { rows } = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
     let user = rows[0];
 
     if (!user) {
-      // Create new customer
       user = await this.usersService.create({
-        username: `user_${phone}`, // default username
+        username: `user_${phone}`,
         phone: phone,
-        password: Math.random().toString(36).slice(-8), // random dummy password
+        password: Math.random().toString(36).slice(-8),
         fullName: 'Customer',
-        role: 'CUSTOMER', // Enforce CUSTOMER role
+        role: 'CUSTOMER',
       });
     }
 
-    // Generate token (Optional: you might want a separate token for customers)
     const accessToken = this.generateAccessToken(user);
 
     return {
