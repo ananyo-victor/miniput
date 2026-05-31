@@ -33,4 +33,8 @@ export class CreateUserDto {
     @IsOptional()
     @IsUUID()
     activeWorkspaceId?: string;
+
+    @IsOptional()
+    @IsString()
+    profilePictureUrl?: string;
 }

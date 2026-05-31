@@ -55,7 +55,7 @@ const ProductCard = ({ product, onClick }) => {
   };
 
   const handleFavoriteClick = (e) => {
-    dispatch(toggleFavorite(product));
+    dispatch(toggleFavorite(product.id));
   };
 
   const copyShareLink = async () => {

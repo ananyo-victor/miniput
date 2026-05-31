@@ -174,6 +174,7 @@ export class UsersService {
         u.email,
         u.phone,
         u.full_name,
+        u.profile_picture_url,
         u.role,
         u."activeWorkspaceId",
         u.is_active,
@@ -217,18 +218,19 @@ export class UsersService {
 
     const { rows } = await pool.query(
       `
-      UPDATE users
-      SET
-        username = COALESCE($2, username),
-        email = COALESCE($3, email),
-        phone = COALESCE($4, phone),
-        password_hash = COALESCE($5, password_hash),
-        full_name = COALESCE($6, full_name),
-        role = COALESCE($7, role),
-        "activeWorkspaceId" = COALESCE($8, "activeWorkspaceId"),
-        updated_at = NOW()
-      WHERE id = $1
-      RETURNING *
+        UPDATE users
+        SET
+          username = COALESCE($2, username),
+          email = COALESCE($3, email),
+          phone = COALESCE($4, phone),
+          password_hash = COALESCE($5, password_hash),
+          full_name = COALESCE($6, full_name),
+          role = COALESCE($7, role),
+          "activeWorkspaceId" = COALESCE($8, "activeWorkspaceId"),
+          profile_picture_url = COALESCE($9, profile_picture_url),
+          updated_at = NOW()
+        WHERE id = $1
+        RETURNING *
       `,
       [
         id,
@@ -239,6 +241,7 @@ export class UsersService {
         dto.fullName,
         dto.role,
         dto.activeWorkspaceId,
+        dto.profilePictureUrl,
       ],
     );
 

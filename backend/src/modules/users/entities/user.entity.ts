@@ -47,6 +47,10 @@ export class UserEntity {
   @IsOptional()
   isWhatsappReceiver?: boolean;
 
+  @IsOptional()
+  @IsString()
+  profilePictureUrl?: string | null;
+
   @IsDate()
   createdAt: Date;
 

@@ -28,13 +28,11 @@ export const toggleFavorite = createAsyncThunk(
   "favorites/toggleFavorite",
   async (productId, { dispatch, rejectWithValue }) => {
     try {
-      await axios.post(`${API_BASE_URL}/api/favorites/toggle`, {
+      const { data } = await axios.post(`${API_BASE_URL}/api/favorites/toggle`, {
         productId,
       });
-
       dispatch(fetchFavorites());
-
-      return productId;
+      return { productId, favorited: data.favorited };
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to update favorite"
@@ -65,9 +63,20 @@ const favoriteSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
       .addCase(toggleFavorite.pending, (state) => {
         state.error = null;
+      })
+      .addCase(toggleFavorite.fulfilled, (state, action) => {
+        const { productId, favorited } = action.payload;
+        
+        if (favorited) {
+          const exists = state.items.some((item) => item.id === productId);
+          if (!exists) {
+            state.items.unshift({ id: productId }); 
+          }
+        } else {
+          state.items = state.items.filter((item) => item.id !== productId);
+        }
       })
       .addCase(toggleFavorite.rejected, (state, action) => {
         state.error = action.payload;

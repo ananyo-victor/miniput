@@ -6,6 +6,7 @@ import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
 import { setActiveCategory, setActiveBrand, setSearchQuery } from "../../store/homeSlice";
 import { openAuthModal, openProfileModal } from "../../store/authSlice";
+import { fetchUserDetailsThunk } from "../../store/userSlice";
 
 const CATEGORIES = [
   { label: "All Categories", value: "all" },
@@ -45,9 +46,9 @@ const Topbar = ({ onMenuClick }) => {
 
   const cart = useSelector((state) => state.cart.items);
   const { authed, phone } = useSelector((state) => state.auth);
-  const { name, profilePic } = useSelector((state) => state.user.profile);
   const activeCategory = useSelector((state) => state.home.activeCategory);
   const storedSearchQuery = useSelector((state) => state.home.searchQuery);
+  const { id: userId, name, profilePic } = useSelector((state) => state.user.profile);
 
   const cartCount = cart.length
   const [searchInput, setSearchInput] = useState(storedSearchQuery);
@@ -87,6 +88,12 @@ const Topbar = ({ onMenuClick }) => {
 
     return () => window.clearTimeout(timer);
   }, [dispatch, hideSearchAndCategory, searchInput]);
+
+  useEffect(() => {
+    if (authed && userId) {
+      dispatch(fetchUserDetailsThunk(userId));
+    }
+  }, [authed, userId, dispatch]);
 
   const handleCategorySelect = (value) => {
     dispatch(setActiveCategory(value));

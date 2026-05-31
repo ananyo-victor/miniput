@@ -13,6 +13,7 @@ const Sidebar = ({ isOpen, onClose }) => {
   const cart = useSelector((state) => state.cart.items);
   const { authed, phone } = useSelector((state) => state.auth);
   const { name, profilePic } = useSelector((state) => state.user.profile);
+  const favorites = useSelector((state) => state.favorites.items);
   const cartCount = cart.length;
 
   const isActiveBrand = (path) => location.pathname.includes(path);
@@ -146,9 +147,9 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <Heart size={20} className="text-gray-500" />
                 Favorites
               </div>
-              {useSelector((state) => state.favorites.items.length) > 0 && (
+              {favorites.length > 0 && (
                 <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600">
-                  {useSelector((state) => state.favorites.items.length)}
+                  {favorites.length || 0}
                 </span>
               )}
             </Link>

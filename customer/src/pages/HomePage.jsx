@@ -5,6 +5,7 @@ import ProductCard from "../components/products/ProductCard";
 import ProductCardSkeleton from "../components/skeletonLoader/ProductCardSkeleton";
 import { fetchProducts } from "../store/productsSlice";
 import { fetchHomeContent, setActiveBrand, setActiveCategory } from "../store/homeSlice";
+import { fetchFavorites } from "../store/favoriteSlice";
 
 const normalizeText = (value) =>
   String(value || "")
@@ -119,6 +120,7 @@ const HomePage = () => {
 
   useEffect(() => {
     dispatch(fetchHomeContent());
+    dispatch(fetchFavorites());
   }, [dispatch]);
 
   const urlBrand = useMemo(() => {

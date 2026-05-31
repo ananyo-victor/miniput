@@ -33,23 +33,23 @@ export class UsersController {
   //   return this.usersService.findAll();
   // }
 
-  // @Get(':id')
-  // findOne(
-  //   @Param('id') id: string,
-  // ) {
-  //   return this.usersService.findOne(id);
-  // }
+  @Get(':id')
+  findOne(
+    @Param('id') id: string,
+  ) {
+    return this.usersService.findOne(id);
+  }
 
-  // @Put(':id')
-  // update(
-  //   @Param('id') id: string,
-  //   @Body() dto: UpdateUserDto,
-  // ) {
-  //   return this.usersService.update(
-  //     id,
-  //     dto,
-  //   );
-  // }
+  @Put(':id')
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserDto,
+  ) {
+    return this.usersService.update(
+      id,
+      dto,
+    );
+  }
 
   @Patch(':id/workspace/:workspaceId')
   updateWorkspace(

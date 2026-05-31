@@ -2,18 +2,17 @@ import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Camera, LogOut } from "lucide-react";
 import { closeProfileModal, logoutCustomer } from "../../store/authSlice";
-import { updateProfile } from "../../store/userSlice";
+import { updateCustomerAccountThunk, updateProfile, uploadProfilePictureThunk } from "../../store/userSlice";
 
 const ProfileModal = () => {
   const dispatch = useDispatch();
-  const { isProfileModalOpen, phone } = useSelector((state) => state.auth);
-  const { name: savedName, profilePic: savedPic } = useSelector((state) => state.user.profile);
+  const { isProfileModalOpen } = useSelector((state) => state.auth);
+  const { id: userId, name: savedName, profilePic: savedPic, phone } = useSelector((state) => state.user.profile);
 
   const [localName, setLocalName] = useState("");
   const [localPic, setLocalPic] = useState("");
   const fileInputRef = useRef(null);
 
-  // Sync state when modal opens
   useEffect(() => {
     if (isProfileModalOpen) {
       setLocalName(savedName || "");
@@ -34,10 +33,28 @@ const ProfileModal = () => {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    dispatch(updateProfile({ name: localName, profilePic: localPic }));
-    dispatch(closeProfileModal());
+    let finalPicUrl = localPic;
+
+    if (localPic && localPic.startsWith("data:")) {
+      try {
+        finalPicUrl = await dispatch(uploadProfilePictureThunk(localPic)).unwrap();
+      } catch (error) {
+        console.error("Failed to upload image to S3:", error);
+        return;
+      }
+    }
+
+    dispatch(updateCustomerAccountThunk({
+      id: userId,
+      fullName: localName,
+      profilePictureUrl: finalPicUrl
+    })).then((response) => {
+      if (!response.error) {
+        dispatch(closeProfileModal());
+      }
+    });
   };
 
   const handleLogout = () => {

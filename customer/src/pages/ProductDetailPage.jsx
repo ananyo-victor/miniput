@@ -73,8 +73,7 @@ const ProductDetailPage = () => {
   };
 
   const handleFavoriteClick = (e) => {
-    e.stopPropagation();
-    dispatch(toggleFavorite(currentProduct));
+    dispatch(toggleFavorite(currentProduct.id));
   };
 
   const handleQtyChange = (delta) => {
@@ -251,8 +250,9 @@ const ProductDetailPage = () => {
               </button>
 
               <button
-                onClick={() => {
+                onClick={(e) => {
                   if (authed) {
+                    e.stopPropagation();
                     handleFavoriteClick();
                   } else {
                     dispatch(openAuthModal());
