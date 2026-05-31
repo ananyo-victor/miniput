@@ -6,7 +6,7 @@ import {
   setAuthField,
   checkCustomerThunk,
   verifyCustomerThunk
-} from "../../store/userSlice";
+} from "../../store/authSlice";
 
 const AuthModal = () => {
   const dispatch = useDispatch();

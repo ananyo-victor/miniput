@@ -3,7 +3,7 @@ import { Trash2 } from 'lucide-react';
 import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart, removeFromCart, updateQuantity } from "../store/cartSlice";
-import { openAuthModal } from "../store/userSlice";
+import { openAuthModal } from "../store/authSlice";
 import { fetchAboutThunk } from "../store/aboutSlice";
 
 const CartPage = () => {

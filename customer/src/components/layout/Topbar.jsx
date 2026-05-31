@@ -5,7 +5,7 @@ import { ShoppingCart, ChevronDown, Menu, User } from "lucide-react";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
 import { setActiveCategory, setActiveBrand, setSearchQuery } from "../../store/homeSlice";
-import { openAuthModal, openProfileModal } from "../../store/userSlice"; // New imports
+import { openAuthModal, openProfileModal } from "../../store/authSlice";
 
 const CATEGORIES = [
   { label: "All Categories", value: "all" },
@@ -45,7 +45,7 @@ const Topbar = ({ onMenuClick }) => {
 
   const cart = useSelector((state) => state.cart.items);
   const { authed, phone } = useSelector((state) => state.auth);
-  const { name, profilePic } = useSelector((state) => state.customerAccount.profile);
+  const { name, profilePic } = useSelector((state) => state.user.profile);
   const activeCategory = useSelector((state) => state.home.activeCategory);
   const storedSearchQuery = useSelector((state) => state.home.searchQuery);
 

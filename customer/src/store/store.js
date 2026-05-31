@@ -1,6 +1,7 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "./userSlice";
-import customerAccountReducer from "./userAccountSlice";
+import authReducer from "./authSlice";
+import userReducer from "./userSlice";
+import favoritesReducer from "./favoriteSlice";
 import cartReducer from "./cartSlice";
 import ordersReducer from "./orderSlice";
 import productsReducer from "./productsSlice";
@@ -11,7 +12,8 @@ import workspaceReducer from "./workspaceSlice";
 export const store = configureStore({
   reducer: {
     auth: authReducer,
-    customerAccount: customerAccountReducer,
+    user: userReducer,
+    favorites: favoritesReducer,
     cart: cartReducer,
     orders: ordersReducer,
     products: productsReducer,
