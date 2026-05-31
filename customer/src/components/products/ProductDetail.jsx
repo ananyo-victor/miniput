@@ -1,5 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, Copy, Minus, Plus, Share2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Copy, Minus, Plus, Share2, Heart } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { toggleFavorite } from "../../store/favoriteSlice";
 
 const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNow }) => {
   const currentProduct = useMemo(
@@ -15,6 +17,11 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
       },
     [product]
   );
+  
+  const dispatch = useDispatch();
+  const favorites = useSelector((state) => state.favorites.items);
+  const isFavorite = favorites.some((item) => item.id === currentProduct.id);
+
   const [quantity, setQuantity] = useState(1);
   const availableSizes = useMemo(
     () => currentProduct.size || currentProduct.sizes || [],
@@ -50,6 +57,11 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
     if (typeof window === "undefined") return path;
     return new URL(path, window.location.origin).toString();
   }, [currentProduct.id]);
+
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    dispatch(toggleFavorite(currentProduct));
+  };
 
   const onPrevImage = () => {
     setCurrentImageIndex((prev) => (prev - 1 + productImages.length) % productImages.length);
@@ -127,7 +139,6 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
     }
   };
 
-  // Calculate dynamic totals based on the selected quantity
   const unitPrice = Number(currentProduct.isDiscountActive ? currentProduct.finalPrice : currentProduct.price) || 0;
   const unitOriginalPrice = Number(currentProduct.originalPrice ?? currentProduct.price) || 0;
 
@@ -191,8 +202,9 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
                     e.stopPropagation();
                     setCurrentImageIndex(index);
                   }}
-                  className={`h-1.5 w-1.5 rounded-full p-0 border-none cursor-pointer transition-colors ${index === currentImageIndex ? "bg-white" : "bg-white/45"
-                    }`}
+                  className={`h-1.5 w-1.5 rounded-full p-0 border-none cursor-pointer transition-colors ${
+                    index === currentImageIndex ? "bg-white" : "bg-white/45"
+                  }`}
                   aria-label={`Go to image ${index + 1}`}
                 />
               ))}
@@ -203,19 +215,31 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
         {/* Details Section */}
         <div className="bg-white rounded-t-3xl -mt-6 md:mt-0 md:rounded-none flex-1 p-5 md:p-6 lg:p-8 z-10 relative flex flex-col w-full md:w-1/2 overflow-y-auto mk-scroll-hidden">
 
-          {/* UTILITY BAR: Share (Left) & Navigation (Right) - Moved outside my-auto container */}
+          {/* UTILITY BAR */}
           <div className="flex items-center justify-between w-full max-w-lg mb-4">
 
-            {/* Share Button */}
-            <button
-              onClick={handleShareProduct}
-              className="shrink-0 h-7 px-3 bg-white md:bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full flex items-center gap-1.5 text-[9px] font-black text-gray-900 uppercase tracking-wider transition-colors shadow-sm"
-              aria-label="Share product"
-              type="button"
-            >
-              {shareStatus === "Link copied" || shareStatus === "Shared" ? <Check size={12} /> : <Share2 size={12} />}
-              <span>{shareStatus || "Share"}</span>
-            </button>
+            <div className="flex items-center gap-2">
+                {/* Share Button */}
+                <button
+                  onClick={handleShareProduct}
+                  className="shrink-0 h-7 px-3 bg-white md:bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full flex items-center gap-1.5 text-[9px] font-black text-gray-900 uppercase tracking-wider transition-colors shadow-sm"
+                  aria-label="Share product"
+                  type="button"
+                >
+                  {shareStatus === "Link copied" || shareStatus === "Shared" ? <Check size={12} /> : <Share2 size={12} />}
+                  <span>{shareStatus || "Share"}</span>
+                </button>
+
+                {/* Favorite Button */}
+                <button
+                  onClick={handleFavoriteClick}
+                  className="shrink-0 h-7 px-3 bg-white md:bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider transition-colors shadow-sm"
+                  type="button"
+                >
+                  <Heart size={12} className={isFavorite ? "fill-red-500 text-red-500" : "text-gray-500"} />
+                  <span className={isFavorite ? "text-red-500" : "text-gray-900"}>{isFavorite ? "Saved" : "Save"}</span>
+                </button>
+            </div>
 
             {/* Product Navigation (PREV / NEXT) */}
             {(onPrev || onNext) && (
@@ -231,7 +255,7 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
             )}
           </div>
 
-          {/* Product Information - Centered Content */}
+          {/* Product Information */}
           <div className="max-w-lg my-auto w-full">
 
             {/* Title */}
@@ -249,7 +273,7 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
               {availableSizes.map((size) => (
                 <div
                   key={size}
-                  className="size-8 md:min-w-10 md:h-10 px-3 rounded-full flex items-center justify-center text-sm font-black bg-gray-100 text-[#1a1a1a] shadow-sm"
+                  className="size-8 md:minw-10 md:h-10 px-3 rounded-full flex items-center justify-center text-sm font-black bg-gray-100 text-[#1a1a1a] shadow-sm"
                 >
                   {size}
                 </div>

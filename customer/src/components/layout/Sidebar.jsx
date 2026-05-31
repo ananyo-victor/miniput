@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { X, ShoppingCart, Info, Flame, Star, Zap, User, UserCircle, FileText, LogOut } from "lucide-react";
+import { X, ShoppingCart, Info, Flame, Star, Zap, User, UserCircle, FileText, LogOut, Heart } from "lucide-react";
 import { setActiveBrand, setActiveCategory } from "../../store/homeSlice";
 import { logoutCustomer, openAuthModal, openProfileModal } from "../../store/authSlice";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
@@ -132,8 +132,26 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           <div className="border-t border-gray-100 mx-4"></div>
 
-          {/* Utility Links (Cart) */}
+          {/* Utility Links (Cart & Favorites) */}
           <div className="flex flex-col py-3">
+
+            <Link
+              to="/favorites"
+              onClick={onClose}
+              className={`flex items-center justify-between px-6 py-3.5 font-bold transition-colors ${isExactPath("/favorites") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"
+                }`}
+            >
+              <div className="flex items-center gap-4">
+                <Heart size={20} className="text-gray-500" />
+                Favorites
+              </div>
+              {useSelector((state) => state.favorites.items.length) > 0 && (
+                <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-100 text-red-600">
+                  {useSelector((state) => state.favorites.items.length)}
+                </span>
+              )}
+            </Link>
+
             <Link
               to="/orders"
               onClick={onClose}

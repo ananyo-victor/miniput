@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
+import FavoritesPage from "./pages/FavoritesPage";
 import OrderFormPage from "./pages/OrderFormPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AboutPage from "./pages/AboutPage";
@@ -61,6 +62,7 @@ export default function App() {
           <Route path="/kwink" element={<HomePage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/favorites" element={<FavoritesPage />} /> 
           <Route path="/order" element={<OrderFormPage />} />
           <Route path="/about" element={<AboutPage />} />
         </Route>
