@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Heart, Share2, Check } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { toggleFavorite } from "../../store/favoriteSlice";
+import { openAuthModal } from "../../store/authSlice";
 
 const ProductCard = ({ product, onClick }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -11,6 +12,7 @@ const ProductCard = ({ product, onClick }) => {
 
   const dispatch = useDispatch();
   const favorites = useSelector((state) => state.favorites.items);
+  const authed = useSelector((state) => state.auth.authed);
   const isFavorite = favorites.some((item) => item.id === product.id);
 
   const productImages = useMemo(() => {
@@ -53,7 +55,6 @@ const ProductCard = ({ product, onClick }) => {
   };
 
   const handleFavoriteClick = (e) => {
-    e.stopPropagation(); 
     dispatch(toggleFavorite(product));
   };
 
@@ -75,7 +76,7 @@ const ProductCard = ({ product, onClick }) => {
   };
 
   const handleShareClick = async (e) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     const shareData = {
       title: product.name,
       text: `Check out ${product.name} on Miniput.`,
@@ -147,18 +148,25 @@ const ProductCard = ({ product, onClick }) => {
       >
         <div className="absolute inset-0 bg-center bg-cover blur-lg scale-130" style={{ backgroundImage: `url(${activeImage})` }} />
         <img src={activeImage} alt={product.name} className="relative w-full h-full object-contain object-center" />
-        
+
         {/* Top Right: Favorite and Share Buttons (Stacked) */}
         <div className="absolute top-2 right-2 z-20 flex flex-col gap-2">
           <button
             type="button"
-            onClick={handleFavoriteClick}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (authed) {
+                handleFavoriteClick()
+              } else {
+                dispatch(openAuthModal());
+              }
+            }}
             className="p-1.5 md:p-2 bg-white/30 hover:bg-white/90 backdrop-blur-md rounded-full shadow-sm text-gray-700 hover:text-red-500 transition-colors"
             aria-label="Toggle Favorite"
           >
             <Heart size={18} className={isFavorite ? "fill-red-500 text-red-500" : ""} />
           </button>
-          
+
           <button
             type="button"
             onClick={handleShareClick}
@@ -174,7 +182,7 @@ const ProductCard = ({ product, onClick }) => {
           <p className="text-[10px] md:text-[11px] font-black tracking-wider uppercase leading-tight line-clamp-2 pt-1">
             {product.name}
           </p>
-          
+
           <div className="flex justify-between items-end mt-1">
             <div className="flex flex-col min-h-[36px] md:min-h-[40px] justify-end">
               {product.isDiscountActive ? (
@@ -191,7 +199,7 @@ const ProductCard = ({ product, onClick }) => {
             </div>
           </div>
         </div>
-        
+
         {/* Pagination Dots */}
         {productImages.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/40 px-2 py-1">
@@ -203,9 +211,8 @@ const ProductCard = ({ product, onClick }) => {
                   e.stopPropagation();
                   setCurrentImageIndex(index);
                 }}
-                className={`h-1.5 w-1.5 rounded-full p-0 border-none cursor-pointer ${
-                  index === currentImageIndex ? "bg-white" : "bg-white/45"
-                }`}
+                className={`h-1.5 w-1.5 rounded-full p-0 border-none cursor-pointer ${index === currentImageIndex ? "bg-white" : "bg-white/45"
+                  }`}
                 aria-label={`View image ${index + 1}`}
               />
             ))}
