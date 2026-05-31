@@ -5,6 +5,7 @@ import { LogOut, User, ChevronDown, Menu } from "lucide-react";
 import { clearAdminToken, getAdminAuthFromStorage } from "../../utils/adminToken";
 import { setActiveCategory, setSearchQuery } from "../../store/homeSlice";
 import { setAdminField } from "../../store/authSlice";
+import { toggleSidebar } from "../../store/userSlice";
 import { isHomeRoute } from "../../utils/workspaceRouting";
 
 // Import brand icons
@@ -92,6 +93,15 @@ const TopBar = ({ onOpenMobileMenu, onWorkspaceSwitch }) => {
           type="button"
           onClick={onOpenMobileMenu}
           className="lg:hidden p-1.5 md:p-2 text-[#0E2A4A] hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <Menu size={24} strokeWidth={2.5} />
+        </button>
+
+        {/* NEW: Desktop Hamburger Button */}
+        <button
+          type="button"
+          onClick={() => dispatch(toggleSidebar())}
+          className="hidden lg:block p-1.5 md:p-2 text-[#0E2A4A] hover:bg-gray-100 rounded-lg transition-colors mr-2"
         >
           <Menu size={24} strokeWidth={2.5} />
         </button>
@@ -212,13 +222,16 @@ const TopBar = ({ onOpenMobileMenu, onWorkspaceSwitch }) => {
 
       {/* RIGHT SECTION: User Profile & Desktop Logout */}
       <div className="flex items-center shrink-0 lg:gap-2">
-        <div className="flex space-x-1 md:space-x-2 items-center leading-tight hover:bg-[#f0f7f8] p-1 md:p-2 lg:p-3 rounded-xl transition-colors">
+        <button
+          onClick={() => navigate('/settings')}
+          className="flex space-x-1 md:space-x-2 items-center leading-tight hover:bg-[#f0f7f8] p-1 md:p-2 lg:p-3 rounded-xl transition-colors text-left"
+        >
           <User className="size-5 lg:size-6" />
           <div className="flex flex-col items-start ml-0.5 md:ml-0">
             <span className="block text-[10px] lg:text-[12px] text-gray-500 font-semibold leading-none mb-[2px]">Hello,</span>
             <span className="flex text-[11px] lg:text-[15px] font-black text-[#0E2A4A] items-center gap-1 leading-none">{auth?.fullName || "Admin"}</span>
           </div>
-        </div>
+        </button>
 
         {/* RESTORED: Desktop Logout Button (Hidden on Mobile) */}
         <button

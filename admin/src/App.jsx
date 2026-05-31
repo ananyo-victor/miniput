@@ -7,6 +7,7 @@ import InventoryPage from "./pages/InventoryPage";
 import HomePage from "./pages/HomePage";
 import AboutPage from "./pages/AboutPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
+import ProfilePage from "./pages/ProfilePage";
 import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
 import { fetchWorkspaces } from "./store/workspaceSlice";
 import OrdersPage from "./pages/OrdersPage";
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/settings" element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

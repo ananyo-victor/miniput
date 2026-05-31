@@ -19,6 +19,7 @@ const PrivateRoute = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const authUserId = auth?.userId || storageUserId || "";
+  const isSidebarCollapsed = useSelector((state) => state.user.preferences.sidebarCollapsed);
 
   if (!token || !isAdmin) {
     clearAdminToken();
@@ -73,7 +74,7 @@ const PrivateRoute = () => {
           onWorkspaceSwitch={handleWorkspaceSwitch}
         />
 
-        <div className="flex-1 flex flex-col min-w-0 transition-all duration-300 lg:ml-64">
+        <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isSidebarCollapsed ? "lg:ml-20" : "lg:ml-64"}`}>
           <main className="flex-1 flex flex-col relative h-full">
             <Outlet />
           </main>
