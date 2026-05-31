@@ -85,15 +85,15 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Section 1: Discover */}
           <div className="flex flex-col py-3">
-            <Link to="/home" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+            <Link to="/discover/trending" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
               <Flame size={20} className="text-orange-500" />
               Trending
             </Link>
-            <Link to="/home" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+            <Link to="/discover/bestsellers" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
               <Star size={20} className="text-yellow-500" />
               Bestsellers
             </Link>
-            <Link to="/home" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+            <Link to="/discover/new-releases" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
               <Zap size={20} className="text-blue-500" />
               New Releases
             </Link>
@@ -134,7 +134,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 
           {/* Utility Links (Cart & Favorites) */}
           <div className="flex flex-col py-3">
-
+            <h3 className="px-6 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Utility</h3>
+           
             <Link
               to="/favorites"
               onClick={onClose}

@@ -7,6 +7,7 @@ import FavoritesPage from "./pages/FavoritesPage";
 import OrderFormPage from "./pages/OrderFormPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AboutPage from "./pages/AboutPage";
+import DiscoverPage from "./pages/DiscoverPage";
 import Navbar from "./components/layout/Navbar";
 import Topbar from "./components/layout/Topbar"; 
 import Sidebar from "./components/layout/Sidebar"; 
@@ -60,6 +61,8 @@ export default function App() {
           <Route path="/home/:brand" element={<HomePage />} />
           <Route path="/miniput" element={<HomePage />} />
           <Route path="/kwink" element={<HomePage />} />
+          <Route path="/discover" element={<Navigate to="/discover/trending" replace />} />
+          <Route path="/discover/:tab" element={<DiscoverPage />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/favorites" element={<FavoritesPage />} /> 
