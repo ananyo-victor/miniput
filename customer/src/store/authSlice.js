@@ -64,6 +64,7 @@ const authSlice = createSlice({
     },
     logoutCustomer: (state) => {
       clearCustomerToken();
+      localStorage.removeItem("userId"); // <-- ADD THIS
       state.authed = false;
       state.phone = "";
       state.otp = "";
@@ -83,6 +84,11 @@ const authSlice = createSlice({
         if (action.payload?.accessToken) {
           setCustomerTokens(action.payload.accessToken, action.payload.refreshToken);
         }
+
+        if (action.payload?.user?.id) {
+          localStorage.setItem("userId", action.payload.user.id);
+        }
+
         state.authed = true;
         state.phone = action.payload?.user?.phone || state.phone;
         state.isAuthModalOpen = false;

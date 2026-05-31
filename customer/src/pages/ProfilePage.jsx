@@ -3,9 +3,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
 import { Camera, LogOut, ArrowLeft } from "lucide-react";
 import { logoutCustomer } from "../store/authSlice";
-import { updateProfile, uploadProfilePictureThunk } from "../store/userSlice";
+import {
+  uploadProfilePictureThunk,
+  updateCustomerAccountThunk,
+  fetchUserDetailsThunk,
+} from "../store/userSlice";
 
-// Reusable FormField matching your Order Form UI exactly
+import {
+  createBusinessThunk,
+  updateBusinessThunk,
+  fetchBusinessesThunk,
+} from "../store/businessSlice";
+
 const FormField = ({ icon, label, required, optional, className, children }) => (
   <div
     className={`flex items-center gap-3 px-4 py-2 min-h-[54px] transition-colors focus-within:bg-[#fffdf5] ${className}`}
@@ -29,45 +38,54 @@ const FormField = ({ icon, label, required, optional, className, children }) => 
 const ProfilePage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { phone, authed } = useSelector((state) => state.auth);
+  const { authed } = useSelector((state) => state.auth);
+  const { id: userId, name, profilePic, phone, email } = useSelector((state) => state.user.profile);
+  const savingUser = useSelector(state => state.user.saving);
+  const savingBusiness = useSelector(state => state.business.saving);
+  const isSaving = savingUser || savingBusiness;
 
-  const {
-    name: savedName,
-    email: savedEmail,
-    profilePic: savedPic,
-    partyName: savedPartyName,
-    businessPhone: savedBusinessPhone,
-    address: savedAddress,
-    gst: savedGst,
-    transport: savedTransport,
-    agent: savedAgent,
-    filledBy: savedFilledBy,
-    remarks: savedRemarks,
-  } = useSelector((state) => state.user.profile);
+  const existingBusiness = useSelector((state) => state.business.items[0]);
 
-  // Personal Info States
-  const [localName, setLocalName] = useState(savedName || "");
-  const [localEmail, setLocalEmail] = useState(savedEmail || "");
-  const [localPic, setLocalPic] = useState(savedPic || "");
+  const [localName, setLocalName] = useState(name || "");
+  const [localEmail, setLocalEmail] = useState(email || "");
+  const [localPic, setLocalPic] = useState(profilePic || "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  // Business Info States
-  const [localPartyName, setLocalPartyName] = useState(savedPartyName || "");
-  const [localBusinessPhone, setLocalBusinessPhone] = useState(savedBusinessPhone || "");
-  const [localAddress, setLocalAddress] = useState(savedAddress || "");
-  const [localGst, setLocalGst] = useState(savedGst || "");
-  const [localTransport, setLocalTransport] = useState(savedTransport || "");
-  const [localAgent, setLocalAgent] = useState(savedAgent || "");
-  const [localFilledBy, setLocalFilledBy] = useState(savedFilledBy || "");
-  const [localRemarks, setLocalRemarks] = useState(savedRemarks || "");
+  const [localPartyName, setLocalPartyName] = useState(existingBusiness?.businessName || "");
+  const [localBusinessPhone, setLocalBusinessPhone] = useState(existingBusiness?.businessPhone || "");
+  const [localAddress, setLocalAddress] = useState(existingBusiness?.deliveryAddress || "");
+  const [localGst, setLocalGst] = useState(existingBusiness?.gstNumber || "");
+  const [localTransport, setLocalTransport] = useState(existingBusiness?.transportCourier || "");
+  const [localAgent, setLocalAgent] = useState(existingBusiness?.agentName || "");
+  const [localFilledBy, setLocalFilledBy] = useState(existingBusiness?.filledBy || "");
+  const [localRemarks, setLocalRemarks] = useState(existingBusiness?.specialInstructions || "");
 
   const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (!authed) {
       navigate("/home");
+      return;
     }
-  }, [authed, navigate]);
+    console.log("ProfilePage mounted, authed:", authed, "userId:", userId); // Debug log for auth status and user ID
+    if (userId) {
+      dispatch(fetchBusinessesThunk(userId));
+      dispatch(fetchUserDetailsThunk(userId));
+    }
+  }, [authed, navigate, dispatch, userId]);
+
+  useEffect(() => {
+    if (existingBusiness) {
+      setLocalPartyName(existingBusiness.businessName || "");
+      setLocalBusinessPhone(existingBusiness.businessPhone || "");
+      setLocalAddress(existingBusiness.deliveryAddress || "");
+      setLocalGst(existingBusiness.gstNumber || "");
+      setLocalTransport(existingBusiness.transportCourier || "");
+      setLocalAgent(existingBusiness.agentName || "");
+      setLocalFilledBy(existingBusiness.filledBy || "");
+      setLocalRemarks(existingBusiness.specialInstructions || "");
+    }
+  }, [existingBusiness]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -75,11 +93,11 @@ const ProfilePage = () => {
       const reader = new FileReader();
       reader.onloadend = async () => {
         const base64Data = reader.result;
-        setLocalPic(base64Data); // Show immediate preview
+        setLocalPic(base64Data);
         setIsUploadingImage(true);
         try {
           const uploadedUrl = await dispatch(uploadProfilePictureThunk(base64Data)).unwrap();
-          setLocalPic(uploadedUrl); // Replace preview with uploaded S3 URL
+          setLocalPic(uploadedUrl);
         } catch (error) {
           console.error("Failed to upload image:", error);
         } finally {
@@ -90,24 +108,42 @@ const ProfilePage = () => {
     }
   };
 
-  const handleSave = (e) => {
+  const handleSave = async (e) => {
     e.preventDefault();
-    dispatch(
-      updateProfile({
-        name: localName,
-        email: localEmail,
-        profilePic: localPic,
-        partyName: localPartyName,
-        businessPhone: localBusinessPhone,
-        address: localAddress,
-        gst: localGst,
-        transport: localTransport,
-        agent: localAgent,
-        filledBy: localFilledBy,
-        remarks: localRemarks,
-      })
-    );
-    navigate("/home");
+    const userPayload = {
+      id: userId,
+      fullName: localName,          // Fixed: Changed from full_name to fullName
+      profilePictureUrl: localPic,  // Fixed: Added profile picture URL to the payload
+      email: localEmail             // Fixed: Send email even if it's blank
+    };
+
+    await dispatch(updateCustomerAccountThunk(userPayload)).unwrap();
+    const businessPayload = { isDefault: true };
+
+    if (localPartyName?.trim()) businessPayload.businessName = localPartyName;
+    if (localBusinessPhone?.trim()) businessPayload.businessPhone = localBusinessPhone;
+    if (localAddress?.trim()) businessPayload.deliveryAddress = localAddress;
+    if (localTransport?.trim()) businessPayload.transportCourier = localTransport;
+    if (localGst?.trim()) businessPayload.gstNumber = localGst;
+    if (localAgent?.trim()) businessPayload.agentName = localAgent;
+    if (localFilledBy?.trim()) businessPayload.filledBy = localFilledBy;
+    if (localRemarks?.trim()) businessPayload.specialInstructions = localRemarks;
+
+    if (existingBusiness?.id) {
+      await dispatch(
+        updateBusinessThunk({
+          id: existingBusiness.id,
+          payload: businessPayload,
+        })
+      ).unwrap();
+    } else {
+      await dispatch(
+        createBusinessThunk({
+          userId: userId,
+          payload: businessPayload,
+        })
+      ).unwrap();
+    }
   };
 
   const handleLogout = () => {
@@ -120,7 +156,7 @@ const ProfilePage = () => {
   return (
     <div className="flex-1 bg-[#ececec] pb-24 pt-4 sm:pt-8 font-['Nunito',_sans-serif] min-h-full">
       <div className="max-w-6xl mx-auto w-full px-4 sm:px-6">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-4">
@@ -145,7 +181,7 @@ const ProfilePage = () => {
 
         <form onSubmit={handleSave} className="bg-[#f5f5f5] rounded-3xl overflow-hidden shadow-sm border border-gray-200">
           <div className="flex flex-col lg:flex-row">
-            
+
             {/* ================= LEFT SIDE: PERSONAL INFORMATION ================= */}
             <div className="w-full lg:w-1/3 bg-white p-6 sm:p-8 lg:border-r border-b lg:border-b-0 border-gray-200">
               <h2 className="text-[13px] font-black tracking-[1.5px] text-[#0E2A4A] mb-8 uppercase text-center lg:text-left">
@@ -237,7 +273,7 @@ const ProfilePage = () => {
               <div className="space-y-6">
                 {/* 1. Name & Phone */}
                 <div className="bg-white rounded-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.04)] flex flex-col md:flex-row overflow-hidden border border-[#f0f0f0]">
-                  <FormField icon="🏢" label="NAME" required className="flex-1 border-b md:border-b-0 md:border-r border-[#f0f0f0]">
+                  <FormField icon="🏢" label="NAME" className="flex-1 border-b md:border-b-0 md:border-r border-[#f0f0f0]">
                     <input
                       type="text"
                       value={localPartyName}
@@ -246,7 +282,7 @@ const ProfilePage = () => {
                       placeholder="Business / Shop name"
                     />
                   </FormField>
-                  <FormField icon="📱" label="PHONE NUMBER" required className="flex-1">
+                  <FormField icon="📱" label="PHONE NUMBER" className="flex-1">
                     <input
                       type="tel"
                       maxLength={10}
@@ -262,7 +298,7 @@ const ProfilePage = () => {
                 <div>
                   <h3 className="text-[10px] font-black tracking-[1.5px] text-[#888] uppercase mb-1.5 ml-1">Delivery</h3>
                   <div className="bg-white rounded-[14px] shadow-[0_2px_12px_rgba(0,0,0,0.04)] overflow-hidden border border-[#f0f0f0]">
-                    <FormField icon="📍" label="DELIVERY ADDRESS" required className="border-b border-[#f0f0f0]">
+                    <FormField icon="📍" label="DELIVERY ADDRESS" className="border-b border-[#f0f0f0]">
                       <input
                         type="text"
                         value={localAddress}
@@ -298,7 +334,7 @@ const ProfilePage = () => {
                           placeholder="e.g. 23ABCDE1234F1Z5"
                         />
                       </FormField>
-                      <FormField icon="👤" label="AGENT NAME" required className="flex-1">
+                      <FormField icon="👤" label="AGENT NAME" className="flex-1">
                         <input
                           type="text"
                           value={localAgent}
@@ -354,10 +390,9 @@ const ProfilePage = () => {
             </p>
             <button
               type="submit"
-              disabled={isUploadingImage}
-              className={`w-full sm:w-auto px-10 py-4 rounded-xl bg-[#0E2A4A] text-[#FFB800] text-sm font-black tracking-[0.09em] transition-transform shadow-md shrink-0 ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}
-            >
-              {isUploadingImage ? "UPLOADING..." : "SAVE CHANGES"}
+              disabled={isSaving}
+              className={`w-full sm:w-auto px-10 py-4 rounded-xl bg-[#0E2A4A] text-[#FFB800] text-sm font-black tracking-[0.09em] transition-transform shadow-md shrink-0 ${isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02]'}`}            >
+              {isSaving ? "SAVING..." : "SAVE CHANGES"}
             </button>
           </div>
 

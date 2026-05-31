@@ -4,6 +4,7 @@ import {
     IsString,
     IsUUID,
     MinLength,
+    ValidateIf,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -12,6 +13,7 @@ export class CreateUserDto {
     username: string;
 
     @IsOptional()
+    @ValidateIf(o => o.email !== "") // <-- Add this to allow empty strings
     @IsEmail()
     email?: string;
 

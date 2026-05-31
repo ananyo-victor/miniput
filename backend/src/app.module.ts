@@ -9,8 +9,9 @@ import { UsersModule } from './modules/users/users.module';
 import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { CartModule } from './modules/cart/cart.module';
+import { BusinessModule } from './modules/business/business.module';
 
 @Module({
-  imports: [AuthModule, ContentModule, OrdersModule, ProductsModule, UploadsModule, WorkspaceModule, UsersModule, WhatsappModule, FavoritesModule, CartModule],
+  imports: [AuthModule, ContentModule, OrdersModule, ProductsModule, UploadsModule, WorkspaceModule, UsersModule, WhatsappModule, FavoritesModule, CartModule, BusinessModule],
 })
 export class AppModule { }

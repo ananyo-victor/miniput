@@ -175,6 +175,7 @@ export class UsersService {
         u.phone,
         u.full_name,
         u.profile_picture_url,
+        u.email,
         u.role,
         u."activeWorkspaceId",
         u.is_active,

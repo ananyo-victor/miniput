@@ -3,42 +3,13 @@ import axios from "axios";
 import { logoutCustomer, verifyCustomerThunk } from "./authSlice";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const PROFILE_STORAGE_KEY = "customerProfile";
 
 const emptyProfile = {
-  id: "",
+  id: localStorage.getItem("userId") || "",
   name: "",
   email: "",
   phone: "",
   profilePic: "",
-};
-
-const loadProfileFromStorage = () => {
-  try {
-    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
-    if (!raw) {
-      return { ...emptyProfile };
-    }
-    return { ...emptyProfile, ...JSON.parse(raw) };
-  } catch (error) {
-    return { ...emptyProfile };
-  }
-};
-
-const persistProfile = (profile) => {
-  try {
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
-  } catch (error) {
-    // Ignore localStorage persistence failures.
-  }
-};
-
-const clearStoredProfile = () => {
-  try {
-    localStorage.removeItem(PROFILE_STORAGE_KEY);
-  } catch (error) {
-    // Ignore localStorage cleanup failures.
-  }
 };
 
 export const fetchUserDetailsThunk = createAsyncThunk(
@@ -84,9 +55,9 @@ export const uploadProfilePictureThunk = createAsyncThunk(
       const { data } = await axios.post(`${API_BASE_URL}/api/uploads/product-image`, {
         imageData,
       });
-      
+
       if (data.success) {
-        return data.imageUrl; 
+        return data.imageUrl;
       }
       return rejectWithValue("Upload was not successful");
     } catch (error) {
@@ -98,7 +69,7 @@ export const uploadProfilePictureThunk = createAsyncThunk(
 const userSlice = createSlice({
   name: "user",
   initialState: {
-    profile: loadProfileFromStorage(),
+    profile: { ...emptyProfile },
     saving: false,
     saveError: "",
   },
@@ -106,22 +77,18 @@ const userSlice = createSlice({
     setAccountField: (state, action) => {
       const { key, value } = action.payload;
       state.profile[key] = value;
-      persistProfile(state.profile);
     },
     createCustomerAccountLocal: (state, action) => {
       state.profile = { ...state.profile, ...action.payload };
       state.saveError = "";
-      persistProfile(state.profile);
     },
     updateProfile: (state, action) => {
       state.profile = { ...state.profile, ...action.payload };
       state.saveError = "";
-      persistProfile(state.profile);
     },
     clearCustomerAccount: (state) => {
       state.profile = { ...emptyProfile };
       state.saveError = "";
-      clearStoredProfile();
     },
   },
   extraReducers: (builder) => {
@@ -136,7 +103,6 @@ const userSlice = createSlice({
           phone: user.phone || state.profile.phone,
           profilePic: user.profilePic || state.profile.profilePic,
         };
-        persistProfile(state.profile);
       })
       .addCase(createCustomerAccountThunk.pending, (state) => {
         state.saving = true;
@@ -145,7 +111,6 @@ const userSlice = createSlice({
       .addCase(createCustomerAccountThunk.fulfilled, (state, action) => {
         state.saving = false;
         state.profile = { ...state.profile, ...(action.payload?.user || action.payload || {}) };
-        persistProfile(state.profile);
       })
       .addCase(createCustomerAccountThunk.rejected, (state, action) => {
         state.saving = false;
@@ -164,18 +129,21 @@ const userSlice = createSlice({
           name: responseData.full_name || responseData.name || state.profile.name,
           profilePic: responseData.profile_picture_url || responseData.profilePictureUrl || responseData.profilePic || state.profile.profilePic
         };
-
-        persistProfile(state.profile);
       })
       .addCase(updateCustomerAccountThunk.rejected, (state, action) => {
         state.saving = false;
         state.saveError = action.payload || "Failed to update customer account";
       })
       .addCase(logoutCustomer, (state) => {
-        state.profile = { ...emptyProfile };
+        state.profile = {
+          id: "",
+          name: "",
+          email: "",
+          phone: "",
+          profilePic: ""
+        };
         state.saving = false;
         state.saveError = "";
-        clearStoredProfile();
       })
       .addCase(fetchUserDetailsThunk.pending, (state) => {
         state.saveError = "";
@@ -187,9 +155,9 @@ const userSlice = createSlice({
           ...responseData,
           id: responseData.id || state.profile.id,
           name: responseData.full_name || responseData.name || state.profile.name,
-          profilePic: responseData.profile_picture_url
+          profilePic: responseData.profile_picture_url,
+          email: responseData.email || state.profile.email,
         };
-        persistProfile(state.profile);
       })
       .addCase(fetchUserDetailsThunk.rejected, (state, action) => {
         state.saveError = action.payload || "Failed to fetch user details";

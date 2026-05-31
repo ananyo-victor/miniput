@@ -8,6 +8,7 @@ import productsReducer from "./productsSlice";
 import homeReducer from "./homeSlice";
 import aboutReducer from "./aboutSlice";
 import workspaceReducer from "./workspaceSlice";
+import businessReducer from "./businessSlice";
 
 export const store = configureStore({
   reducer: {
@@ -19,6 +20,7 @@ export const store = configureStore({
     products: productsReducer,
     home: homeReducer,
     about: aboutReducer,
-    workspace: workspaceReducer
+    workspace: workspaceReducer,
+    business: businessReducer,
   }
 });
