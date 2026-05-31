@@ -3,7 +3,7 @@ import { Trash2 } from 'lucide-react';
 import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { clearCart, removeFromCart, updateQuantity } from "../store/cartSlice";
-import { openAuthModal } from "../store/customerSlice";
+import { openAuthModal } from "../store/userSlice";
 import { fetchAboutThunk } from "../store/aboutSlice";
 
 const CartPage = () => {
@@ -179,3 +179,4 @@ const CartPage = () => {
 };
 
 export default CartPage;
+

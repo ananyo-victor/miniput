@@ -32,14 +32,14 @@ const initialState = {
   authError: "",
 };
 
-const customerSlice = createSlice({
+const userSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
     setAuthField: (state, action) => {
       const { key, value } = action.payload;
       state[key] = value;
-      if (key === 'otp' || key === 'phone') state.authError = "";
+      if (key === "otp" || key === "phone") state.authError = "";
     },
     openAuthModal: (state) => {
       state.isAuthModalOpen = true;
@@ -87,5 +87,5 @@ const customerSlice = createSlice({
 
 export const {
   setAuthField, openAuthModal, closeAuthModal, openProfileModal, closeProfileModal, logoutCustomer
-} = customerSlice.actions;
-export default customerSlice.reducer;
+} = userSlice.actions;
+export default userSlice.reducer;

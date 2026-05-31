@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { X, ShoppingCart, Info, Flame, Star, Zap, User, UserCircle, FileText, LogOut } from "lucide-react";
 import { setActiveBrand, setActiveCategory } from "../../store/homeSlice";
-import { logoutCustomer, openAuthModal, openProfileModal } from "../../store/customerSlice";
+import { logoutCustomer, openAuthModal, openProfileModal } from "../../store/userSlice";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
 
@@ -215,3 +215,4 @@ const Sidebar = ({ isOpen, onClose }) => {
 };
 
 export default Sidebar;
+

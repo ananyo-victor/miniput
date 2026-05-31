@@ -5,7 +5,7 @@ import { ShoppingCart, ChevronDown, Menu, User } from "lucide-react";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
 import { setActiveCategory, setActiveBrand, setSearchQuery } from "../../store/homeSlice";
-import { openAuthModal, openProfileModal } from "../../store/customerSlice"; // New imports
+import { openAuthModal, openProfileModal } from "../../store/userSlice"; // New imports
 
 const CATEGORIES = [
   { label: "All Categories", value: "all" },
@@ -243,3 +243,4 @@ const Topbar = ({ onMenuClick }) => {
 };
 
 export default Topbar;
+

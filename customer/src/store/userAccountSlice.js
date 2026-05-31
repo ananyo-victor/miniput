@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { logoutCustomer, verifyCustomerThunk } from "./customerSlice";
+import { logoutCustomer, verifyCustomerThunk } from "./userSlice";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const STORAGE_KEY = "customerProfile";
@@ -65,7 +65,7 @@ export const updateCustomerAccountThunk = createAsyncThunk(
   }
 );
 
-const customerAccountSlice = createSlice({
+const userAccountSlice = createSlice({
   name: "customerAccount",
   initialState: {
     profile: loadProfileFromStorage(),
@@ -148,6 +148,6 @@ export const {
   createCustomerAccountLocal,
   updateProfile,
   clearCustomerAccount
-} = customerAccountSlice.actions;
+} = userAccountSlice.actions;
 
-export default customerAccountSlice.reducer;
+export default userAccountSlice.reducer;

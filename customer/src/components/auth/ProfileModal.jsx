@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Camera, LogOut } from "lucide-react";
-import { closeProfileModal, logoutCustomer } from "../../store/customerSlice";
-import { updateProfile } from "../../store/customerAccountSlice";
+import { closeProfileModal, logoutCustomer } from "../../store/userSlice";
+import { updateProfile } from "../../store/userAccountSlice";
 
 const ProfileModal = () => {
   const dispatch = useDispatch();
@@ -142,3 +142,4 @@ const ProfileModal = () => {
 };
 
 export default ProfileModal;
+
