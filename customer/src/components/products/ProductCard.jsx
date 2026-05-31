@@ -93,12 +93,20 @@ const ProductCard = ({ product, onClick }) => {
             </div>
           </div>
         </div>
+        {/* Pagination Dots */}
         {productImages.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/40 px-2 py-1 md:hidden">
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/40 px-2 py-1">
             {productImages.map((_, index) => (
-              <span
+              <button
                 key={`product-${product.id}-dot-${index}`}
-                className={`h-1.5 w-1.5 rounded-full ${index === currentImageIndex ? "bg-white" : "bg-white/45"}`}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation(); // Stops the card from opening
+                  setCurrentImageIndex(index); // Changes the image
+                }}
+                className={`h-1.5 w-1.5 rounded-full p-0 border-none cursor-pointer ${index === currentImageIndex ? "bg-white" : "bg-white/45"
+                  }`}
+                aria-label={`View image ${index + 1}`}
               />
             ))}
           </div>

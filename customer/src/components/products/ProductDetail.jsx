@@ -130,7 +130,7 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
   // Calculate dynamic totals based on the selected quantity
   const unitPrice = Number(currentProduct.isDiscountActive ? currentProduct.finalPrice : currentProduct.price) || 0;
   const unitOriginalPrice = Number(currentProduct.originalPrice ?? currentProduct.price) || 0;
-  
+
   const totalAmount = unitPrice * quantity;
   const totalOriginalAmount = unitOriginalPrice * quantity;
 
@@ -158,61 +158,87 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
             className="relative z-10 w-full h-full object-contain cursor-zoom-in"
           />
 
-          {productImages.length > 1 && <button
-            onClick={onPrevImage}
-            className="absolute top-1/2 -translate-y-1/2 left-2.5 w-9 h-9 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer z-20"
-            aria-label="Previous image"
-          >
-            <ChevronLeft size={20} />
-          </button>}
+          {/* Previous Button */}
+          {productImages.length > 1 && (
+            <button
+              onClick={onPrevImage}
+              className="absolute top-1/2 -translate-y-1/2 left-2.5 w-9 h-9 bg-white/50 hover:bg-white/80 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer z-20 transition-colors"
+              aria-label="Previous image"
+            >
+              <ChevronLeft size={20} />
+            </button>
+          )}
 
-          {productImages.length > 1 && <button
-            onClick={onNextImage}
-            className="absolute top-1/2 -translate-y-1/2 right-2.5 w-9 h-9 bg-white/50 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer z-20"
-            aria-label="Next image"
-          >
-            <ChevronRight size={20} />
-          </button>}
+          {/* Next Button */}
+          {productImages.length > 1 && (
+            <button
+              onClick={onNextImage}
+              className="absolute top-1/2 -translate-y-1/2 right-2.5 w-9 h-9 bg-white/50 hover:bg-white/80 rounded-full flex items-center justify-center text-xl shadow-md border-none cursor-pointer z-20 transition-colors"
+              aria-label="Next image"
+            >
+              <ChevronRight size={20} />
+            </button>
+          )}
+
+          {/* Image Pagination Dots */}
+          {productImages.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5 rounded-full bg-black/40 px-2 py-1 z-20">
+              {productImages.map((_, index) => (
+                <button
+                  key={`detail-dot-${index}`}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurrentImageIndex(index);
+                  }}
+                  className={`h-1.5 w-1.5 rounded-full p-0 border-none cursor-pointer transition-colors ${index === currentImageIndex ? "bg-white" : "bg-white/45"
+                    }`}
+                  aria-label={`Go to image ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Details Section */}
         <div className="bg-white rounded-t-3xl -mt-6 md:mt-0 md:rounded-none flex-1 p-5 md:p-6 lg:p-8 z-10 relative flex flex-col w-full md:w-1/2 overflow-y-auto mk-scroll-hidden">
 
-          <div className="max-w-lg my-auto w-full">
-            
-            {/* UTILITY BAR: Share (Left) & Navigation (Right) */}
-            <div className="flex items-center justify-between mb-3">
-              
-              {/* Share Button */}
-              <button
-                onClick={handleShareProduct}
-                className="shrink-0 h-7 px-3 bg-white md:bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full flex items-center gap-1.5 text-[9px] font-black text-gray-900 uppercase tracking-wider transition-colors shadow-sm"
-                aria-label="Share product"
-                type="button"
-              >
-                {shareStatus === "Link copied" || shareStatus === "Shared" ? <Check size={12} /> : <Share2 size={12} />}
-                <span>{shareStatus || "Share"}</span>
-              </button>
+          {/* UTILITY BAR: Share (Left) & Navigation (Right) - Moved outside my-auto container */}
+          <div className="flex items-center justify-between w-full max-w-lg mb-4">
 
-              {/* Product Navigation (PREV / NEXT) */}
-              {(onPrev || onNext) && (
-                <div className="flex items-center gap-2.5 text-[9px] font-black text-gray-400 tracking-widest uppercase">
-                  <button onClick={onPrev} type="button" className="flex items-center gap-0.5 hover:text-gray-900 transition-colors">
-                    <ChevronLeft size={13} strokeWidth={3} /> PREV
-                  </button>
-                  <span className="text-gray-200 font-normal">|</span>
-                  <button onClick={onNext} type="button" className="flex items-center gap-0.5 hover:text-gray-900 transition-colors">
-                    NEXT <ChevronRight size={13} strokeWidth={3} />
-                  </button>
-                </div>
-              )}
-            </div>
+            {/* Share Button */}
+            <button
+              onClick={handleShareProduct}
+              className="shrink-0 h-7 px-3 bg-white md:bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-full flex items-center gap-1.5 text-[9px] font-black text-gray-900 uppercase tracking-wider transition-colors shadow-sm"
+              aria-label="Share product"
+              type="button"
+            >
+              {shareStatus === "Link copied" || shareStatus === "Shared" ? <Check size={12} /> : <Share2 size={12} />}
+              <span>{shareStatus || "Share"}</span>
+            </button>
+
+            {/* Product Navigation (PREV / NEXT) */}
+            {(onPrev || onNext) && (
+              <div className="flex items-center gap-2.5 text-[9px] font-black text-gray-400 tracking-widest uppercase">
+                <button onClick={onPrev} type="button" className="flex items-center gap-0.5 hover:text-gray-900 transition-colors">
+                  <ChevronLeft size={13} strokeWidth={3} /> PREV
+                </button>
+                <span className="text-gray-200 font-normal">|</span>
+                <button onClick={onNext} type="button" className="flex items-center gap-0.5 hover:text-gray-900 transition-colors">
+                  NEXT <ChevronRight size={13} strokeWidth={3} />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Product Information - Centered Content */}
+          <div className="max-w-lg my-auto w-full">
 
             {/* Title */}
             <h1 className="text-xl lg:text-2xl font-black text-gray-900 uppercase tracking-wide mb-1.5 leading-tight">
               {currentProduct.name}
             </h1>
-            
+
             {/* Description */}
             <p className="text-[13px] md:text-sm text-gray-500 mb-4 leading-snug">
               {currentProduct.description || "Premium quality material designed for maximum comfort and durability."}
@@ -257,27 +283,27 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
                 </div>
               </div>
 
-                {/* Display Dynamic Amounts */}
-                {currentProduct.isDiscountActive ? (
-                  <div className="text-right">
-                    <div className="flex items-center justify-end gap-1.5 mb-0.5">
-                      <span className="text-sm line-through text-gray-400 font-bold">
-                        Rs.{totalOriginalAmount.toLocaleString()}
-                      </span>
-                      <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
-                        {currentProduct.discountLabel}
-                      </span>
-                    </div>
-                    <div className="text-2xl lg:text-3xl font-black text-red-600 leading-none">
-                      Rs.{totalAmount.toLocaleString()}
-                    </div>
+              {/* Display Dynamic Amounts */}
+              {currentProduct.isDiscountActive ? (
+                <div className="text-right">
+                  <div className="flex items-center justify-end gap-1.5 mb-0.5">
+                    <span className="text-sm line-through text-gray-400 font-bold">
+                      Rs.{totalOriginalAmount.toLocaleString()}
+                    </span>
+                    <span className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-black uppercase tracking-wider">
+                      {currentProduct.discountLabel}
+                    </span>
                   </div>
-                ) : (
-                  <div className="text-2xl lg:text-3xl font-black text-gray-900 leading-none">
+                  <div className="text-2xl lg:text-3xl font-black text-red-600 leading-none">
                     Rs.{totalAmount.toLocaleString()}
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="text-2xl lg:text-3xl font-black text-gray-900 leading-none">
+                  Rs.{totalAmount.toLocaleString()}
+                </div>
+              )}
+            </div>
 
             <div className="flex flex-col sm:flex-row gap-3 mt-4">
               <button
@@ -297,37 +323,37 @@ const ProductDetail = ({ product, onBack, onPrev, onNext, onAddToCart, onOrderNo
         </div>
       </div>
 
-        {/* Full Screen Image Preview Modal */}
-        {showPreview && (
-          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center backdrop-blur-sm">
-            <button
-              onClick={() => setShowPreview(false)}
-              className="absolute top-6 right-6 text-white/70 hover:text-white text-3xl z-50 transition-colors"
-            >
-              ✕
-            </button>
+      {/* Full Screen Image Preview Modal */}
+      {showPreview && (
+        <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center backdrop-blur-sm">
+          <button
+            onClick={() => setShowPreview(false)}
+            className="absolute top-6 right-6 text-white/70 hover:text-white text-3xl z-50 transition-colors"
+          >
+            ✕
+          </button>
 
-            {productImages.length > 1 && <button
-              onClick={onPrevImage}
-              className="absolute left-4 md:left-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors"
-            >
-              <ChevronLeft size={32} />
-            </button>}
+          {productImages.length > 1 && <button
+            onClick={onPrevImage}
+            className="absolute left-4 md:left-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors"
+          >
+            <ChevronLeft size={32} />
+          </button>}
 
-            <img
-              src={productImages[currentImageIndex]}
-              alt={currentProduct.name}
-              className="max-w-[90%] max-h-[90vh] object-contain"
-            />
+          <img
+            src={productImages[currentImageIndex]}
+            alt={currentProduct.name}
+            className="max-w-[90%] max-h-[90vh] object-contain"
+          />
 
-            {productImages.length > 1 && <button
-              onClick={onNextImage}
-              className="absolute right-4 md:right-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors"
-            >
-              <ChevronRight size={32} />
-            </button>}
-          </div>
-        )}
+          {productImages.length > 1 && <button
+            onClick={onNextImage}
+            className="absolute right-4 md:right-10 text-white hover:bg-white/20 bg-white/10 p-3 md:p-4 rounded-full transition-colors"
+          >
+            <ChevronRight size={32} />
+          </button>}
+        </div>
+      )}
     </div>
   );
 };
