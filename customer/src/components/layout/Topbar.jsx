@@ -58,8 +58,9 @@ const Topbar = ({ onMenuClick }) => {
   const isMiniput = !isKwink && !isCartPage;
   const isOrderPage = location.pathname.includes("/order");
   const isAboutPage = location.pathname.includes("/about");
+  const isTermsPage = location.pathname.includes("/terms");
   const isProductDetailPage = location.pathname.includes("/product/");
-  const hideSearchAndCategory = isCartPage || isOrderPage || isProductDetailPage || isAboutPage;
+  const hideSearchAndCategory = isCartPage || isOrderPage || isProductDetailPage || isAboutPage || isTermsPage;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -115,7 +116,8 @@ const Topbar = ({ onMenuClick }) => {
           <Menu size={24} />
         </button>
 
-        {isCartPage || isAboutPage ? (
+        {/* 3. Add isTermsPage to this condition to show both icons */}
+        {isCartPage || isAboutPage || isTermsPage ? (
           <div className="flex items-center gap-2 lg:gap-3">
             <Link
               to="/home/miniput"

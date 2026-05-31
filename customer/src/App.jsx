@@ -15,6 +15,7 @@ import AuthModal from "./components/auth/AuthModal";
 import ProfileModal from "./components/auth/ProfileModal";
 import { setupCustomerAxiosInterceptors } from "./utils/axiosInterceptor";
 import { fetchWorkspaces } from "./store/workspaceSlice";
+import TermsPage from "./pages/TermsPage";
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -68,6 +69,7 @@ export default function App() {
           <Route path="/favorites" element={<FavoritesPage />} /> 
           <Route path="/order" element={<OrderFormPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/terms" element={<TermsPage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/home" replace />} />

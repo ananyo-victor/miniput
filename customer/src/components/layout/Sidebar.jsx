@@ -208,7 +208,11 @@ const Sidebar = ({ isOpen, onClose }) => {
               About Us
             </Link>
 
-            <Link to="/about" onClick={onClose} className="flex items-center gap-4 px-6 py-3.5 font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+            <Link
+              to="/terms"
+              onClick={onClose}
+              className={`flex items-center gap-4 px-6 py-3.5 font-bold transition-colors ${isExactPath("/terms") ? "bg-gray-100 text-[var(--mk-navy)]" : "text-gray-700 hover:bg-gray-50"}`}
+            >
               <FileText size={20} className="text-gray-500" />
               Terms & Conditions
             </Link>

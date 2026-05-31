@@ -17,7 +17,8 @@ const Navbar = () => {
     location.pathname.includes("/cart") || 
     location.pathname.includes("/product") || 
     location.pathname.includes("/order") ||
-    location.pathname.includes("/discover");
+    location.pathname.includes("/discover") ||
+    location.pathname.includes("/terms");
 
   if (isHiddenRoute) {
     return null;
