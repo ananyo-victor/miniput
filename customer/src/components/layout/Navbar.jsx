@@ -18,7 +18,8 @@ const Navbar = () => {
     location.pathname.includes("/product") || 
     location.pathname.includes("/order") ||
     location.pathname.includes("/discover") ||
-    location.pathname.includes("/terms");
+    location.pathname.includes("/terms") ||
+    location.pathname.includes("/profile");
 
   if (isHiddenRoute) {
     return null;

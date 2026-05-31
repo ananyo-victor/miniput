@@ -1,14 +1,15 @@
 import React from "react";
-import { Link, useLocation } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { X, ShoppingCart, Info, Flame, Star, Zap, User, UserCircle, FileText, LogOut, Heart } from "lucide-react";
 import { setActiveBrand, setActiveCategory } from "../../store/homeSlice";
-import { logoutCustomer, openAuthModal, openProfileModal } from "../../store/authSlice";
+import { logoutCustomer, openAuthModal } from "../../store/authSlice";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const cart = useSelector((state) => state.cart.items);
   const { authed, phone } = useSelector((state) => state.auth);
@@ -27,7 +28,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
   const handleAccountClick = () => {
     if (authed) {
-      dispatch(openProfileModal());
+      navigate("/profile");
     } else {
       dispatch(openAuthModal());
     }

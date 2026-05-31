@@ -12,10 +12,10 @@ import Navbar from "./components/layout/Navbar";
 import Topbar from "./components/layout/Topbar"; 
 import Sidebar from "./components/layout/Sidebar"; 
 import AuthModal from "./components/auth/AuthModal";
-import ProfileModal from "./components/auth/ProfileModal";
 import { setupCustomerAxiosInterceptors } from "./utils/axiosInterceptor";
 import { fetchWorkspaces } from "./store/workspaceSlice";
 import TermsPage from "./pages/TermsPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -29,7 +29,6 @@ const Layout = () => {
     <div className="flex flex-col lg:flex-row min-h-screen bg-[#f5f5f5]" style={layoutHeights}>
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       <AuthModal /> 
-      <ProfileModal />
       
       <div className="flex-1 flex flex-col min-h-0">
         <Topbar onMenuClick={() => setIsSidebarOpen(true)} />
@@ -69,6 +68,7 @@ export default function App() {
           <Route path="/favorites" element={<FavoritesPage />} /> 
           <Route path="/order" element={<OrderFormPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/terms" element={<TermsPage />} />
         </Route>
 

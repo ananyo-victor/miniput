@@ -5,7 +5,7 @@ import { ShoppingCart, ChevronDown, Menu, User } from "lucide-react";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
 import { setActiveCategory, setActiveBrand, setSearchQuery } from "../../store/homeSlice";
-import { openAuthModal, openProfileModal } from "../../store/authSlice";
+import { openAuthModal } from "../../store/authSlice";
 import { fetchUserDetailsThunk } from "../../store/userSlice";
 
 const CATEGORIES = [
@@ -60,8 +60,9 @@ const Topbar = ({ onMenuClick }) => {
   const isOrderPage = location.pathname.includes("/order");
   const isAboutPage = location.pathname.includes("/about");
   const isTermsPage = location.pathname.includes("/terms");
+  const isProfilePage = location.pathname.includes("/profile");
   const isProductDetailPage = location.pathname.includes("/product/");
-  const hideSearchAndCategory = isCartPage || isOrderPage || isProductDetailPage || isAboutPage || isTermsPage;
+  const hideSearchAndCategory = isCartPage || isOrderPage || isProductDetailPage || isAboutPage || isTermsPage || isProfilePage;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -124,7 +125,7 @@ const Topbar = ({ onMenuClick }) => {
         </button>
 
         {/* 3. Add isTermsPage to this condition to show both icons */}
-        {isCartPage || isAboutPage || isTermsPage ? (
+        {isCartPage || isAboutPage || isTermsPage  || isProfilePage? (
           <div className="flex items-center gap-2 lg:gap-3">
             <Link
               to="/home/miniput"
@@ -206,7 +207,7 @@ const Topbar = ({ onMenuClick }) => {
         {/* User Login/Profile Widget */}
         {authed ? (
           <div
-            onClick={() => dispatch(openProfileModal())}
+            onClick={() => navigate("/profile")}
             className="flex items-center gap-1.5 lg:gap-2 cursor-pointer hover:bg-gray-50 p-1 lg:p-1.5 rounded-xl transition-colors"
           >
             {profilePic ? (
