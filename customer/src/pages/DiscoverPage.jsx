@@ -17,10 +17,8 @@ const DiscoverPage = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
-  console.log("Fetched products:", products);
 
   const activeTabId = TABS.find((t) => t.id === tab) ? tab : "trending";
-  console.log("Active Tab ID:", activeTabId);
   useEffect(() => {
     dispatch(fetchProducts({ badge: activeTabId }));
   }, [dispatch, activeTabId]);

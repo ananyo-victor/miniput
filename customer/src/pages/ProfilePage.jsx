@@ -40,6 +40,7 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const { authed } = useSelector((state) => state.auth);
   const { id: userId, name, profilePic, phone, email } = useSelector((state) => state.user.profile);
+  console.log("ProfilePage render - auth:", authed, "userId:", userId, "name:", name, "profilePic", profilePic); // Debug log for auth status and user info
   const savingUser = useSelector(state => state.user.saving);
   const savingBusiness = useSelector(state => state.business.saving);
   const isSaving = savingUser || savingBusiness;
@@ -63,16 +64,15 @@ const ProfilePage = () => {
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    if (!authed) {
-      navigate("/home");
-      return;
-    }
-    console.log("ProfilePage mounted, authed:", authed, "userId:", userId); // Debug log for auth status and user ID
     if (userId) {
-      dispatch(fetchBusinessesThunk(userId));
-      dispatch(fetchUserDetailsThunk(userId));
+      Promise.all([
+        dispatch(fetchBusinessesThunk(userId)),
+        dispatch(fetchUserDetailsThunk(userId))
+      ]).catch((error) => {
+        console.error("Error fetching user details or businesses:", error);
+      });
     }
-  }, [authed, navigate, dispatch, userId]);
+  }, [dispatch, userId]);
 
   useEffect(() => {
     if (existingBusiness) {
@@ -84,6 +84,11 @@ const ProfilePage = () => {
       setLocalAgent(existingBusiness.agentName || "");
       setLocalFilledBy(existingBusiness.filledBy || "");
       setLocalRemarks(existingBusiness.specialInstructions || "");
+    }
+    if(userId || name || profilePic || phone || email) {
+      setLocalName(name || "");
+      setLocalEmail(email || "");
+      setLocalPic(profilePic || "");
     }
   }, [existingBusiness]);
 
@@ -112,9 +117,9 @@ const ProfilePage = () => {
     e.preventDefault();
     const userPayload = {
       id: userId,
-      fullName: localName,          // Fixed: Changed from full_name to fullName
-      profilePictureUrl: localPic,  // Fixed: Added profile picture URL to the payload
-      email: localEmail             // Fixed: Send email even if it's blank
+      fullName: localName,
+      profilePictureUrl: localPic,
+      email: localEmail
     };
 
     await dispatch(updateCustomerAccountThunk(userPayload)).unwrap();

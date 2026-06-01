@@ -126,7 +126,6 @@ const businessSlice = createSlice({
       })
       .addCase(fetchBusinessesThunk.fulfilled, (state, action) => {
         state.loading = false;
-        console.log("Fetched businesses data:", action.payload); // Debug log for fetched data
         state.items = Array.isArray(action.payload)
           ? action.payload
           : action.payload?.businesses || [];

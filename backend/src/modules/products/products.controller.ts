@@ -112,4 +112,28 @@ export class ProductsController {
       });
     }
   }
+
+  @Post('generate-dummy')
+  async generateDummyProducts(
+    @Body()
+    body: {
+      workspaceId: string;
+      imageUrls: string[];
+      size: number[];
+      count?: number;
+    },
+  ) {
+    try {
+      return await this.productsService.generateDummyProducts(
+        body.workspaceId,
+        body.imageUrls,
+        body.size,
+        body.count || 100,
+      );
+    } catch (error) {
+      throw new InternalServerErrorException({
+        error: error.message,
+      });
+    }
+  }
 }

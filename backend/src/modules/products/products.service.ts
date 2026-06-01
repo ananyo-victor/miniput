@@ -460,4 +460,127 @@ export class ProductsService implements OnModuleInit {
 
     return true;
   }
+
+  async generateDummyProducts(
+    workspaceId: string,
+    imageUrls: string[],
+    size: number[],
+    count = 100,
+  ) {
+    await this.validateWorkspaceExists(workspaceId);
+
+    const categories = [
+      'shirt',
+      'pant',
+      'jacket',
+      'set',
+      'other',
+    ];
+
+    const adjectives = [
+      'Premium',
+      'Classic',
+      'Stylish',
+      'Modern',
+      'Elegant',
+      'Casual',
+      'Luxury',
+      'Comfort',
+    ];
+
+    const products = [];
+
+    for (let i = 0; i < count; i++) {
+      const id = uuidv4();
+
+      const category =
+        categories[Math.floor(Math.random() * categories.length)];
+
+      const name =
+        `${adjectives[Math.floor(Math.random() * adjectives.length)]} ${category.charAt(0).toUpperCase() + category.slice(1)
+        } ${i + 1}`;
+
+      const articleId = `ART-${String(i + 1).padStart(4, '0')}`;
+
+      const price = Math.floor(Math.random() * 3000) + 499;
+
+      const stock = Math.floor(Math.random() * 150) + 10;
+
+      const imageCount = Math.floor(Math.random() * 3) + 3; // 3-5
+
+      const availableImages = [...imageUrls];
+      const selectedImages: string[] = [];
+
+      while (
+        selectedImages.length < imageCount &&
+        availableImages.length > 0
+      ) {
+        const randomIndex = Math.floor(
+          Math.random() * availableImages.length,
+        );
+
+        selectedImages.push(
+          availableImages.splice(randomIndex, 1)[0],
+        );
+      }
+
+      const imageUrl = selectedImages;
+
+      const query = `
+      INSERT INTO products (
+        id,
+        "workspaceId",
+        "articleId",
+        name,
+        category,
+        price,
+        "discountType",
+        "discountValue",
+        stock,
+        "imageUrl",
+        description,
+        "isHidden",
+        size,
+        "piecesPerPack",
+        "isTrending",
+        "isBestseller",
+        "isNewRelease"
+      )
+      VALUES (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,
+        $11,$12,$13::integer[],$14,$15,$16,$17
+      )
+      RETURNING *
+    `;
+
+      const values = [
+        id,
+        workspaceId,
+        articleId,
+        name,
+        category,
+        price,
+        null, // discountType
+        null, // discountValue
+        stock,
+        imageUrl,
+        `${name} - Auto generated product`,
+        false, // isHidden
+        size,
+        size.length,
+        false, // isTrending
+        false, // isBestseller
+        false, // isNewRelease
+      ];
+
+      const { rows } = await pool.query(query, values);
+
+      products.push(mapProductRow(rows[0]));
+    }
+
+    return {
+      success: true,
+      count: products.length,
+    };
+  }
 }

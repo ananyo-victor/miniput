@@ -49,7 +49,6 @@ const Topbar = ({ onMenuClick }) => {
   const activeCategory = useSelector((state) => state.home.activeCategory);
   const storedSearchQuery = useSelector((state) => state.home.searchQuery);
   const { id: userId, name, profilePic } = useSelector((state) => state.user.profile);
-
   const cartCount = cart.length
   const [searchInput, setSearchInput] = useState(storedSearchQuery);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -125,7 +124,7 @@ const Topbar = ({ onMenuClick }) => {
         </button>
 
         {/* 3. Add isTermsPage to this condition to show both icons */}
-        {isCartPage || isAboutPage || isTermsPage  || isProfilePage? (
+        {isCartPage || isAboutPage || isTermsPage  || isProfilePage ? (
           <div className="flex items-center gap-2 lg:gap-3">
             <Link
               to="/home/miniput"
@@ -217,7 +216,7 @@ const Topbar = ({ onMenuClick }) => {
                 <User size={16} className="lg:w-[18px] lg:h-[18px]" />
               </div>
             )}
-            <div className="flex flex-col text-left mr-0.5 lg:mr-1">
+            <div className="hidden md:flex flex-col text-left mr-0.5 lg:mr-1">
               <span className="text-[9px] lg:text-[10px] text-gray-500 leading-none mb-0.5">Hello,</span>
               <span className="text-[11px] lg:text-sm font-black text-[var(--mk-navy)] leading-none truncate max-w-[65px] lg:max-w-[100px]">
                 {name || phone}
