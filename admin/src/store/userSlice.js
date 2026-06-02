@@ -56,6 +56,43 @@ export const fetchActiveWorkspaceThunk = createAsyncThunk(
   }
 );
 
+export const fetchUserProfileThunk = createAsyncThunk(
+  "user/fetchProfile",
+  async (id, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.get(
+        `${API_BASE_URL}/api/users/${id}`
+      );
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+        "Failed to fetch profile"
+      );
+    }
+  }
+);
+
+export const updateUserProfileThunk = createAsyncThunk(
+  "user/updateProfile",
+  async ({ id, payload }, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.put(
+        `${API_BASE_URL}/api/users/${id}`,
+        payload
+      );
+
+      return data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message ||
+        "Failed to update profile"
+      );
+    }
+  }
+);
+
 const initialState = {
   profile: null,
   loading: false,
@@ -135,6 +172,30 @@ const userSlice = createSlice({
       .addCase(fetchActiveWorkspaceThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to fetch active workspace";
+      })
+      .addCase(fetchUserProfileThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUserProfileThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
+      })
+      .addCase(fetchUserProfileThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      .addCase(updateUserProfileThunk.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(updateUserProfileThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.profile = action.payload;
+        state.successMessage =
+          "Profile updated successfully";
+      })
+      .addCase(updateUserProfileThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   }
 });

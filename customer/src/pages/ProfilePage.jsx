@@ -40,7 +40,6 @@ const ProfilePage = () => {
   const navigate = useNavigate();
   const { authed } = useSelector((state) => state.auth);
   const { id: userId, name, profilePic, phone, email } = useSelector((state) => state.user.profile);
-  console.log("ProfilePage render - auth:", authed, "userId:", userId, "name:", name, "profilePic", profilePic); // Debug log for auth status and user info
   const savingUser = useSelector(state => state.user.saving);
   const savingBusiness = useSelector(state => state.business.saving);
   const isSaving = savingUser || savingBusiness;

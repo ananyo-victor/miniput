@@ -1,4 +1,6 @@
-import { configureStore } from "@reduxjs/toolkit";
+import { configureStore, combineReducers } from "@reduxjs/toolkit";
+import storage from "redux-persist/lib/storage";
+import { persistReducer, persistStore } from "redux-persist";
 import authReducer from "./authSlice";
 import userReducer from "./userSlice";
 import favoritesReducer from "./favoriteSlice";
@@ -10,17 +12,33 @@ import aboutReducer from "./aboutSlice";
 import workspaceReducer from "./workspaceSlice";
 import businessReducer from "./businessSlice";
 
-export const store = configureStore({
-  reducer: {
-    auth: authReducer,
-    user: userReducer,
-    favorites: favoritesReducer,
-    cart: cartReducer,
-    orders: ordersReducer,
-    products: productsReducer,
-    home: homeReducer,
-    about: aboutReducer,
-    workspace: workspaceReducer,
-    business: businessReducer,
-  }
+const persistConfig = {
+  key: "root",
+  storage,
+  whitelist: ["auth", "user"],
+};
+
+const rootReducer = combineReducers({
+  auth: authReducer,
+  user: userReducer,
+  favorites: favoritesReducer,
+  cart: cartReducer,
+  orders: ordersReducer,
+  products: productsReducer,
+  home: homeReducer,
+  about: aboutReducer,
+  workspace: workspaceReducer,
+  business: businessReducer,
 });
+
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+export const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: false,
+    }),
+});
+
+export const persistor = persistStore(store);

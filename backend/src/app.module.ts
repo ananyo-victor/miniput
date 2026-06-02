@@ -12,6 +12,7 @@ import { WhatsappModule } from './modules/whatsapp/whatsapp.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { CartModule } from './modules/cart/cart.module';
 import { BusinessModule } from './modules/business/business.module';
+import { BillingModule } from './modules/billing/billing.module';
 
 function parseEnvInteger(value: string | undefined, fallback: number): number {
   const parsedValue = Number(value);
@@ -40,6 +41,7 @@ const throttlerLimit = parseEnvInteger(process.env.THROTTLE_LIMIT, 100);
     FavoritesModule,
     CartModule,
     BusinessModule,
+    BillingModule
   ],
   providers: [
     {

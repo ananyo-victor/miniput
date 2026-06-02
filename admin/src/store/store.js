@@ -9,6 +9,7 @@ import homeReducer from "./homeSlice";
 import aboutReducer from "./aboutSlice";
 import customerReducer from "./customerSlice";
 import ordersReducer from "./ordersSlice";
+import billingReducer from "./billingSlice";
 
 const persistConfig = {
   key: "root",
@@ -25,6 +26,7 @@ const rootReducer = combineReducers({
   workspace: workspaceReducer,
   about: aboutReducer,
   orders: ordersReducer,
+  billing: billingReducer,
 });
 
 const persistedReducer = persistReducer(
