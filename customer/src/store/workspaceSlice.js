@@ -47,9 +47,16 @@ const initialState = {
   items: [],
   activeWorkspace: null,
   activeWorkspaceId: loadActiveWorkspaceId(),
+  activeWorkspaceSlug: "",
   loading: false,
   error: "",
 };
+
+const normalizeWorkspaceSlug = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-");
 
 const workspaceSlice = createSlice({
   name: "workspace",
@@ -61,6 +68,7 @@ const workspaceSlice = createSlice({
       state.activeWorkspace = action.payload || null;
       state.activeWorkspaceId =
         action.payload?.id || "";
+      state.activeWorkspaceSlug = normalizeWorkspaceSlug(action.payload?.slug || action.payload?.name);
       saveActiveWorkspaceId(state.activeWorkspaceId);
     },
 
@@ -73,12 +81,28 @@ const workspaceSlice = createSlice({
       state.activeWorkspace = workspace;
       state.activeWorkspaceId =
         workspace?.id || "";
+      state.activeWorkspaceSlug = normalizeWorkspaceSlug(workspace?.slug || workspace?.name);
+      saveActiveWorkspaceId(state.activeWorkspaceId);
+    },
+
+    setActiveWorkspaceBySlug(state, action) {
+      const workspaceSlug = normalizeWorkspaceSlug(action.payload);
+      state.activeWorkspaceSlug = workspaceSlug;
+      const workspace =
+        state.items.find(
+          (item) =>
+            normalizeWorkspaceSlug(item?.slug || item?.name) === workspaceSlug,
+        ) || null;
+
+      state.activeWorkspace = workspace;
+      state.activeWorkspaceId = workspace?.id || "";
       saveActiveWorkspaceId(state.activeWorkspaceId);
     },
 
     clearActiveWorkspace(state) {
       state.activeWorkspace = null;
       state.activeWorkspaceId = "";
+      state.activeWorkspaceSlug = "";
       saveActiveWorkspaceId("");
     },
   },
@@ -101,6 +125,20 @@ const workspaceSlice = createSlice({
             );
             if (stillExists) {
               state.activeWorkspace = stillExists;
+              state.activeWorkspaceSlug = normalizeWorkspaceSlug(stillExists.slug || stillExists.name);
+              saveActiveWorkspaceId(state.activeWorkspaceId);
+              return;
+            }
+          }
+
+          if (state.activeWorkspaceSlug) {
+            const matchingWorkspace = action.payload.find(
+              (item) =>
+                normalizeWorkspaceSlug(item?.slug || item?.name) === state.activeWorkspaceSlug,
+            );
+            if (matchingWorkspace) {
+              state.activeWorkspace = matchingWorkspace;
+              state.activeWorkspaceId = matchingWorkspace.id;
               saveActiveWorkspaceId(state.activeWorkspaceId);
               return;
             }
@@ -109,6 +147,7 @@ const workspaceSlice = createSlice({
           if (!state.activeWorkspace && action.payload.length) {
             state.activeWorkspace = action.payload[0];
             state.activeWorkspaceId = action.payload[0].id;
+            state.activeWorkspaceSlug = normalizeWorkspaceSlug(action.payload[0].slug || action.payload[0].name);
             saveActiveWorkspaceId(state.activeWorkspaceId);
           }
         },
@@ -129,6 +168,7 @@ const workspaceSlice = createSlice({
 export const {
   setActiveWorkspace,
   setActiveWorkspaceById,
+  setActiveWorkspaceBySlug,
   clearActiveWorkspace,
 } = workspaceSlice.actions;
 

@@ -26,6 +26,15 @@ const normalizeFetchOptions = (value = false) => {
   };
 };
 
+const buildRequestKey = (value = {}) => {
+  const options = normalizeFetchOptions(value);
+  return JSON.stringify({
+    includeHidden: Boolean(options.includeHidden),
+    workspaceId: String(options.workspaceId || ""),
+    badge: String(options.badge || "")
+  });
+};
+
 export const fetchProducts = createAsyncThunk("products/fetch", async (options = false) => {
   const { includeHidden, workspaceId, badge } = normalizeFetchOptions(options);
   const query = new URLSearchParams();
@@ -39,25 +48,53 @@ export const fetchProducts = createAsyncThunk("products/fetch", async (options =
   return data;
 });
 
+const initialState = {
+  items: [],
+  loading: false,
+  error: "",
+  currentRequestKey: ""
+};
+
 const productsSlice = createSlice({
   name: "products",
-  initialState: { items: [], loading: false, error: "" },
-  reducers: {},
+  initialState,
+  reducers: {
+    resetProductsState: (state, action) => {
+      const options = normalizeFetchOptions(action.payload || false);
+      state.items = [];
+      state.loading = true;
+      state.error = "";
+      state.currentRequestKey = buildRequestKey(options);
+    }
+  },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchProducts.pending, (state) => {
+      .addCase(fetchProducts.pending, (state, action) => {
         state.loading = true;
         state.error = "";
+        state.currentRequestKey = buildRequestKey(action.meta.arg);
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
+        const requestKey = buildRequestKey(action.meta.arg);
+        if (state.currentRequestKey && state.currentRequestKey !== requestKey) {
+          return;
+        }
+
         state.loading = false;
         state.items = action.payload;
+        state.currentRequestKey = requestKey;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
+        const requestKey = buildRequestKey(action.meta.arg);
+        if (state.currentRequestKey && state.currentRequestKey !== requestKey) {
+          return;
+        }
+
         state.loading = false;
         state.error = action.error.message || "Failed loading products";
       });
   }
 });
 
+export const { resetProductsState } = productsSlice.actions;
 export default productsSlice.reducer;

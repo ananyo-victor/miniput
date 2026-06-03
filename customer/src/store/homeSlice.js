@@ -3,55 +3,26 @@ import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const emptyBrandContent = {
-  heroImageUrls: [],
-  promoTags: []
-};
-
-const normalizeWorkspaceSlug = (value) =>
-  String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-");
-
-const findWorkspaceIdBySlug = (workspaces, slug) => {
-  const match = Array.isArray(workspaces)
-    ? workspaces.find((workspace) => normalizeWorkspaceSlug(workspace?.name) === slug)
-    : null;
-  return match?.id || "";
-};
+const buildRequestKey = (workspaceId = "") => String(workspaceId || "");
 
 export const fetchHomeContent = createAsyncThunk(
   "home/fetchHomeContent",
-  async (_, { rejectWithValue }) => {
+  async ({ workspaceId } = {}, { rejectWithValue }) => {
     try {
-      const { data: workspaces } = await axios.get(`${API_BASE_URL}/api/workspace`);
+      if (!workspaceId) {
+        return {
+          workspaceId: "",
+          heroImageUrls: [],
+          promoTags: []
+        };
+      }
 
-      const miniputWorkspaceId = findWorkspaceIdBySlug(workspaces, "miniput");
-      const kwinkWorkspaceId = findWorkspaceIdBySlug(workspaces, "kwink");
-
-      const [miniputRes, kwinkRes] = await Promise.all([
-        miniputWorkspaceId
-          ? axios.get(`${API_BASE_URL}/api/content/home/workspace/${miniputWorkspaceId}`)
-          : Promise.resolve({ data: emptyBrandContent }),
-        kwinkWorkspaceId
-          ? axios.get(`${API_BASE_URL}/api/content/home/workspace/${kwinkWorkspaceId}`)
-          : Promise.resolve({ data: emptyBrandContent })
-      ]);
+      const { data } = await axios.get(`${API_BASE_URL}/api/content/home/workspace/${workspaceId}`);
 
       return {
-        Miniput: {
-          heroImageUrls: Array.isArray(miniputRes?.data?.heroImageUrls)
-            ? miniputRes.data.heroImageUrls.slice(0, 4)
-            : [],
-          promoTags: Array.isArray(miniputRes?.data?.promoTags) ? miniputRes.data.promoTags : []
-        },
-        Kwink: {
-          heroImageUrls: Array.isArray(kwinkRes?.data?.heroImageUrls)
-            ? kwinkRes.data.heroImageUrls.slice(0, 4)
-            : [],
-          promoTags: Array.isArray(kwinkRes?.data?.promoTags) ? kwinkRes.data.promoTags : []
-        }
+        workspaceId,
+        heroImageUrls: Array.isArray(data?.heroImageUrls) ? data.heroImageUrls.slice(0, 4) : [],
+        promoTags: Array.isArray(data?.promoTags) ? data.promoTags : []
       };
     } catch (error) {
       return rejectWithValue(
@@ -61,19 +32,21 @@ export const fetchHomeContent = createAsyncThunk(
   }
 );
 
+const initialState = {
+  activeBrand: "Miniput",
+  activeCategory: "all",
+  searchQuery: "",
+  heroImageUrls: [],
+  promoTags: [],
+  activeWorkspaceId: "",
+  loadingHomeContent: false,
+  homeContentError: "",
+  currentRequestKey: ""
+};
+
 const homeSlice = createSlice({
   name: "home",
-  initialState: {
-    activeBrand: "Miniput",
-    activeCategory: "all",
-    searchQuery: "",
-    homeContentByBrand: {
-      Miniput: { ...emptyBrandContent },
-      Kwink: { ...emptyBrandContent }
-    },
-    loadingHomeContent: false,
-    homeContentError: ""
-  },
+  initialState,
   reducers: {
     setActiveBrand: (state, action) => {
       state.activeBrand = action.payload;
@@ -83,28 +56,73 @@ const homeSlice = createSlice({
     },
     setSearchQuery: (state, action) => {
       state.searchQuery = String(action.payload || "");
+    },
+    setWorkspaceForBrand: (state, action) => {
+      const workspaceId = typeof action.payload?.workspaceId === "string" ? action.payload.workspaceId : "";
+      const brand = action.payload?.brand ? String(action.payload.brand) : state.activeBrand;
+
+      state.activeBrand = brand;
+      state.activeWorkspaceId = workspaceId;
+      state.heroImageUrls = [];
+      state.promoTags = [];
+      state.loadingHomeContent = true;
+      state.homeContentError = "";
+      state.currentRequestKey = buildRequestKey(workspaceId);
+    },
+    resetHomeContentState: (state, action) => {
+      const workspaceId = typeof action.payload?.workspaceId === "string" ? action.payload.workspaceId : "";
+
+      state.heroImageUrls = [];
+      state.promoTags = [];
+      state.loadingHomeContent = true;
+      state.homeContentError = "";
+      state.currentRequestKey = buildRequestKey(workspaceId);
     }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchHomeContent.pending, (state) => {
+      .addCase(fetchHomeContent.pending, (state, action) => {
+        const workspaceId = action.meta.arg?.workspaceId || "";
+
         state.loadingHomeContent = true;
         state.homeContentError = "";
+        state.currentRequestKey = buildRequestKey(workspaceId);
       })
       .addCase(fetchHomeContent.fulfilled, (state, action) => {
+        const requestKey = buildRequestKey(action.payload?.workspaceId);
+        if (state.currentRequestKey && state.currentRequestKey !== requestKey) {
+          return;
+        }
+
         state.loadingHomeContent = false;
-        state.homeContentByBrand = action.payload;
+        state.activeWorkspaceId = action.payload?.workspaceId || "";
+        state.heroImageUrls = Array.isArray(action.payload?.heroImageUrls)
+          ? action.payload.heroImageUrls
+          : [];
+        state.promoTags = Array.isArray(action.payload?.promoTags)
+          ? action.payload.promoTags
+          : [];
+        state.currentRequestKey = requestKey;
       })
       .addCase(fetchHomeContent.rejected, (state, action) => {
+        const requestKey = buildRequestKey(action.meta.arg?.workspaceId);
+        if (state.currentRequestKey && state.currentRequestKey !== requestKey) {
+          return;
+        }
+
         state.loadingHomeContent = false;
         state.homeContentError = action.payload || "Failed to load home content.";
-        state.homeContentByBrand = {
-          Miniput: { ...emptyBrandContent },
-          Kwink: { ...emptyBrandContent }
-        };
+        state.heroImageUrls = [];
+        state.promoTags = [];
       });
   }
 });
 
-export const { setActiveBrand, setActiveCategory, setSearchQuery } = homeSlice.actions;
+export const {
+  setActiveBrand,
+  setActiveCategory,
+  setSearchQuery,
+  setWorkspaceForBrand,
+  resetHomeContentState
+} = homeSlice.actions;
 export default homeSlice.reducer;

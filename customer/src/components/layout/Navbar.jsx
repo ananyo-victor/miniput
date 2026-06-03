@@ -2,6 +2,7 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch } from "react-redux";
 import { setActiveBrand, setActiveCategory } from "../../store/homeSlice";
+import { setActiveWorkspaceBySlug } from "../../store/workspaceSlice";
 
 const navItems = [
   { label: "Miniput", path: "/home/miniput", brand: "Miniput" },
@@ -30,6 +31,7 @@ const Navbar = () => {
     if (item.brand) {
       dispatch(setActiveBrand(item.brand));
       dispatch(setActiveCategory("all"));
+      dispatch(setActiveWorkspaceBySlug(item.brand));
     }
     navigate(item.path);
   };

@@ -5,6 +5,7 @@ import { ShoppingCart, ChevronDown, Menu, User } from "lucide-react";
 import MiniputSign from "../../assests/MINIPUT_SIGN.png";
 import KwinkSign from "../../assests/kwink_SIGN.png";
 import { setActiveCategory, setActiveBrand, setSearchQuery } from "../../store/homeSlice";
+import { setActiveWorkspaceBySlug } from "../../store/workspaceSlice";
 import { openAuthModal } from "../../store/authSlice";
 import { fetchUserDetailsThunk } from "../../store/userSlice";
 
@@ -102,12 +103,14 @@ const Topbar = ({ onMenuClick }) => {
     if (!location.pathname.includes("/home")) {
       navigate(`/home/miniput`);
       dispatch(setActiveBrand("Miniput"));
+      dispatch(setActiveWorkspaceBySlug("Miniput"));
     }
   };
 
   const handleBrandClick = (brand) => {
     dispatch(setActiveBrand(brand));
     dispatch(setActiveCategory("all"));
+    dispatch(setActiveWorkspaceBySlug(brand));
   };
 
   const selectedCategoryLabel = CATEGORIES.find(c => c.value === activeCategory)?.label || "All Categories";

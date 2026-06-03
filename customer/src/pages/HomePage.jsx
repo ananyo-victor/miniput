@@ -1,11 +1,17 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
 import ProductCard from "../components/products/ProductCard";
 import ProductCardSkeleton from "../components/skeletonLoader/ProductCardSkeleton";
-import { fetchProducts } from "../store/productsSlice";
-import { fetchHomeContent, setActiveBrand, setActiveCategory } from "../store/homeSlice";
+import { fetchProducts, resetProductsState } from "../store/productsSlice";
+import {
+  fetchHomeContent,
+  resetHomeContentState,
+  setActiveBrand,
+  setActiveCategory,
+} from "../store/homeSlice";
 import { fetchFavorites } from "../store/favoriteSlice";
+import { setActiveWorkspaceBySlug } from "../store/workspaceSlice";
 
 const normalizeText = (value) =>
   String(value || "")
@@ -20,11 +26,6 @@ const CATEGORY_ALIASES = {
   jacket: ["jacket", "hoodie", "coat"],
   set: ["set", "sets", "dress", "combo"],
   shorts: ["short", "shorts"]
-};
-
-const emptyBrandContent = {
-  heroImageUrls: [],
-  promoTags: []
 };
 
 const parsePriceCapFromTag = (tag) => {
@@ -106,7 +107,7 @@ const HomePage = () => {
   const { brand } = useParams();
   const dispatch = useDispatch();
   const { items: products, loading, error } = useSelector((state) => state.products);
-  const { activeBrand, activeCategory, searchQuery, homeContentByBrand } = useSelector((state) => state.home);
+  const { activeBrand, activeCategory, searchQuery, heroImageUrls: brandHeroImages, promoTags: brandPromoTags, loadingHomeContent } = useSelector((state) => state.home);
   const workspaces = useSelector((state) => state.workspace.items);
 
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
@@ -119,7 +120,6 @@ const HomePage = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchHomeContent());
     dispatch(fetchFavorites());
   }, [dispatch]);
 
@@ -142,6 +142,7 @@ const HomePage = () => {
     if (urlBrand && urlBrand !== activeBrand) {
       dispatch(setActiveBrand(urlBrand));
       dispatch(setActiveCategory("all"));
+      dispatch(setActiveWorkspaceBySlug(urlBrand));
     }
   }, [urlBrand, activeBrand, dispatch]);
 
@@ -158,18 +159,19 @@ const HomePage = () => {
     });
   }, [activeBrand, workspaces]);
 
-  const activeWorkspaceId = activeWorkspace?.id || "";
+  const resolvedWorkspaceId = activeWorkspace?.id || "";
 
-  useEffect(() => {
-    if (!activeWorkspaceId) return;
-    dispatch(fetchProducts({ includeHidden: false, workspaceId: activeWorkspaceId }));
-  }, [activeWorkspaceId, dispatch]);
+  useLayoutEffect(() => {
+    if (!resolvedWorkspaceId) return;
 
-  const currentBrandContent = homeContentByBrand[activeBrand] || emptyBrandContent;
-  const heroImages = Array.isArray(currentBrandContent.heroImageUrls)
-    ? currentBrandContent.heroImageUrls.slice(0, 4)
-    : [];
-  const promoTags = Array.isArray(currentBrandContent.promoTags) ? currentBrandContent.promoTags : [];
+    dispatch(resetProductsState({ includeHidden: false, workspaceId: resolvedWorkspaceId }));
+    dispatch(resetHomeContentState({ workspaceId: resolvedWorkspaceId }));
+    dispatch(fetchProducts({ includeHidden: false, workspaceId: resolvedWorkspaceId }));
+    dispatch(fetchHomeContent({ workspaceId: resolvedWorkspaceId }));
+  }, [dispatch, resolvedWorkspaceId, activeBrand]);
+
+  const heroImages = Array.isArray(brandHeroImages) ? brandHeroImages.slice(0, 4) : [];
+  const promoTags = Array.isArray(brandPromoTags) ? brandPromoTags : [];
 
   useEffect(() => {
     const currentIndex = Number(heroIndexByBrand[activeBrand] || 0);
@@ -232,8 +234,8 @@ const HomePage = () => {
     );
 
     return products.filter((product) => {
-      const brandMatch = activeWorkspaceId
-        ? product.workspaceId === activeWorkspaceId
+      const brandMatch = resolvedWorkspaceId
+        ? product.workspaceId === resolvedWorkspaceId
         : normalizeText(product.brand) === normalizeText(activeBrand);
 
       const categoryMatch =
@@ -245,7 +247,7 @@ const HomePage = () => {
 
       return brandMatch && categoryMatch && promoMatch && searchMatch;
     });
-  }, [products, activeBrand, activeCategory, activePromoTag, activeWorkspaceId, searchQuery]);
+  }, [products, activeBrand, activeCategory, activePromoTag, resolvedWorkspaceId, searchQuery]);
 
   const activeHeroImage = heroImages.length
     ? heroImages[Math.min(heroIndexByBrand[activeBrand] || 0, heroImages.length - 1)]
@@ -377,7 +379,7 @@ const HomePage = () => {
 
       {/* FLOATING PRODUCTS MAIN SECTION */}
       <main className="mx-auto w-full max-w-[1440px] flex-1 px-6 sm:px-8 lg:px-10 relative z-20">
-        {loading ? (
+        {loading || loadingHomeContent ? (
           <ProductCardSkeleton count={12} />
         ) : error ? (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center min-h-[300px] sm:min-h-[400px]">
