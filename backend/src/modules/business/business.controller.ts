@@ -33,14 +33,14 @@ export class BusinessController {
   findAll(
     @Param('userId') userId: string,
   ) {
-    return this.businessService.findAll(
-      userId,
-    );
+    return this.businessService.findAll(userId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.businessService.findOne(id);
+  @Get('user/:userId/default')
+  findDefault(
+    @Param('userId') userId: string,
+  ) {
+    return this.businessService.findDefault(userId);
   }
 
   @Patch(':id')

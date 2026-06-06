@@ -44,21 +44,21 @@ const ProfilePage = () => {
   const savingBusiness = useSelector(state => state.business.saving);
   const isSaving = savingUser || savingBusiness;
 
-  const existingBusiness = useSelector((state) => state.business.items[0]);
+  const existingBusiness = useSelector((state) => state.business.items[0] || null);
 
   const [localName, setLocalName] = useState(name || "");
   const [localEmail, setLocalEmail] = useState(email || "");
   const [localPic, setLocalPic] = useState(profilePic || "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const [localPartyName, setLocalPartyName] = useState(existingBusiness?.businessName || "");
-  const [localBusinessPhone, setLocalBusinessPhone] = useState(existingBusiness?.businessPhone || "");
-  const [localAddress, setLocalAddress] = useState(existingBusiness?.deliveryAddress || "");
-  const [localGst, setLocalGst] = useState(existingBusiness?.gstNumber || "");
-  const [localTransport, setLocalTransport] = useState(existingBusiness?.transportCourier || "");
-  const [localAgent, setLocalAgent] = useState(existingBusiness?.agentName || "");
-  const [localFilledBy, setLocalFilledBy] = useState(existingBusiness?.filledBy || "");
-  const [localRemarks, setLocalRemarks] = useState(existingBusiness?.specialInstructions || "");
+  const [localPartyName, setLocalPartyName] = useState(existingBusiness?.business_name || "");
+  const [localBusinessPhone, setLocalBusinessPhone] = useState(existingBusiness?.business_phone || "");
+  const [localAddress, setLocalAddress] = useState(existingBusiness?.delivery_address || "");
+  const [localGst, setLocalGst] = useState(existingBusiness?.gst_number || "");
+  const [localTransport, setLocalTransport] = useState(existingBusiness?.transport_courier || "");
+  const [localAgent, setLocalAgent] = useState(existingBusiness?.agent_name || "");
+  const [localFilledBy, setLocalFilledBy] = useState(existingBusiness?.filled_by || "");
+  const [localRemarks, setLocalRemarks] = useState(existingBusiness?.special_instructions || "");
 
   const fileInputRef = useRef(null);
 
@@ -75,14 +75,14 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (existingBusiness) {
-      setLocalPartyName(existingBusiness.businessName || "");
-      setLocalBusinessPhone(existingBusiness.businessPhone || "");
-      setLocalAddress(existingBusiness.deliveryAddress || "");
-      setLocalGst(existingBusiness.gstNumber || "");
-      setLocalTransport(existingBusiness.transportCourier || "");
-      setLocalAgent(existingBusiness.agentName || "");
-      setLocalFilledBy(existingBusiness.filledBy || "");
-      setLocalRemarks(existingBusiness.specialInstructions || "");
+      setLocalPartyName(existingBusiness?.business_name || "");
+      setLocalBusinessPhone(existingBusiness?.business_phone || "");
+      setLocalAddress(existingBusiness.delivery_address || "");
+      setLocalGst(existingBusiness.gst_number || "");
+      setLocalTransport(existingBusiness.transport_courier || "");
+      setLocalAgent(existingBusiness.agent_name || "");
+      setLocalFilledBy(existingBusiness.filled_by || "");
+      setLocalRemarks(existingBusiness.special_instructions || "");
     }
     if(userId || name || profilePic || phone || email) {
       setLocalName(name || "");
@@ -174,13 +174,13 @@ const ProfilePage = () => {
               ACCOUNT SETTINGS
             </h1>
           </div>
-          <button
+          {/* <button
             type="button"
             onClick={handleLogout}
             className="hidden sm:flex items-center justify-center gap-2 text-xs font-black text-[#D63031] hover:text-red-700 uppercase tracking-widest transition-colors bg-white px-5 py-2.5 rounded-full shadow-sm"
           >
             <LogOut size={16} /> Logout
-          </button>
+          </button> */}
         </div>
 
         <form onSubmit={handleSave} className="bg-[#f5f5f5] rounded-3xl overflow-hidden shadow-sm border border-gray-200">

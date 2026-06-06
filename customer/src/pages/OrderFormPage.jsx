@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAboutThunk } from "../store/aboutSlice";
+import { fetchDefaultBusinessThunk } from "../store/businessSlice";
 
 const PHONE_REGEX = /^[6-9]\d{9}$/;
 
@@ -35,6 +36,8 @@ const OrderFormPage = () => {
   const [step, setStep] = useState(1);
   const cart = useSelector((state) => state.cart.items);
   const { about } = useSelector((state) => state.about);
+  const { id: userId } = useSelector((state) => state.user.profile);
+  const defaultBusiness = useSelector((state) => state.business.defaultBusiness);
   const directOrderItem = location.state?.directOrderItem;
   const isDirectOrder = Boolean(directOrderItem);
   const orderItems = isDirectOrder ? [directOrderItem] : cart;
@@ -62,12 +65,11 @@ const OrderFormPage = () => {
   const buildOrderMessage = () => {
     const itemLines = orderItems.map((item, index) => {
       const quantity = Number(item.quantity || 1);
-      const unitPrice = Number(item.price || 0);
-      const itemTotal = unitPrice * quantity;
       const sizes = Array.isArray(item.selectedSizes) && item.selectedSizes.length
         ? ` | Sizes: ${item.selectedSizes.join(", ")}`
         : "";
-      return `${index + 1}. ${String(item.name || "PRODUCT")} - ${quantity} x INR ${unitPrice.toLocaleString()} = INR ${itemTotal.toLocaleString()}${sizes}`;
+      const articleId = item.articleId ? ` [${item.articleId}]` : "";
+      return `${index + 1}. ${String(item.name || "PRODUCT")}${articleId} - Qty: ${quantity}${sizes}`;
     });
 
     return [
@@ -84,8 +86,6 @@ const OrderFormPage = () => {
       "",
       "Order Items:",
       ...itemLines,
-      "",
-      `Total Order Value: INR ${subtotal.toLocaleString()}`,
     ].join("\n");
   };
 
@@ -103,7 +103,22 @@ const OrderFormPage = () => {
 
   useEffect(() => {
     dispatch(fetchAboutThunk());
-  }, [dispatch]);
+    if (userId) dispatch(fetchDefaultBusinessThunk(userId));
+  }, [dispatch, userId]);
+
+  useEffect(() => {
+    if (!defaultBusiness) return;
+    setFormData((prev) => ({
+      partyName: defaultBusiness.businessName || prev.partyName,
+      phone: defaultBusiness.businessPhone || prev.phone,
+      address: defaultBusiness.deliveryAddress || prev.address,
+      transport: defaultBusiness.transportCourier || prev.transport,
+      gst: defaultBusiness.gstNumber || prev.gst,
+      agent: defaultBusiness.agentName || prev.agent,
+      filledBy: defaultBusiness.filledBy || prev.filledBy,
+      remarks: defaultBusiness.specialInstructions || prev.remarks,
+    }));
+  }, [defaultBusiness]);
 
   const whatsappNumber = formatWhatsAppNumber(about.whatsappNumber);
 

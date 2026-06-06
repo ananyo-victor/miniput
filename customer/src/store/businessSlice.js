@@ -21,19 +21,19 @@ export const fetchBusinessesThunk = createAsyncThunk(
   }
 );
 
-export const fetchBusinessThunk = createAsyncThunk(
-  "business/fetchBusiness",
+export const fetchDefaultBusinessThunk = createAsyncThunk(
+  "business/fetchDefaultBusiness",
   async (userId, { rejectWithValue }) => {
     try {
       const { data } = await axios.get(
-        `${API_BASE_URL}/api/businesses/${userId}`
+        `${API_BASE_URL}/api/businesses/user/${userId}/default`
       );
 
       return data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message ||
-          "Failed to fetch business"
+          "Failed to fetch default business"
       );
     }
   }
@@ -101,6 +101,7 @@ const businessSlice = createSlice({
   initialState: {
     items: [],
     selectedBusiness: null,
+    defaultBusiness: null,
     loading: false,
     saving: false,
     error: null,
@@ -110,6 +111,7 @@ const businessSlice = createSlice({
     clearBusinessState: (state) => {
       state.items = [];
       state.selectedBusiness = null;
+      state.defaultBusiness = null;
       state.loading = false;
       state.saving = false;
       state.error = null;
@@ -135,17 +137,18 @@ const businessSlice = createSlice({
         state.error = action.payload;
       })
 
-      // FETCH ONE
-      .addCase(fetchBusinessThunk.pending, (state) => {
+      // FETCH DEFAULT
+      .addCase(fetchDefaultBusinessThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchBusinessThunk.fulfilled, (state, action) => {
+      .addCase(fetchDefaultBusinessThunk.fulfilled, (state, action) => {
         state.loading = false;
-        state.selectedBusiness = action.payload;
+        state.defaultBusiness = action.payload;
       })
-      .addCase(fetchBusinessThunk.rejected, (state, action) => {
+      .addCase(fetchDefaultBusinessThunk.rejected, (state, action) => {
         state.loading = false;
+        state.defaultBusiness = null;
         state.error = action.payload;
       })
 

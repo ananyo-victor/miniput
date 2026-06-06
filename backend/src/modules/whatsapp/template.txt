@@ -1,0 +1,44 @@
+order_received
+
+Hi {{1}}! We have received your order and will confirm it shortly. Thank you for shopping with us!
+
+
+
+new_order_alert
+
+New order received!
+
+Customer: {{1}}
+Phone: {{2}}
+Message: {{3}}
+
+
+
+order_accepted
+
+Hi {{1}}! Your order has been accepted. We will send you a payment QR code shortly.
+
+
+
+order_rejected
+
+Hi {{1}}, unfortunately your order has been rejected. Please contact us for more details.
+
+
+
+payment_qr 
+
+Header: [Image — your QR code]
+Body: Please scan this QR code to complete your payment.
+
+
+
+payment_screenshot_received
+
+Payment screenshot received for order from {{1}} ({{2}}). Please review and confirm.
+
+
+
+order_shipped
+
+Great news, {{1}}! Your payment has been received and your order is on its way. Thank you! 🚚

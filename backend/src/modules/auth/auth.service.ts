@@ -134,7 +134,7 @@ export class AuthService {
     if (this.isLocalEnv()) {
       console.log(`[LOCAL DEV] WhatsApp bypassed. OTP for ${phone} is: ${otp} (You can also use 1111)`);
     } else {
-      await this.whatsappClient.sendTextMessage(phone, message);
+      await this.whatsappClient.sendText(phone, message, null, 'hello_world');
     }
 
     const { rows } = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);

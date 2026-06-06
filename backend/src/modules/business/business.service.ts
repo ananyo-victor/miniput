@@ -7,6 +7,24 @@ import pool from '../../config/database.config';
 import { CreateBusinessDto } from './dto/create-business.dto';
 import { UpdateBusinessDto } from './dto/update-business.dto';
 
+function mapRow(row: Record<string, any>) {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    businessName: row.business_name,
+    businessPhone: row.business_phone,
+    deliveryAddress: row.delivery_address,
+    transportCourier: row.transport_courier,
+    gstNumber: row.gst_number,
+    agentName: row.agent_name,
+    filledBy: row.filled_by,
+    specialInstructions: row.special_instructions,
+    isDefault: row.is_default,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
 @Injectable()
 export class BusinessService {
   async create(
@@ -53,7 +71,7 @@ export class BusinessService {
       ],
     );
 
-    return rows[0];
+    return mapRow(rows[0]);
   }
 
   async findAll(userId: string) {
@@ -67,7 +85,27 @@ export class BusinessService {
       [userId],
     );
 
-    return rows;
+    return rows.map(mapRow);
+  }
+
+  async findDefault(userId: string) {
+    const { rows } = await pool.query(
+      `
+      SELECT *
+      FROM businesses
+      WHERE user_id = $1 AND is_default = TRUE
+      LIMIT 1
+      `,
+      [userId],
+    );
+
+    if (!rows.length) {
+      throw new NotFoundException(
+        'No default business found',
+      );
+    }
+
+    return mapRow(rows[0]);
   }
 
   async findOne(id: string) {
@@ -86,7 +124,7 @@ export class BusinessService {
       );
     }
 
-    return rows[0];
+    return mapRow(rows[0]);
   }
 
   async update(
@@ -105,7 +143,7 @@ export class BusinessService {
         SET is_default = FALSE
         WHERE user_id = $1
         `,
-        [business.user_id],
+        [business.userId],
       );
     }
 
@@ -140,7 +178,7 @@ export class BusinessService {
       ],
     );
 
-    return rows[0];
+    return mapRow(rows[0]);
   }
 
   async remove(id: string) {
