@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAboutThunk } from "../store/aboutSlice";
 
 const PHONE_REGEX = /^[6-9]\d{9}$/;
 
@@ -30,6 +31,7 @@ const FormField = ({ icon, label, required, optional, className, hasError, child
 const OrderFormPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
   const [step, setStep] = useState(1);
   const cart = useSelector((state) => state.cart.items);
   const { about } = useSelector((state) => state.about);
@@ -37,14 +39,14 @@ const OrderFormPage = () => {
   const isDirectOrder = Boolean(directOrderItem);
   const orderItems = isDirectOrder ? [directOrderItem] : cart;
   const subtotal = orderItems.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 1), 0);
-  
+
   const getProductImage = (item) => {
     if (Array.isArray(item.imageUrls) && item.imageUrls.length) {
       return item.imageUrls[0];
     }
     return item.imageUrl || item.image || "https://via.placeholder.com/140?text=Item";
   };
-  
+
   const [formData, setFormData] = useState({
     partyName: "",
     phone: "",
@@ -98,6 +100,10 @@ const OrderFormPage = () => {
     }
     return String(number);
   }
+
+  useEffect(() => {
+    dispatch(fetchAboutThunk());
+  }, [dispatch]);
 
   const whatsappNumber = formatWhatsAppNumber(about.whatsappNumber);
 
@@ -190,13 +196,13 @@ const OrderFormPage = () => {
         {/* LEFT SIDEBAR (Progress) */}
         <div className="hidden md:flex w-20 lg:w-28 flex-col items-center shrink-0 pt-6 lg:pt-8">
           <div className="sticky top-28 flex flex-col items-center">
-            
+
             {/* Step 1 */}
             <div className={`flex flex-col items-center gap-1.5 transition-opacity ${step >= 1 ? 'opacity-100' : 'opacity-40'}`}>
               <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[14px] font-black tracking-[1px] transition-all ${step >= 1 ? 'bg-[#0E2A4A] text-white shadow-md scale-110' : 'bg-[#e0e0e0] text-[#666]'}`}>1</div>
               <span className={`text-[9px] font-black tracking-[1px] mt-1 ${step >= 1 ? 'text-[#0E2A4A]' : 'text-[#888]'}`}>DETAILS</span>
             </div>
-            
+
             <div className={`w-[2px] h-12 mx-auto my-2 transition-colors ${step >= 2 ? 'bg-[#0E2A4A]' : 'bg-[#e0e0e0]'}`}></div>
 
             {/* Step 2 */}
@@ -209,7 +215,7 @@ const OrderFormPage = () => {
 
         {/* FORM CONTENT (Right Side) */}
         <div className="flex-1 w-full p-4 md:p-6 lg:p-8 pb-10 lg:pr-8">
-          
+
           {/* Mobile Progress Bar */}
           <div className="md:hidden flex items-center justify-center max-w-xs mx-auto mb-6 mt-2">
             <div className={`flex flex-col items-center gap-1.5 ${step >= 1 ? 'opacity-100' : 'opacity-40'}`}>

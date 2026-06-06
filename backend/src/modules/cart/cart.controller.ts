@@ -30,7 +30,6 @@ export class CartController {
   @Post()
   @HttpCode(HttpStatus.OK)
   async addItem(@Req() req: any, @Body() body: AddToCartDto) {
-    // console.log('Adding to cart:', body, req);
     const userId = req.user.id;
     return this.cartService.addToCart(userId, body);
   }

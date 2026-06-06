@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Trash2 } from 'lucide-react';
 import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { clearCart, removeFromCart, updateQuantity } from "../store/cartSlice";
+import { clearCart, fetchCart, removeFromCart, updateQuantity } from "../store/cartSlice";
 import { openAuthModal } from "../store/authSlice";
 import { fetchAboutThunk } from "../store/aboutSlice";
 
@@ -14,16 +14,22 @@ const CartPage = () => {
 
   const subtotal = cart.reduce((acc, item) => acc + Number(item.price || 0) * Number(item.quantity || 1), 0);
 
-  const handleQuantityChange = (id, quantity) => {
+  const handleQuantityChange = (cartItemId, quantity) => {
     if (quantity < 1) {
       return;
     }
-    dispatch(updateQuantity({ id, quantity }));
+    dispatch(updateQuantity({ cartItemId, quantity }));
   };
 
   useEffect(() => {
     dispatch(fetchAboutThunk());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (authed) {
+      dispatch(fetchCart());
+    }
+  }, [authed, dispatch]);
 
   return (
     <div className="mk-shell flex flex-col h-full">
@@ -59,7 +65,7 @@ const CartPage = () => {
                   // Refactored layout to give space back to the middle column
                   <article key={rowId} className="relative mk-card p-4 sm:p-5 mb-4 flex gap-4">
                     <img
-                      src={item.imageUrl || item.image || "https://via.placeholder.com/140?text=Item"}
+                      src={item.imageUrls[0] || item.image || "https://via.placeholder.com/140?text=Item"}
                       alt={item.name}
                       className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl object-center object-contain bg-gray-100 shrink-0"
                     />
