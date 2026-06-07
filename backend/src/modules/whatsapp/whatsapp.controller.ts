@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UnauthorizedException,
   UseGuards,
@@ -58,6 +59,12 @@ export class WhatsappController {
   // @UseGuards(AuthGuard)
   async getAllOrders() {
     return this.whatsappService.getAllOrders();
+  }
+
+  @Get('orders/my-orders')
+  @UseGuards(AuthGuard)
+  async getMyOrders(@Req() req: any) {
+    return this.whatsappService.getMyOrders(req.user.id);
   }
 
   @Get('media/:mediaId')

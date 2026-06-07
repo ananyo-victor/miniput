@@ -3,7 +3,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './modules/auth/auth.module';
 import { ContentModule } from './modules/content/content.module';
-import { OrdersModule } from './modules/orders/orders.module';
 import { ProductsModule } from './modules/products/products.module';
 import { UploadsModule } from './modules/uploads/uploads.module';
 import { WorkspaceModule } from './modules/workspace/workspace.module';
@@ -33,7 +32,6 @@ const throttlerLimit = parseEnvInteger(process.env.THROTTLE_LIMIT, 100);
     ]),
     AuthModule,
     ContentModule,
-    OrdersModule,
     ProductsModule,
     UploadsModule,
     WorkspaceModule,

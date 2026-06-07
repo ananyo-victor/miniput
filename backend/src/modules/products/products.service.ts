@@ -1,4 +1,4 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../../config/database.config';
 import { UploadsService } from '../uploads/uploads.service';
@@ -161,57 +161,10 @@ const mapProductRow = (product: any) => {
 };
 
 @Injectable()
-export class ProductsService implements OnModuleInit {
+export class ProductsService {
   private readonly logger = new Logger(ProductsService.name);
 
   constructor(private readonly uploadsService: UploadsService) { }
-
-  async onModuleInit() {
-    await this.ensureSizeColumnIsIntegerArray();
-  }
-
-  private async ensureSizeColumnIsIntegerArray() {
-    try {
-      const { rows } = await pool.query(
-        `
-        SELECT udt_name
-        FROM information_schema.columns
-        WHERE table_schema = current_schema()
-          AND table_name = 'products'
-          AND column_name = 'size'
-        LIMIT 1
-        `,
-      );
-
-      if (!rows.length) {
-        return;
-      }
-
-      if (rows[0].udt_name === '_int4') {
-        return;
-      }
-
-      await pool.query(
-        `
-        ALTER TABLE products
-        ALTER COLUMN "size" TYPE integer[]
-        USING (
-          ARRAY(
-            SELECT TRUNC(TRIM(value_txt)::numeric)::integer
-            FROM unnest(COALESCE("size"::text[], ARRAY[]::text[])) AS value_txt
-            WHERE TRIM(value_txt) ~ '^-?\\d+(\\.\\d+)?$'
-          )
-        )
-        `,
-      );
-
-      this.logger.log('Converted products.size column to integer[]');
-    } catch (error) {
-      this.logger.warn(
-        `Could not convert products.size column to integer[]: ${error.message}`,
-      );
-    }
-  }
 
   private async validateWorkspaceExists(workspaceId: string) {
     const { rows } = await pool.query(

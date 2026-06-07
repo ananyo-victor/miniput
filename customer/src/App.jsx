@@ -5,6 +5,7 @@ import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
 import FavoritesPage from "./pages/FavoritesPage";
 import OrderFormPage from "./pages/OrderFormPage";
+import OrdersPage from "./pages/OrdersPage";
 import ProductDetailPage from "./pages/ProductDetailPage";
 import AboutPage from "./pages/AboutPage";
 import DiscoverPage from "./pages/DiscoverPage";
@@ -67,6 +68,7 @@ export default function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/favorites" element={<FavoritesPage />} /> 
           <Route path="/order" element={<OrderFormPage />} />
+          <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/terms" element={<TermsPage />} />

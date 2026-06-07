@@ -27,7 +27,7 @@ const DashboardPage = () => {
   const dispatch = useDispatch();
   
   // Selectors matching the exact Redux architectural slice paths
-  const activeWorkspaceId = useSelector((state) => state.auth?.userId);
+  const activeWorkspaceId = useSelector((state) => state.user?.activeWorkspace?.id);
   const currentWorkspaceName = useSelector((state) => state.user?.activeWorkspace?.name || 'All Collections');
   const { data, status, error } = useSelector((state) => state.analytics);
 

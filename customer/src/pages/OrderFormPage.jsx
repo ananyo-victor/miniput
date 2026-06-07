@@ -75,6 +75,7 @@ const OrderFormPage = () => {
     return [
       "Hello, please place this order:",
       "",
+      `User ID: ${userId || "-"}`,
       `Party Name: ${formData.partyName || "-"}`,
       `Phone: ${formData.phone || "-"}`,
       `Address: ${formData.address || "-"}`,

@@ -1,22 +1,14 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../../config/database.config';
 import { WhatsappClientService } from './whatsapp-client.service';
 
 @Injectable()
-export class WhatsappService implements OnModuleInit {
+export class WhatsappService {
 
   constructor(
     private readonly whatsappClient: WhatsappClientService,
   ) { }
-
-  async onModuleInit() {
-    await pool.query(`
-      ALTER TABLE whatsapp_orders
-        ADD COLUMN IF NOT EXISTS "messageId" VARCHAR UNIQUE,
-        ADD COLUMN IF NOT EXISTS "parsedOrder" JSONB;
-    `);
-  }
 
   private parseOrderMessage(text: string) {
     const fields: Record<string, string> = {};
@@ -46,6 +38,7 @@ export class WhatsappService implements OnModuleInit {
     }
 
     return {
+      userId: fields['user_id'] || '',
       partyName: fields['party_name'] || '',
       phone: fields['phone'] || '',
       address: fields['address'] || '',
@@ -83,16 +76,79 @@ export class WhatsappService implements OnModuleInit {
 
   async createOrder(data: any) {
     const parsedOrder = this.parseOrderMessage(data.orderMessage);
+    const orderId = uuidv4();
+    const userId = parsedOrder.userId || null;
     const { rows } = await pool.query(
       `
-      INSERT INTO whatsapp_orders (id, "customerPhone", "customerName", "orderMessage", "parsedOrder", "messageId", "lastCustomerMessageAt")
-      VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      INSERT INTO whatsapp_orders (id, "customerPhone", "customerName", "orderMessage", "parsedOrder", "messageId", "userId", "lastCustomerMessageAt")
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
       ON CONFLICT ("messageId") DO NOTHING
       RETURNING *
       `,
-      [uuidv4(), data.customerPhone, data.customerName, data.orderMessage, JSON.stringify(parsedOrder), data.messageId],
+      [orderId, data.customerPhone, data.customerName, data.orderMessage, JSON.stringify(parsedOrder), data.messageId, userId],
     );
-    return rows[0] ?? null;
+
+    const order = rows[0] ?? null;
+
+    if (order && parsedOrder.items.length > 0) {
+      await this.insertOrderItems(order.id, parsedOrder.items);
+    }
+
+    return order;
+  }
+
+  private async resolveWorkspaceIds(codes: string[]): Promise<Map<string, string>> {
+    const workspaceByArticleId = new Map<string, string>();
+    const articleIds = [...new Set(codes.filter(Boolean))];
+
+    if (!articleIds.length) {
+      return workspaceByArticleId;
+    }
+
+    const { rows } = await pool.query(
+      `SELECT "articleId", "workspaceId" FROM products WHERE "articleId" = ANY($1::text[])`,
+      [articleIds],
+    );
+
+    for (const row of rows) {
+      workspaceByArticleId.set(row.articleId, row.workspaceId);
+    }
+
+    return workspaceByArticleId;
+  }
+
+  private async insertOrderItems(whatsappOrderId: string, items: { name: string; code: string; qty: number }[]) {
+    const workspaceByArticleId = await this.resolveWorkspaceIds(items.map((item) => item.code));
+
+    const values: string[] = [];
+    const params: any[] = [];
+
+    items.forEach((item, index) => {
+      const offset = index * 5;
+      values.push(`($${offset + 1}, $${offset + 2}, $${offset + 3}, $${offset + 4}, $${offset + 5})`);
+      params.push(whatsappOrderId, item.name, item.code, item.qty, workspaceByArticleId.get(item.code) || null);
+    });
+
+    await pool.query(
+      `INSERT INTO whatsapp_order_items ("whatsappOrderId", name, code, qty, "workspaceId") VALUES ${values.join(', ')}`,
+      params,
+    );
+  }
+
+
+  async getMyOrders(userId: string) {
+    const { rows: userRows } = await pool.query(
+      `SELECT phone FROM users WHERE id = $1`,
+      [userId],
+    );
+
+    const phone = userRows[0]?.phone || null;
+
+    const { rows } = await pool.query(
+      `SELECT * FROM whatsapp_orders WHERE "userId" = $1 OR "customerPhone" = $2 ORDER BY "createdAt" DESC`,
+      [userId, phone],
+    );
+    return rows;
   }
 
   async getOrder(id: string) {
@@ -105,7 +161,12 @@ export class WhatsappService implements OnModuleInit {
       throw new Error('Order not found');
     }
 
-    return rows[0];
+    const { rows: items } = await pool.query(
+      `SELECT * FROM whatsapp_order_items WHERE "whatsappOrderId" = $1 ORDER BY "createdAt" ASC`,
+      [id],
+    );
+
+    return { ...rows[0], items };
   }
 
   private async touchCustomerWindow(orderId: string) {
