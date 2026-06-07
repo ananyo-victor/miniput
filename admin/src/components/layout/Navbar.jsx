@@ -2,8 +2,7 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { setActiveCategory } from "../../store/homeSlice";
-// Added UserCog for Account Settings
-import { Package, Info, Store, ShoppingBag, UserCog } from "lucide-react"; 
+import { Package, Info, Store, ShoppingBag, UserCog, LayoutDashboard } from "lucide-react"; 
 import { getWorkspaceHomePath, isHomeRoute } from "../../utils/workspaceRouting";
 
 const Navbar = ({ onNavigate, isCollapsed }) => {
@@ -17,6 +16,7 @@ const Navbar = ({ onNavigate, isCollapsed }) => {
     {
       title: "MAIN",
       items: [
+        { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
         { label: "Home", path: getWorkspaceHomePath(activeWorkspace?.slug), icon: Store, key: "home" },
         { label: "Orders", path: "/orders", icon: ShoppingBag, key: "orders" },
         { label: "Inventory", path: "/inventory", icon: Package, key: "inventory" },

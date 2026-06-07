@@ -11,6 +11,7 @@ import ProfilePage from "./pages/ProfilePage";
 import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
 import { fetchWorkspaces } from "./store/workspaceSlice";
 import OrdersPage from "./pages/OrdersPage";
+import DashboardPage from "./pages/DashboardPage";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -29,6 +30,7 @@ export default function App() {
           <Route path="/miniput" element={<Navigate to="/home/miniput" replace />} />
           <Route path="/kwink" element={<Navigate to="/home/kwink" replace />} />
           <Route path="/product/:productId" element={<ProductDetailPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPage />} />
