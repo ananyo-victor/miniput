@@ -6,25 +6,39 @@ export class AnalyticsService {
   async getDashboardStats(workspaceId?: string) {
     try {
       const params = workspaceId ? [workspaceId] : [];
-      const workspaceFilter = workspaceId ? `WHERE "workspaceId" = $1` : ``;
-      const workspaceFilterWithAnd = workspaceId ? `AND "workspaceId" = $1` : ``;
+      const productWorkspaceFilter = workspaceId ? `WHERE "workspaceId" = $1` : ``;
+      const productWorkspaceFilterWithAnd = workspaceId ? `AND "workspaceId" = $1` : ``;
+      // whatsapp_orders has no workspaceId column directly; scope it via its line items
+      const orderWorkspaceFilter = workspaceId
+        ? `AND EXISTS (
+             SELECT 1 FROM whatsapp_order_items woi
+             WHERE woi."whatsappOrderId" = wo.id AND woi."workspaceId" = $1
+           )`
+        : ``;
+      const revenueWorkspaceFilter = workspaceId ? `AND woi."workspaceId" = $1` : ``;
 
       // 1. KPI Query
       const kpisQuery = `
         SELECT
-          (SELECT COALESCE(SUM("totalPrice"), 0) FROM orders WHERE status = 'approved' ${workspaceFilterWithAnd}) AS "totalRevenue",
-          (SELECT COUNT(*) FROM orders WHERE status = 'pending' ${workspaceFilterWithAnd}) AS "pendingOrders",
-          (SELECT COUNT(*) FROM orders WHERE status = 'approved' ${workspaceFilterWithAnd}) AS "approvedOrders",
-          (SELECT COUNT(*) FROM products WHERE stock <= 15 ${workspaceFilterWithAnd}) AS "lowStockAlerts",
-          (SELECT COUNT(*) FROM products WHERE "discountValue" IS NOT NULL AND "discountValue" > 0 ${workspaceFilterWithAnd}) AS "activeDiscounts"
+          (
+            SELECT COALESCE(SUM(woi.qty * p.price), 0)
+            FROM whatsapp_orders wo
+            JOIN whatsapp_order_items woi ON woi."whatsappOrderId" = wo.id
+            JOIN products p ON p."articleId" = woi.code
+            WHERE wo.status = 'shipped' ${revenueWorkspaceFilter}
+          ) AS "totalRevenue",
+          (SELECT COUNT(*) FROM whatsapp_orders wo WHERE wo.status NOT IN ('shipped', 'cancelled') ${orderWorkspaceFilter}) AS "pendingOrders",
+          (SELECT COUNT(*) FROM whatsapp_orders wo WHERE wo.status = 'shipped' ${orderWorkspaceFilter}) AS "completedOrders",
+          (SELECT COUNT(*) FROM products WHERE stock <= 15 ${productWorkspaceFilterWithAnd}) AS "lowStockAlerts",
+          (SELECT COUNT(*) FROM products WHERE "discountValue" IS NOT NULL AND "discountValue" > 0 ${productWorkspaceFilterWithAnd}) AS "activeDiscounts"
       `;
 
       // 2. Order Status Distribution Query
       const orderStatusQuery = `
-        SELECT status as name, COUNT(*) as count
-        FROM orders
-        ${workspaceFilter}
-        GROUP BY status
+        SELECT wo.status as name, COUNT(*) as count
+        FROM whatsapp_orders wo
+        WHERE TRUE ${orderWorkspaceFilter}
+        GROUP BY wo.status
       `;
 
       // 3. Stock Health Distribution Query
@@ -34,7 +48,7 @@ export class AnalyticsService {
           COUNT(*) FILTER (WHERE stock > 15 AND stock <= 50) AS "limited",
           COUNT(*) FILTER (WHERE stock <= 15) AS "lowStock"
         FROM products
-        ${workspaceFilter}
+        ${productWorkspaceFilter}
       `;
 
       // Execute all analytical queries in parallel
@@ -46,9 +60,9 @@ export class AnalyticsService {
 
       const kpis = kpisRes.rows[0];
       const stockData = stockHealthRes.rows[0];
-      
+
       const totalRevenue = parseFloat(kpis.totalRevenue);
-      const approvedOrdersCount = parseInt(kpis.approvedOrders, 10);
+      const completedOrdersCount = parseInt(kpis.completedOrders, 10);
 
       // Format payload to exactly match the React component's expected structure
       return {
@@ -57,7 +71,7 @@ export class AnalyticsService {
           pendingOrdersCount: parseInt(kpis.pendingOrders, 10),
           lowStockCount: parseInt(kpis.lowStockAlerts, 10),
           activeDiscountsCount: parseInt(kpis.activeDiscounts, 10),
-          averageOrderValue: approvedOrdersCount > 0 ? totalRevenue / approvedOrdersCount : 0,
+          averageOrderValue: completedOrdersCount > 0 ? totalRevenue / completedOrdersCount : 0,
         },
         charts: {
           orderStatusData: orderStatusRes.rows.map((row) => ({
