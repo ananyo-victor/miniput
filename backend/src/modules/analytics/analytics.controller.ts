@@ -10,9 +10,11 @@ export class AnalyticsController {
   @Get('dashboard')
   async getDashboard(
     @Query('workspaceId') workspaceId?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
     try {
-      return await this.analyticsService.getDashboardStats(workspaceId);
+      return await this.analyticsService.getDashboardStats(workspaceId, startDate, endDate);
     } catch (error) {
       throw new InternalServerErrorException({
         success: false,

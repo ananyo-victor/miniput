@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import {
@@ -74,7 +75,11 @@ const OrdersPage = () => {
     const { items: orders, loading } = useSelector((state) => state.orders);
     const workspaces = useSelector((state) => state.workspace.items);
     const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
-    const [activeFilter, setActiveFilter] = useState("pending");
+    const location = useLocation();
+    const incomingFilter = location.state?.filter;
+    const [activeFilter, setActiveFilter] = useState(
+        filters.some((filter) => filter.id === incomingFilter) ? incomingFilter : "pending"
+    );
     const [pendingAction, setPendingAction] = useState(null);
     const [isProcessingAction, setIsProcessingAction] = useState(false);
 

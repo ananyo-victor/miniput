@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import {
   createProductThunk,
@@ -27,8 +28,12 @@ const filters = [
   { id: "in-stock", label: "IN STOCK" },
   { id: "limited", label: "LIMITED" },
   { id: "low", label: "LOW/OUT" },
+  { id: "discounted", label: "DISCOUNTED" },
   { id: "hidden", label: "HIDDEN" }
 ];
+
+const hasActiveDiscount = (product) =>
+  product.discountValue !== null && product.discountValue !== undefined && Number(product.discountValue) > 0;
 
 const buildSizeVariants = (sizes, totalStock) => {
   if (!Array.isArray(sizes)) {
@@ -96,8 +101,12 @@ const InventoryPage = () => {
   } = useSelector((state) => state.products);
   const activeWorkspace = useSelector((state) => state.user.activeWorkspace);
   const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
+  const location = useLocation();
 
-  const [activeFilter, setActiveFilter] = useState("all");
+  const incomingFilter = location.state?.filter;
+  const [activeFilter, setActiveFilter] = useState(
+    filters.some((filter) => filter.id === incomingFilter) ? incomingFilter : "all"
+  );
   const [showAddModal, setShowAddModal] = useState(false);
   const [imageUploads, setImageUploads] = useState([]);
   const [removingImageId, setRemovingImageId] = useState("");
@@ -111,11 +120,14 @@ const InventoryPage = () => {
   }, [dispatch, activeWorkspaceId]);
 
   const counts = useMemo(() => {
-    const map = { all: products.length, "in-stock": 0, limited: 0, low: 0, hidden: 0 };
+    const map = { all: products.length, "in-stock": 0, limited: 0, low: 0, discounted: 0, hidden: 0 };
 
     products.forEach((product) => {
       const key = statusMeta(Number(product.stock || 0)).key;
       map[key] += 1;
+      if (hasActiveDiscount(product)) {
+        map.discounted += 1;
+      }
       if (product.isHidden) {
         map.hidden += 1;
       }
@@ -131,6 +143,10 @@ const InventoryPage = () => {
 
     if (activeFilter === "hidden") {
       return products.filter((item) => item.isHidden);
+    }
+
+    if (activeFilter === "discounted") {
+      return products.filter((item) => !item.isHidden && hasActiveDiscount(item));
     }
 
     return products.filter(

@@ -6,11 +6,11 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const fetchDashboardData = createAsyncThunk(
   'analytics/fetchDashboardData',
   // Removed `getState` since we no longer need to manually fetch the token
-  async (workspaceId, { rejectWithValue }) => { 
+  async ({ workspaceId, startDate, endDate } = {}, { rejectWithValue }) => {
     try {
       // We rely entirely on your setupAxiosInterceptors to handle the Authorization header
       const response = await axios.get(`${API_BASE_URL}/api/analytics/dashboard`, {
-        params: { workspaceId }
+        params: { workspaceId, startDate, endDate }
       });
       
       return response.data;

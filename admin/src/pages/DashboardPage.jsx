@@ -1,5 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router';
 import { fetchDashboardData } from '../store/analyticsSlice';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
@@ -7,9 +8,10 @@ import {
 } from 'recharts';
 import {
   TrendingUp, ShoppingBag, AlertTriangle, Tag,
-  ArrowUpRight, Sparkles, Shirt, Calendar
+  ArrowUpRight, Sparkles, Shirt
 } from 'lucide-react';
 import DashboardPageSkeleton from '../components/skeletonLoader/DashboardPageSkeleton';
+import DateRangePicker from '../components/dashboard/DateRangePicker';
 import MiniputSign from '../assests/MINIPUT_SIGN.png';
 import KwinkSign from '../assests/kwink_SIGN.png';
 
@@ -28,7 +30,8 @@ const PIE_COLORS = [FASHION_COLORS.green, FASHION_COLORS.yellow, '#d63031'];
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
-  
+  const navigate = useNavigate();
+
   // Selectors matching the exact Redux architectural slice paths
   const activeWorkspace = useSelector((state) => state.user?.activeWorkspace);
   const activeWorkspaceId = activeWorkspace?.id;
@@ -37,11 +40,16 @@ const DashboardPage = () => {
   const workspaceLogoSrc = isMiniputWorkspace ? MiniputSign : KwinkSign;
   const { data, status, error } = useSelector((state) => state.analytics);
 
+  const [reportingPeriod, setReportingPeriod] = useState({ presetId: 'all', label: 'All Time', startDate: null, endDate: null });
+
   useEffect(() => {
     if (activeWorkspaceId) {
-      dispatch(fetchDashboardData(activeWorkspaceId));
+      dispatch(fetchDashboardData({ workspaceId: activeWorkspaceId, startDate: reportingPeriod.startDate, endDate: reportingPeriod.endDate }));
     }
-  }, [dispatch, activeWorkspaceId]);
+  }, [dispatch, activeWorkspaceId, reportingPeriod.startDate, reportingPeriod.endDate]);
+
+  const goToOrders = (filter) => navigate('/orders', { state: { filter } });
+  const goToInventory = (filter) => navigate('/inventory', { state: { filter } });
 
   if (status === 'loading') {
     return <DashboardPageSkeleton />;
@@ -89,6 +97,11 @@ const DashboardPage = () => {
         </div>
         
         <div className="flex items-center gap-3">
+          {reportingPeriod.presetId !== 'all' && (
+            <span className="text-[10px] font-black text-[#0e2a4a] bg-[#f0f7f8] border border-[#0e2a4a]/10 rounded-full px-3 py-1.5 uppercase tracking-wider whitespace-nowrap">
+              {reportingPeriod.label}
+            </span>
+          )}
           <div className="px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-left min-w-[160px]">
             <span className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Active Workspace</span>
             <span className="text-xs font-black text-[#0e2a4a] flex items-center gap-1.5 mt-0.5">
@@ -96,9 +109,7 @@ const DashboardPage = () => {
               {currentWorkspaceName}
             </span>
           </div>
-          <div className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-[#0e2a4a] cursor-pointer transition-colors shadow-sm hidden sm:block">
-            <Calendar size={18} />
-          </div>
+          <DateRangePicker activePresetId={reportingPeriod.presetId} onSelect={setReportingPeriod} />
         </div>
       </div>
 
@@ -108,9 +119,10 @@ const DashboardPage = () => {
           title="Gross Revenue"
           value={`₹${kpis.totalRevenue?.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon={TrendingUp}
-          trend="+18.4% this week"
+          trend="From shipped orders — view breakdown"
           colorClass="text-[#0e2a4a]"
           bgIcon="bg-blue-50 text-[#0e2a4a]"
+          onClick={() => goToOrders('shipped')}
         />
         <KpiCard
           title="Fulfillment Queue"
@@ -119,6 +131,7 @@ const DashboardPage = () => {
           trend="Requires fast processing"
           colorClass="text-[#e85a1d]"
           bgIcon="bg-orange-50 text-[#e85a1d]"
+          onClick={() => goToOrders('pending')}
         />
         <KpiCard
           title="SKU Inventory Risk"
@@ -127,6 +140,7 @@ const DashboardPage = () => {
           trend="Items low or out of stock"
           colorClass="text-[#d63031]"
           bgIcon="bg-red-50 text-[#d63031]"
+          onClick={() => goToInventory('low')}
         />
         <KpiCard
           title="Active Promotions"
@@ -135,6 +149,7 @@ const DashboardPage = () => {
           trend="Driving conversion momentum"
           colorClass="text-[#ffb800]"
           bgIcon="bg-amber-50 text-[#ffb800]"
+          onClick={() => goToInventory('discounted')}
         />
       </div>
 
@@ -233,8 +248,14 @@ const DashboardPage = () => {
 };
 
 // Internal reusable Asymmetrical Bento UI Asset Component
-const KpiCard = ({ title, value, icon: Icon, trend, colorClass, bgIcon }) => (
-  <div className="bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md group">
+const KpiCard = ({ title, value, icon: Icon, trend, colorClass, bgIcon, onClick }) => (
+  <div
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
+    onClick={onClick}
+    onKeyDown={onClick ? (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onClick(); } } : undefined}
+    className={`bg-white p-5 rounded-3xl border border-gray-100 shadow-sm flex flex-col justify-between relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md group ${onClick ? 'cursor-pointer' : ''}`}
+  >
     <div className="flex justify-between items-start mb-4">
       <div>
         <span className="text-[9px] font-black text-gray-400 tracking-widest uppercase font-['Montserrat'] block mb-1">

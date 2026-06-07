@@ -3,11 +3,27 @@ import pool from '../../config/database.config';
 
 @Injectable()
 export class AnalyticsService {
-  async getDashboardStats(workspaceId?: string) {
+  async getDashboardStats(workspaceId?: string, startDate?: string, endDate?: string) {
     try {
-      const params = workspaceId ? [workspaceId] : [];
+      // Product-scoped queries only ever bind the workspaceId ($1)
+      const productParams: string[] = [];
+      if (workspaceId) productParams.push(workspaceId);
       const productWorkspaceFilter = workspaceId ? `WHERE "workspaceId" = $1` : ``;
       const productWorkspaceFilterWithAnd = workspaceId ? `AND "workspaceId" = $1` : ``;
+
+      // Order-scoped queries additionally bind the optional reporting-period bounds,
+      // so they need their own param list/placeholder numbering ($1 stays workspaceId).
+      const orderParams: string[] = [...productParams];
+      let orderDateFilter = '';
+      if (startDate) {
+        orderParams.push(startDate);
+        orderDateFilter += ` AND wo."createdAt" >= $${orderParams.length}`;
+      }
+      if (endDate) {
+        orderParams.push(endDate);
+        orderDateFilter += ` AND wo."createdAt" <= $${orderParams.length}`;
+      }
+
       // whatsapp_orders has no workspaceId column directly; scope it via its line items
       const orderWorkspaceFilter = workspaceId
         ? `AND EXISTS (
@@ -25,10 +41,10 @@ export class AnalyticsService {
             FROM whatsapp_orders wo
             JOIN whatsapp_order_items woi ON woi."whatsappOrderId" = wo.id
             JOIN products p ON p."articleId" = woi.code
-            WHERE wo.status = 'shipped' ${revenueWorkspaceFilter}
+            WHERE wo.status = 'shipped' ${revenueWorkspaceFilter} ${orderDateFilter}
           ) AS "totalRevenue",
-          (SELECT COUNT(*) FROM whatsapp_orders wo WHERE wo.status NOT IN ('shipped', 'cancelled') ${orderWorkspaceFilter}) AS "pendingOrders",
-          (SELECT COUNT(*) FROM whatsapp_orders wo WHERE wo.status = 'shipped' ${orderWorkspaceFilter}) AS "completedOrders",
+          (SELECT COUNT(*) FROM whatsapp_orders wo WHERE wo.status NOT IN ('shipped', 'cancelled') ${orderWorkspaceFilter} ${orderDateFilter}) AS "pendingOrders",
+          (SELECT COUNT(*) FROM whatsapp_orders wo WHERE wo.status = 'shipped' ${orderWorkspaceFilter} ${orderDateFilter}) AS "completedOrders",
           (SELECT COUNT(*) FROM products WHERE stock <= 15 ${productWorkspaceFilterWithAnd}) AS "lowStockAlerts",
           (SELECT COUNT(*) FROM products WHERE "discountValue" IS NOT NULL AND "discountValue" > 0 ${productWorkspaceFilterWithAnd}) AS "activeDiscounts"
       `;
@@ -37,7 +53,7 @@ export class AnalyticsService {
       const orderStatusQuery = `
         SELECT wo.status as name, COUNT(*) as count
         FROM whatsapp_orders wo
-        WHERE TRUE ${orderWorkspaceFilter}
+        WHERE TRUE ${orderWorkspaceFilter} ${orderDateFilter}
         GROUP BY wo.status
       `;
 
@@ -53,9 +69,9 @@ export class AnalyticsService {
 
       // Execute all analytical queries in parallel
       const [kpisRes, orderStatusRes, stockHealthRes] = await Promise.all([
-        pool.query(kpisQuery, params),
-        pool.query(orderStatusQuery, params),
-        pool.query(stockHealthQuery, params),
+        pool.query(kpisQuery, orderParams),
+        pool.query(orderStatusQuery, orderParams),
+        pool.query(stockHealthQuery, productParams),
       ]);
 
       const kpis = kpisRes.rows[0];
