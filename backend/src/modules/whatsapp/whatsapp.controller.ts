@@ -106,4 +106,16 @@ export class WhatsappController {
   async paymentConfirmed(@Param('id') id: string) {
     return this.whatsappService.paymentConfirmed(id);
   }
+
+  @Patch(':id/payment-received')
+  @UseGuards(AuthGuard)
+  async markPaymentReceived(@Param('id') id: string) {
+    return this.whatsappService.markPaymentReceived(id);
+  }
+
+  @Patch(':id/payment-not-received')
+  @UseGuards(AuthGuard)
+  async markPaymentNotReceived(@Param('id') id: string) {
+    return this.whatsappService.markPaymentNotReceived(id);
+  }
 }

@@ -378,4 +378,50 @@ export class WhatsappService {
 
     return { success: true };
   }
+
+  async markPaymentReceived(orderId: string) {
+    const order = await this.getOrder(orderId);
+
+    await this.whatsappClient.sendText(
+      order.customerPhone,
+      `Hi ${order.customerName || 'there'}! We've received your payment. Your order is being processed and will be shipped soon. Thank you! 🚚`,
+      order.lastCustomerMessageAt,
+    );
+
+    await pool.query(
+      `
+      UPDATE whatsapp_orders
+      SET status = 'payment_received', "updatedAt" = NOW()
+      WHERE id = $1
+      `,
+      [orderId],
+    );
+
+    this.eventsGateway.emitOrderUpdated(await this.getOrder(orderId));
+
+    return { success: true };
+  }
+
+  async markPaymentNotReceived(orderId: string) {
+    const order = await this.getOrder(orderId);
+
+    await this.whatsappClient.sendText(
+      order.customerPhone,
+      `Hi ${order.customerName || 'there'}, we haven't received your payment yet, so your order has been cancelled. Please contact us if you'd like to place the order again.`,
+      order.lastCustomerMessageAt,
+    );
+
+    await pool.query(
+      `
+      UPDATE whatsapp_orders
+      SET status = 'cancelled', "updatedAt" = NOW()
+      WHERE id = $1
+      `,
+      [orderId],
+    );
+
+    this.eventsGateway.emitOrderUpdated(await this.getOrder(orderId));
+
+    return { success: true };
+  }
 }

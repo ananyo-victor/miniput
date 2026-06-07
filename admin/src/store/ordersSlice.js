@@ -55,6 +55,28 @@ export const paymentConfirmedThunk = createAsyncThunk(
   }
 );
 
+export const markPaymentReceivedThunk = createAsyncThunk(
+  "orders/markPaymentReceived",
+  async (orderId) => {
+    const { data } = await axios.patch(
+      `${API_BASE_URL}/api/whatsapp/${orderId}/payment-received`,
+      {}
+    );
+    return data;
+  }
+);
+
+export const markPaymentNotReceivedThunk = createAsyncThunk(
+  "orders/markPaymentNotReceived",
+  async (orderId) => {
+    const { data } = await axios.patch(
+      `${API_BASE_URL}/api/whatsapp/${orderId}/payment-not-received`,
+      {}
+    );
+    return data;
+  }
+);
+
 const ordersSlice = createSlice({
   name: "orders",
   initialState: {
@@ -102,6 +124,14 @@ const ordersSlice = createSlice({
       .addCase(paymentConfirmedThunk.fulfilled, (state, action) => {
         const idx = state.items.findIndex((o) => o.id === action.meta.arg);
         if (idx !== -1) state.items[idx].status = "shipped";
+      })
+      .addCase(markPaymentReceivedThunk.fulfilled, (state, action) => {
+        const idx = state.items.findIndex((o) => o.id === action.meta.arg);
+        if (idx !== -1) state.items[idx].status = "payment_received";
+      })
+      .addCase(markPaymentNotReceivedThunk.fulfilled, (state, action) => {
+        const idx = state.items.findIndex((o) => o.id === action.meta.arg);
+        if (idx !== -1) state.items[idx].status = "cancelled";
       });
   },
 });

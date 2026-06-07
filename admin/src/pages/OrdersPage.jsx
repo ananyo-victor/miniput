@@ -7,11 +7,55 @@ import {
     rejectOrderThunk,
     sendQrThunk,
     paymentConfirmedThunk,
+    markPaymentReceivedThunk,
+    markPaymentNotReceivedThunk,
     orderReceived,
     orderUpdated,
 } from "../store/ordersSlice";
 import { CheckCircle, XCircle, Clock, Package, QrCode, Truck, CreditCard, Ban, RefreshCw } from "lucide-react";
 import OrderCardSkeleton from "../components/skeletonLoader/OrderCardSkeleton";
+import ConfirmActionModal from "../components/orders/ConfirmActionModal";
+
+const confirmActions = {
+    accept: {
+        title: "Accept Order",
+        message: "Accept this order?",
+        confirmLabel: "ACCEPT",
+        confirmVariant: "accept",
+        thunk: acceptOrderThunk,
+    },
+    reject: {
+        title: "Reject Order",
+        message: "Reject this order? The customer will be notified.",
+        confirmLabel: "REJECT",
+        confirmVariant: "reject",
+        thunk: rejectOrderThunk,
+    },
+    sendQr: {
+        title: "Send QR Code",
+        message: "Send the payment QR code to the customer?",
+        confirmLabel: "SEND",
+        thunk: sendQrThunk,
+    },
+    markPaymentReceived: {
+        title: "Confirm Payment Received",
+        message: "Confirm that payment was received for this order?",
+        confirmLabel: "CONFIRM",
+        thunk: markPaymentReceivedThunk,
+    },
+    markPaymentNotReceived: {
+        title: "Mark Payment Not Received",
+        message: "Mark payment as not received? This will cancel the order and notify the customer.",
+        confirmLabel: "MARK NOT RECEIVED",
+        thunk: markPaymentNotReceivedThunk,
+    },
+    paymentConfirmed: {
+        title: "Confirm & Ship",
+        message: "Confirm payment received? This will mark the order as shipped.",
+        confirmLabel: "CONFIRM & SHIP",
+        thunk: paymentConfirmedThunk,
+    },
+};
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -31,6 +75,8 @@ const OrdersPage = () => {
     const workspaces = useSelector((state) => state.workspace.items);
     const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
     const [activeFilter, setActiveFilter] = useState("pending");
+    const [pendingAction, setPendingAction] = useState(null);
+    const [isProcessingAction, setIsProcessingAction] = useState(false);
 
     useEffect(() => {
         if (activeWorkspaceId) {
@@ -54,29 +100,26 @@ const OrdersPage = () => {
         return orders.filter((order) => order.status === activeFilter);
     }, [orders, activeFilter]);
 
-    const handleAccept = (orderId) => {
-        if (window.confirm("Accept this order?")) {
-            dispatch(acceptOrderThunk(orderId));
+    const handleAccept = (orderId) => setPendingAction({ type: "accept", orderId });
+    const handleReject = (orderId) => setPendingAction({ type: "reject", orderId });
+    const handleSendQr = (orderId) => setPendingAction({ type: "sendQr", orderId });
+    const handleMarkPaymentReceived = (orderId) => setPendingAction({ type: "markPaymentReceived", orderId });
+    const handleMarkPaymentNotReceived = (orderId) => setPendingAction({ type: "markPaymentNotReceived", orderId });
+    const handlePaymentConfirmed = (orderId) => setPendingAction({ type: "paymentConfirmed", orderId });
+
+    const handleConfirmAction = async () => {
+        if (!pendingAction) return;
+        const action = confirmActions[pendingAction.type];
+        setIsProcessingAction(true);
+        try {
+            await dispatch(action.thunk(pendingAction.orderId)).unwrap();
+        } finally {
+            setIsProcessingAction(false);
+            setPendingAction(null);
         }
     };
 
-    const handleReject = (orderId) => {
-        if (window.confirm("Reject this order? The customer will be notified.")) {
-            dispatch(rejectOrderThunk(orderId));
-        }
-    };
-
-    const handleSendQr = (orderId) => {
-        if (window.confirm("Send the payment QR code to the customer?")) {
-            dispatch(sendQrThunk(orderId));
-        }
-    };
-
-    const handlePaymentConfirmed = (orderId) => {
-        if (window.confirm("Confirm payment received? This will mark the order as shipped.")) {
-            dispatch(paymentConfirmedThunk(orderId));
-        }
-    };
+    const handleCancelAction = () => setPendingAction(null);
 
     const getItemBrandName = (order, item) => {
         const orderItem = order.items?.find((oi) => oi.code === item.code);
@@ -271,6 +314,24 @@ const OrdersPage = () => {
                                         </button>
                                     )}
 
+                                    {/* payment_pending → Received Payment / Didn't Receive Payment */}
+                                    {order.status === "payment_pending" && (
+                                        <div className="flex flex-row gap-3">
+                                            <button
+                                                onClick={() => handleMarkPaymentReceived(order.id)}
+                                                className="bg-[#0E2A4A] text-white font-black text-xs px-4 py-3 rounded-xl hover:bg-[#1a3d6e] transition-colors shadow-sm flex items-center gap-2"
+                                            >
+                                                <CreditCard size={16} /> RECEIVED PAYMENT
+                                            </button>
+                                            <button
+                                                onClick={() => handleMarkPaymentNotReceived(order.id)}
+                                                className="bg-[#fff5f5] text-[#D63031] font-black text-xs px-4 py-3 rounded-xl hover:bg-[#fde8e8] transition-colors border border-red-100 flex items-center gap-2"
+                                            >
+                                                <XCircle size={16} /> DIDN'T RECEIVE PAYMENT
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {/* payment_received → Confirm Payment */}
                                     {order.status === "payment_received" && (
                                         <button
@@ -286,6 +347,17 @@ const OrdersPage = () => {
                     </div>
                 )}
             </div>
+
+            <ConfirmActionModal
+                show={!!pendingAction}
+                title={pendingAction ? confirmActions[pendingAction.type].title : ""}
+                message={pendingAction ? confirmActions[pendingAction.type].message : ""}
+                confirmLabel={pendingAction ? confirmActions[pendingAction.type].confirmLabel : ""}
+                confirmVariant={pendingAction ? confirmActions[pendingAction.type].confirmVariant || "default" : "default"}
+                isProcessing={isProcessingAction}
+                onConfirm={handleConfirmAction}
+                onCancel={handleCancelAction}
+            />
         </div>
     );
 };
