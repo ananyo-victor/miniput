@@ -58,12 +58,17 @@ export class WhatsappClientService {
 
     const mimeType = matches[1];
     const buffer = Buffer.from(matches[2], 'base64');
-
     const ext = mimeType.split('/')[1] ?? 'jpg';
+
+    return this.uploadMedia(buffer, mimeType, `qr.${ext}`);
+  }
+
+  // Uploads a raw buffer to WhatsApp media and returns the media ID
+  async uploadMedia(buffer: Buffer, mimeType: string, filename: string): Promise<string> {
     const form = new FormData();
     form.append('messaging_product', 'whatsapp');
     form.append('type', mimeType);
-    form.append('file', buffer, { filename: `qr.${ext}`, contentType: mimeType });
+    form.append('file', buffer, { filename, contentType: mimeType });
 
     const uploadUrl = `https://graph.facebook.com/${this.apiVersion}/${this.phoneNumberId}/media`;
     const response = await axios.post(uploadUrl, form, {
@@ -102,6 +107,31 @@ export class WhatsappClientService {
           to: phone,
           type: 'image',
           image: imagePayload,
+        },
+        { headers: this.headers },
+      );
+    }
+
+    return this.sendTemplate(phone, fallbackTemplate);
+  }
+
+  // Sends a document (e.g. PDF) if within 24h window, falls back to template
+  async sendDocument(
+    phone: string,
+    mediaId: string,
+    filename: string,
+    caption: string,
+    lastCustomerMessageAt: Date | string | null,
+    fallbackTemplate: string = 'hello_world',
+  ) {
+    if (this.isWithinWindow(lastCustomerMessageAt)) {
+      return axios.post(
+        this.baseUrl,
+        {
+          messaging_product: 'whatsapp',
+          to: phone,
+          type: 'document',
+          document: { id: mediaId, filename, caption },
         },
         { headers: this.headers },
       );

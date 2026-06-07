@@ -4,6 +4,7 @@ import pool from '../../config/database.config';
 import { WhatsappClientService } from './whatsapp-client.service';
 import { EventsGateway } from '../../events/events.gateway';
 import { ContentService } from '../content/content.service';
+import { generateInvoicePdf } from './invoice.util';
 
 @Injectable()
 export class WhatsappService {
@@ -140,6 +141,26 @@ export class WhatsappService {
     }
 
     return workspaceByArticleId;
+  }
+
+  private async resolvePrices(codes: string[]): Promise<Map<string, number>> {
+    const priceByArticleId = new Map<string, number>();
+    const articleIds = [...new Set(codes.filter(Boolean))];
+
+    if (!articleIds.length) {
+      return priceByArticleId;
+    }
+
+    const { rows } = await pool.query(
+      `SELECT "articleId", price FROM products WHERE "articleId" = ANY($1::text[])`,
+      [articleIds],
+    );
+
+    for (const row of rows) {
+      priceByArticleId.set(row.articleId, Number(row.price));
+    }
+
+    return priceByArticleId;
   }
 
   private async insertOrderItems(whatsappOrderId: string, items: { name: string; code: string; qty: number }[]) {
@@ -326,6 +347,36 @@ export class WhatsappService {
     return rows[0];
   }
 
+  private async sendInvoice(order: any) {
+    const priceByArticleId = await this.resolvePrices(order.items.map((item: any) => item.code));
+
+    const invoiceItems = order.items.map((item: any) => ({
+      name: item.name,
+      code: item.code,
+      qty: item.qty,
+      price: priceByArticleId.get(item.code) || 0,
+    }));
+
+    const pdfBuffer = await generateInvoicePdf({
+      orderId: order.id,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      createdAt: order.createdAt,
+      items: invoiceItems,
+    });
+
+    const filename = `Invoice-${order.id}.pdf`;
+    const mediaId = await this.whatsappClient.uploadMedia(pdfBuffer, 'application/pdf', filename);
+
+    await this.whatsappClient.sendDocument(
+      order.customerPhone,
+      mediaId,
+      filename,
+      'Here is your invoice. Thank you for shopping with us!',
+      order.lastCustomerMessageAt,
+    );
+  }
+
   async sendQr(orderId: string) {
     const order = await this.getOrder(orderId);
     const aboutContent = await this.contentService.getAboutContent();
@@ -364,6 +415,8 @@ export class WhatsappService {
       'Payment received! Your order is confirmed and will be dispatched soon. Thank you! 🚚',
       order.lastCustomerMessageAt,
     );
+
+    await this.sendInvoice(order);
 
     await pool.query(
       `
