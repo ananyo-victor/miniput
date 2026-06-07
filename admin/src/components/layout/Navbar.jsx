@@ -17,7 +17,7 @@ const Navbar = ({ onNavigate, isCollapsed }) => {
       title: "MAIN",
       items: [
         { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard, key: "dashboard" },
-        { label: "Home", path: getWorkspaceHomePath(activeWorkspace?.slug), icon: Store, key: "home" },
+        { label: "Preview", path: getWorkspaceHomePath(activeWorkspace?.slug), icon: Store, key: "home" },
         { label: "Orders", path: "/orders", icon: ShoppingBag, key: "orders" },
         { label: "Inventory", path: "/inventory", icon: Package, key: "inventory" },
       ]

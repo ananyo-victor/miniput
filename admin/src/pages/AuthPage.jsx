@@ -81,7 +81,7 @@ const AuthPage = () => {
       const user = result.payload;
       await dispatch(fetchWorkspaces());
       await dispatch(fetchActiveWorkspaceThunk(user.user.id));
-      navigate("/inventory");
+      navigate("/dashboard");
     }
   };
 

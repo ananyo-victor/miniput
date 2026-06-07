@@ -35,6 +35,7 @@ export default function App() {
           <Route path="/orders" element={<OrdersPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/settings" element={<ProfilePage />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />
