@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../../config/database.config';
 import { WhatsappClientService } from './whatsapp-client.service';
 import { EventsGateway } from '../../events/events.gateway';
+import { ContentService } from '../content/content.service';
 
 @Injectable()
 export class WhatsappService {
@@ -10,6 +11,7 @@ export class WhatsappService {
   constructor(
     private readonly whatsappClient: WhatsappClientService,
     private readonly eventsGateway: EventsGateway,
+    private readonly contentService: ContentService,
   ) { }
 
   private parseOrderMessage(text: string) {
@@ -324,8 +326,14 @@ export class WhatsappService {
     return rows[0];
   }
 
-  async sendQr(orderId: string, qrImageUrl: string) {
+  async sendQr(orderId: string) {
     const order = await this.getOrder(orderId);
+    const aboutContent = await this.contentService.getAboutContent();
+    const qrImageUrl = aboutContent.qrCodeImageUrl;
+
+    if (!qrImageUrl) {
+      throw new BadRequestException('No QR code image has been configured. Please upload one in the About page.');
+    }
 
     await this.whatsappClient.sendImage(
       order.customerPhone,

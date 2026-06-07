@@ -43,6 +43,7 @@ const AboutPage = () => {
     whatsappNumber: "",
     phoneNumber: "",
     locationUrl: "",
+    qrCodeImageUrl: "",
   });
 
   const [workspaceForm, setWorkspaceForm] = useState({
@@ -52,6 +53,8 @@ const AboutPage = () => {
 
   const [uploadingCount, setUploadingCount] = useState(0);
   const [removingImageKey, setRemovingImageKey] = useState("");
+  const [uploadingQrCode, setUploadingQrCode] = useState(false);
+  const [removingQrCode, setRemovingQrCode] = useState(false);
 
   const loadContent = async () => {
     if (!activeWorkspaceId) {
@@ -75,6 +78,7 @@ const AboutPage = () => {
         whatsappNumber: aboutData?.whatsappNumber || "",
         phoneNumber: aboutData?.phoneNumber || "",
         locationUrl: aboutData?.locationUrl || "",
+        qrCodeImageUrl: aboutData?.qrCodeImageUrl || "",
       });
 
       setWorkspaceForm({
@@ -215,6 +219,61 @@ const AboutPage = () => {
     setSuccess("");
   };
 
+  const handleUploadQrCode = async (files) => {
+    const file = Array.from(files || [])[0];
+    if (!file) {
+      return;
+    }
+
+    setUploadingQrCode(true);
+
+    try {
+      const data = await dispatch(uploadProductImageThunk(file)).unwrap();
+      const imageUrl = data?.imageUrl;
+
+      if (!imageUrl) {
+        throw new Error("Image upload returned an empty URL.");
+      }
+
+      const previousUrl = aboutForm.qrCodeImageUrl;
+      handleAboutFieldChange("qrCodeImageUrl", imageUrl);
+
+      const previousPublicId = toPublicIdFromImageUrl(previousUrl);
+      if (previousPublicId) {
+        try {
+          await dispatch(deleteUploadedProductImageThunk(previousPublicId)).unwrap();
+        } catch {
+          // Ignore failures deleting the replaced image from storage.
+        }
+      }
+    } catch (uploadError) {
+      window.alert(uploadError?.message || "Image upload failed.");
+    } finally {
+      setUploadingQrCode(false);
+    }
+  };
+
+  const handleRemoveQrCode = async () => {
+    const imageUrl = aboutForm.qrCodeImageUrl;
+    if (!imageUrl) {
+      return;
+    }
+
+    setRemovingQrCode(true);
+
+    const publicId = toPublicIdFromImageUrl(imageUrl);
+    if (publicId) {
+      try {
+        await dispatch(deleteUploadedProductImageThunk(publicId)).unwrap();
+      } catch {
+        window.alert("Image removed from page content, but deletion from storage failed.");
+      }
+    }
+
+    handleAboutFieldChange("qrCodeImageUrl", "");
+    setRemovingQrCode(false);
+  };
+
   const handleSave = async (event) => {
     event.preventDefault();
 
@@ -223,7 +282,7 @@ const AboutPage = () => {
       return;
     }
 
-    if (uploadingCount > 0) {
+    if (uploadingCount > 0 || uploadingQrCode) {
       window.alert("Please wait for all image uploads to finish before saving.");
       return;
     }
@@ -247,6 +306,7 @@ const AboutPage = () => {
             whatsappNumber: String(aboutForm.whatsappNumber || "").trim(),
             phoneNumber: String(aboutForm.phoneNumber || "").trim(),
             locationUrl: String(aboutForm.locationUrl || "").trim(),
+            qrCodeImageUrl: String(aboutForm.qrCodeImageUrl || "").trim(),
           }),
         ).unwrap(),
         dispatch(
@@ -350,6 +410,47 @@ const AboutPage = () => {
                 />
                 <p className="mt-1 text-[10px] text-gray-400">Paste the URL from Google Maps (Share {">"} Embed a map {">"} src attribute)</p>
               </label>
+
+              <div className="block md:col-span-2">
+                <span className="text-xs font-bold uppercase tracking-wide text-gray-500">Payment QR Code</span>
+                <p className="mt-1 text-[10px] text-gray-400">
+                  Upload a QR code image. It will be sent to customers in WhatsApp chat once their order is accepted.
+                </p>
+
+                <div className="mt-2 flex flex-wrap items-center gap-4">
+                  {aboutForm.qrCodeImageUrl ? (
+                    <div className="relative">
+                      <img
+                        src={aboutForm.qrCodeImageUrl}
+                        alt="Payment QR code"
+                        className="h-32 w-32 rounded-xl border border-gray-200 object-contain bg-gray-50"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveQrCode}
+                        disabled={removingQrCode}
+                        className="absolute -top-2 -right-2 rounded-full bg-white border border-gray-200 text-red-500 text-xs font-black h-6 w-6 flex items-center justify-center shadow-sm hover:bg-red-50 disabled:opacity-50"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <label className="inline-flex items-center justify-center rounded-xl border border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-xs font-bold uppercase tracking-wide text-gray-500 cursor-pointer hover:border-[#0E2A4A] hover:text-[#0E2A4A] transition-colors">
+                    {uploadingQrCode ? "Uploading..." : aboutForm.qrCodeImageUrl ? "Replace QR Code" : "Upload QR Code"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingQrCode}
+                      onChange={(event) => {
+                        handleUploadQrCode(event.target.files);
+                        event.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
           </section>
 

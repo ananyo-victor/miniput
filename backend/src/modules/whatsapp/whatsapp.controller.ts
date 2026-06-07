@@ -15,7 +15,6 @@ import { Response } from 'express';
 
 import { AuthGuard } from '../../common/guards/auth.guard';
 import { WhatsappService } from './whatsapp.service';
-import { SendQrDto } from './dto/send-qr.dto';
 
 @Controller('whatsapp')
 export class WhatsappController {
@@ -98,9 +97,8 @@ export class WhatsappController {
   @UseGuards(AuthGuard)
   async sendQr(
     @Param('id') id: string,
-    @Body() body: SendQrDto,
   ) {
-    return this.whatsappService.sendQr(id, body.qrImageUrl);
+    return this.whatsappService.sendQr(id);
   }
 
   @Patch(':id/payment-confirmed')

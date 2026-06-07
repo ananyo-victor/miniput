@@ -23,6 +23,10 @@ export class AboutContentEntity {
   locationUrl?: string;
 
   @IsOptional()
+  @IsString()
+  qrCodeImageUrl?: string;
+
+  @IsOptional()
   @IsDate()
   updatedAt?: Date;
 }

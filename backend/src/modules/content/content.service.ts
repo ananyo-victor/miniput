@@ -149,7 +149,7 @@ export class ContentService {
   async getAboutContent(): Promise<AboutContentEntity> {
     const { rows } = await pool.query(
       `
-      SELECT id, miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url, "updatedAt"
+      SELECT id, miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url, qr_code_image_url, "updatedAt"
       FROM about_content
       WHERE id = 1
       `,
@@ -162,6 +162,7 @@ export class ContentService {
       whatsapp_number: '',
       phone_number: '',
       location_url: '',
+      qr_code_image_url: '',
     };
 
     return {
@@ -171,6 +172,7 @@ export class ContentService {
       whatsappNumber: row.whatsapp_number,
       phoneNumber: row.phone_number,
       locationUrl: row.location_url || '',
+      qrCodeImageUrl: row.qr_code_image_url || '',
       updatedAt: row.updatedAt,
     };
   }
@@ -183,10 +185,11 @@ export class ContentService {
     const whatsappNumber = payload.whatsappNumber === undefined ? null : String(payload.whatsappNumber || '').trim();
     const phoneNumber = payload.phoneNumber === undefined ? null : String(payload.phoneNumber || '').trim();
     const locationUrl = payload.locationUrl === undefined ? null : String(payload.locationUrl || '').trim();
+    const qrCodeImageUrl = payload.qrCodeImageUrl === undefined ? null : String(payload.qrCodeImageUrl || '').trim();
 
     const { rows } = await pool.query(
       `
-      INSERT INTO about_content (id, miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url)
+      INSERT INTO about_content (id, miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url, qr_code_image_url)
       VALUES (
         1,
         COALESCE($1, '{}'::TEXT[]),
@@ -194,7 +197,8 @@ export class ContentService {
         COALESCE($3, ''),
         COALESCE($4, ''),
         COALESCE($5, ''),
-        COALESCE($6, '')
+        COALESCE($6, ''),
+        COALESCE($7, '')
       )
       ON CONFLICT (id)
       DO UPDATE SET
@@ -204,8 +208,9 @@ export class ContentService {
         whatsapp_number = COALESCE($4, about_content.whatsapp_number),
         phone_number = COALESCE($5, about_content.phone_number),
         location_url = COALESCE($6, about_content.location_url),
+        qr_code_image_url = COALESCE($7, about_content.qr_code_image_url),
         "updatedAt" = NOW()
-      RETURNING miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url, "updatedAt"
+      RETURNING miniput_details, kwink_details, address, whatsapp_number, phone_number, location_url, qr_code_image_url, "updatedAt"
       `,
       [
         miniputDetails,
@@ -214,6 +219,7 @@ export class ContentService {
         whatsappNumber,
         phoneNumber,
         locationUrl,
+        qrCodeImageUrl,
       ],
     );
 
@@ -224,6 +230,7 @@ export class ContentService {
       whatsappNumber: rows[0].whatsapp_number,
       phoneNumber: rows[0].phone_number,
       locationUrl: rows[0].location_url || '',
+      qrCodeImageUrl: rows[0].qr_code_image_url || '',
       updatedAt: rows[0].updatedAt,
     };
   }

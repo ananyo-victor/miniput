@@ -35,10 +35,10 @@ export const rejectOrderThunk = createAsyncThunk(
 
 export const sendQrThunk = createAsyncThunk(
   "orders/sendQr",
-  async ({ orderId, qrImageUrl }) => {
+  async (orderId) => {
     const { data } = await axios.patch(
       `${API_BASE_URL}/api/whatsapp/${orderId}/send-qr`,
-      { qrImageUrl }
+      {}
     );
     return data;
   }

@@ -26,4 +26,8 @@ export class UpsertAboutContentDto {
   @IsOptional()
   @IsString()
   locationUrl?: string;
+
+  @IsOptional()
+  @IsString()
+  qrCodeImageUrl?: string;
 }

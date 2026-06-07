@@ -31,7 +31,6 @@ const OrdersPage = () => {
     const workspaces = useSelector((state) => state.workspace.items);
     const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
     const [activeFilter, setActiveFilter] = useState("pending");
-    const [qrInputs, setQrInputs] = useState({});
 
     useEffect(() => {
         if (activeWorkspaceId) {
@@ -68,11 +67,8 @@ const OrdersPage = () => {
     };
 
     const handleSendQr = (orderId) => {
-        const qrImageUrl = qrInputs[orderId]?.trim();
-        if (!qrImageUrl) return alert("Please paste a QR image URL first.");
-        if (window.confirm("Send this QR code to the customer?")) {
-            dispatch(sendQrThunk({ orderId, qrImageUrl }));
-            setQrInputs((prev) => ({ ...prev, [orderId]: "" }));
+        if (window.confirm("Send the payment QR code to the customer?")) {
+            dispatch(sendQrThunk(orderId));
         }
     };
 
@@ -267,23 +263,12 @@ const OrdersPage = () => {
 
                                     {/* accepted → Send QR */}
                                     {order.status === "accepted" && (
-                                        <div className="flex flex-row gap-2 w-full md:w-auto">
-                                            <input
-                                                type="text"
-                                                placeholder="Paste QR image URL..."
-                                                value={qrInputs[order.id] || ""}
-                                                onChange={(e) =>
-                                                    setQrInputs((prev) => ({ ...prev, [order.id]: e.target.value }))
-                                                }
-                                                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-xs font-bold focus:outline-none focus:border-[#0E2A4A]"
-                                            />
-                                            <button
-                                                onClick={() => handleSendQr(order.id)}
-                                                className="bg-[#0E2A4A] text-white font-black text-xs px-4 py-3 rounded-xl hover:bg-[#1a3d6e] transition-colors shadow-sm flex items-center gap-2 whitespace-nowrap"
-                                            >
-                                                <QrCode size={16} /> SEND QR
-                                            </button>
-                                        </div>
+                                        <button
+                                            onClick={() => handleSendQr(order.id)}
+                                            className="bg-[#0E2A4A] text-white font-black text-xs px-4 py-3 rounded-xl hover:bg-[#1a3d6e] transition-colors shadow-sm flex items-center gap-2 whitespace-nowrap"
+                                        >
+                                            <QrCode size={16} /> SEND QR
+                                        </button>
                                     )}
 
                                     {/* payment_received → Confirm Payment */}
