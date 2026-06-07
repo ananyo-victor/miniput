@@ -5,10 +5,13 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
   AreaChart, Area, CartesianGrid, PieChart, Pie, Cell, Legend
 } from 'recharts';
-import { 
-  TrendingUp, ShoppingBag, AlertTriangle, Tag, 
-  ArrowUpRight, Sparkles, Shirt, Layers, Calendar
+import {
+  TrendingUp, ShoppingBag, AlertTriangle, Tag,
+  ArrowUpRight, Sparkles, Shirt, Calendar
 } from 'lucide-react';
+import DashboardPageSkeleton from '../components/skeletonLoader/DashboardPageSkeleton';
+import MiniputSign from '../assests/MINIPUT_SIGN.png';
+import KwinkSign from '../assests/kwink_SIGN.png';
 
 // Premium 2026 Fashion Palette matching index.css variables
 const FASHION_COLORS = {
@@ -27,8 +30,11 @@ const DashboardPage = () => {
   const dispatch = useDispatch();
   
   // Selectors matching the exact Redux architectural slice paths
-  const activeWorkspaceId = useSelector((state) => state.user?.activeWorkspace?.id);
-  const currentWorkspaceName = useSelector((state) => state.user?.activeWorkspace?.name || 'All Collections');
+  const activeWorkspace = useSelector((state) => state.user?.activeWorkspace);
+  const activeWorkspaceId = activeWorkspace?.id;
+  const currentWorkspaceName = activeWorkspace?.name || 'All Collections';
+  const isMiniputWorkspace = String(activeWorkspace?.slug || activeWorkspace?.name || '').toLowerCase() === 'miniput';
+  const workspaceLogoSrc = isMiniputWorkspace ? MiniputSign : KwinkSign;
   const { data, status, error } = useSelector((state) => state.analytics);
 
   useEffect(() => {
@@ -38,17 +44,7 @@ const DashboardPage = () => {
   }, [dispatch, activeWorkspaceId]);
 
   if (status === 'loading') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f5f5f5]">
-        <div className="relative w-16 h-16">
-          <div className="absolute inset-0 rounded-full border-4 border-gray-200 animate-pulse"></div>
-          <div className="absolute inset-0 rounded-full border-4 border-t-[#0e2a4a] animate-spin"></div>
-        </div>
-        <span className="mt-4 text-xs font-bold tracking-widest text-[#0e2a4a] uppercase font-['Montserrat']">
-          Curating Analytics Matrix...
-        </span>
-      </div>
-    );
+    return <DashboardPageSkeleton />;
   }
 
   if (status === 'failed') {
@@ -96,7 +92,8 @@ const DashboardPage = () => {
           <div className="px-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl text-left min-w-[160px]">
             <span className="block text-[9px] font-black text-gray-400 uppercase tracking-wider">Active Workspace</span>
             <span className="text-xs font-black text-[#0e2a4a] flex items-center gap-1.5 mt-0.5">
-              <Layers size={12} className="text-[#7dc1ca]" /> {currentWorkspaceName}
+              <img src={workspaceLogoSrc} alt={currentWorkspaceName} className="h-3.5 w-auto max-w-[16px] object-contain" />
+              {currentWorkspaceName}
             </span>
           </div>
           <div className="p-2.5 bg-white border border-gray-200 rounded-xl text-gray-400 hover:text-[#0e2a4a] cursor-pointer transition-colors shadow-sm hidden sm:block">
