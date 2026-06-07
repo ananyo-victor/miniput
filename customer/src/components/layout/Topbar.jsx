@@ -62,6 +62,7 @@ const Topbar = ({ onMenuClick }) => {
   const isTermsPage = location.pathname.includes("/terms");
   const isProfilePage = location.pathname.includes("/profile");
   const isProductDetailPage = location.pathname.includes("/product/");
+  const isOrdersPage = location.pathname.includes("/orders");
   const hideSearchAndCategory = isCartPage || isOrderPage || isProductDetailPage || isAboutPage || isTermsPage || isProfilePage;
 
   useEffect(() => {
@@ -127,7 +128,7 @@ const Topbar = ({ onMenuClick }) => {
         </button>
 
         {/* 3. Add isTermsPage to this condition to show both icons */}
-        {isCartPage || isAboutPage || isTermsPage  || isProfilePage ? (
+        {isCartPage || isAboutPage || isTermsPage  || isProfilePage || isOrdersPage ? (
           <div className="flex items-center gap-2 lg:gap-3">
             <Link
               to="/home/miniput"

@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Trash2 } from 'lucide-react';
 import { Link, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
-import { clearCart, fetchCart, removeFromCart, updateQuantity } from "../store/cartSlice";
+import { clearCart, removeFromCart, updateQuantity } from "../store/cartSlice";
 import { openAuthModal } from "../store/authSlice";
 import { fetchAboutThunk } from "../store/aboutSlice";
 
@@ -24,12 +24,6 @@ const CartPage = () => {
   useEffect(() => {
     dispatch(fetchAboutThunk());
   }, [dispatch]);
-
-  useEffect(() => {
-    if (authed) {
-      dispatch(fetchCart());
-    }
-  }, [authed, dispatch]);
 
   return (
     <div className="mk-shell flex flex-col h-full">

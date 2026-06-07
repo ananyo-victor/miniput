@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from "react-router";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import HomePage from "./pages/HomePage";
 import CartPage from "./pages/CartPage";
 import FavoritesPage from "./pages/FavoritesPage";
@@ -14,6 +14,7 @@ import Topbar from "./components/layout/Topbar";
 import Sidebar from "./components/layout/Sidebar"; 
 import AuthModal from "./components/auth/AuthModal";
 import { fetchWorkspaces } from "./store/workspaceSlice";
+import { fetchCart } from "./store/cartSlice";
 import TermsPage from "./pages/TermsPage";
 import ProfilePage from "./pages/ProfilePage";
 
@@ -44,10 +45,17 @@ const Layout = () => {
 
 export default function App() {
   const dispatch = useDispatch();
+  const authed = useSelector((state) => state.auth.authed);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());
   }, [dispatch]);
+
+  useEffect(() => {
+    if (authed) {
+      dispatch(fetchCart());
+    }
+  }, [authed, dispatch]);
 
   return (
     <Router>

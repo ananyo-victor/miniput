@@ -15,7 +15,7 @@ import businessReducer from "./businessSlice";
 const persistConfig = {
   key: "root",
   storage,
-  whitelist: ["auth", "user"],
+  whitelist: ["auth", "user", "cart"],
 };
 
 const rootReducer = combineReducers({

@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAboutThunk } from "../store/aboutSlice";
 import { fetchDefaultBusinessThunk } from "../store/businessSlice";
+import { clearCart } from "../store/cartSlice";
 
 const PHONE_REGEX = /^[6-9]\d{9}$/;
 
@@ -34,6 +35,7 @@ const OrderFormPage = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const [step, setStep] = useState(1);
+  const [showWhatsAppRedirect, setShowWhatsAppRedirect] = useState(false);
   const cart = useSelector((state) => state.cart.items);
   const { about } = useSelector((state) => state.about);
   const { id: userId } = useSelector((state) => state.user.profile);
@@ -128,6 +130,15 @@ const OrderFormPage = () => {
     const message = buildOrderMessage();
     const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, "_blank");
+    if (!isDirectOrder) {
+      dispatch(clearCart());
+    }
+    setShowWhatsAppRedirect(true);
+  };
+
+  const handleRedirectDone = () => {
+    setShowWhatsAppRedirect(false);
+    navigate("/home");
   };
 
   const handleNext = () => {
@@ -466,6 +477,29 @@ const OrderFormPage = () => {
 
         </div>
       </div>
+
+      {/* WhatsApp redirect full-screen confirmation */}
+      {showWhatsAppRedirect && (
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center p-6 text-center">
+          <div className="w-20 h-20 rounded-full bg-[#25D366]/15 flex items-center justify-center text-[40px]">
+            💬
+          </div>
+          <h1 className="mt-6 text-2xl sm:text-3xl font-black text-[#0E2A4A] tracking-[0.5px]">
+            OPENING WHATSAPP…
+          </h1>
+          <p className="mt-3 max-w-sm text-[14px] text-[#666] leading-relaxed">
+            We've opened WhatsApp in a new tab with your order details already filled in.
+            Just hit <span className="font-bold text-[#1a1a1a]">send</span> in the chat to
+            confirm your order with us.
+          </p>
+          <button
+            onClick={handleRedirectDone}
+            className="mt-8 w-full max-w-xs text-white bg-[#0E2A4A] hover:bg-[#1a3d6e] rounded-[14px] py-4 text-[13px] font-black tracking-[1px] transition-colors"
+          >
+            BACK TO HOME
+          </button>
+        </div>
+      )}
     </div>
   );
 };
