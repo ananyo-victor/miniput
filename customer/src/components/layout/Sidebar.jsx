@@ -165,7 +165,7 @@ const Sidebar = ({ isOpen, onClose }) => {
             >
               <div className="flex items-center gap-4">
                 <ShoppingCart size={20} className="text-gray-500" />
-                Your Orders
+                My Orders
               </div>
             </Link>
 

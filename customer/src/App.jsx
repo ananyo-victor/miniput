@@ -13,7 +13,6 @@ import Navbar from "./components/layout/Navbar";
 import Topbar from "./components/layout/Topbar"; 
 import Sidebar from "./components/layout/Sidebar"; 
 import AuthModal from "./components/auth/AuthModal";
-import { setupCustomerAxiosInterceptors } from "./utils/axiosInterceptor";
 import { fetchWorkspaces } from "./store/workspaceSlice";
 import TermsPage from "./pages/TermsPage";
 import ProfilePage from "./pages/ProfilePage";
@@ -45,10 +44,6 @@ const Layout = () => {
 
 export default function App() {
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    setupCustomerAxiosInterceptors();
-  }, []);
 
   useEffect(() => {
     dispatch(fetchWorkspaces());

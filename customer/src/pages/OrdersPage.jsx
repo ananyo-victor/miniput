@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
 import { Package, Clock, CheckCircle, QrCode, CreditCard, Truck, Ban } from "lucide-react";
 import { fetchMyOrdersThunk } from "../store/orderSlice";
+import { openAuthModal } from "../store/authSlice";
 
 const STAGES = [
   { id: "pending", label: "Order Placed", icon: Clock },
@@ -110,21 +111,42 @@ const OrderCard = ({ order }) => {
 const OrdersPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const authed = useSelector((state) => state.auth.authed);
   const { items: orders, loading, error } = useSelector((state) => state.orders);
 
   useEffect(() => {
-    dispatch(fetchMyOrdersThunk());
-  }, [dispatch]);
+    if (authed) {
+      dispatch(fetchMyOrdersThunk());
+    } else {
+      dispatch(openAuthModal());
+    }
+  }, [dispatch, authed]);
 
   return (
     <div className="flex-1 flex flex-col bg-[#f5f5f5] pb-10 h-full">
       <section className="bg-[var(--mk-orange)] px-4 sm:px-8 py-4 sm:py-5 text-center shadow-sm">
         <h1 className="mk-bebas text-3xl sm:text-5xl text-white tracking-[0.12em]">
-          YOUR ORDERS
+          MY ORDERS
         </h1>
       </section>
 
-      {loading ? (
+      {!authed ? (
+        <main className="flex-1 flex items-center justify-center p-6 sm:p-10">
+          <div className="mk-card max-w-md w-full p-8 text-center border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
+            <div className="flex justify-center mb-4">
+              <Package size={42} className="text-gray-300" strokeWidth={1.5} />
+            </div>
+            <h2 className="text-xl font-black text-[var(--mk-navy)]">Sign in to view your orders</h2>
+            <p className="mt-2 text-sm text-gray-500">Log in to see the orders you've placed over WhatsApp.</p>
+            <button
+              onClick={() => dispatch(openAuthModal())}
+              className="inline-block mt-6 px-6 py-3.5 rounded-xl text-xs font-black tracking-[0.08em] bg-[var(--mk-navy)] text-[var(--mk-yellow)] hover:-translate-y-0.5 transition-transform shadow-md"
+            >
+              SIGN IN
+            </button>
+          </div>
+        </main>
+      ) : loading ? (
         <main className="flex-1 flex items-center justify-center p-10">
           <p className="text-sm text-gray-500">Loading your orders...</p>
         </main>

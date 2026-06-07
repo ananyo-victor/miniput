@@ -24,4 +24,8 @@ export class EventsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   emitNewOrder(order: unknown) {
     this.server?.emit('new-order-received', order);
   }
+
+  emitOrderUpdated(order: unknown) {
+    this.server?.emit('order-updated', order);
+  }
 }

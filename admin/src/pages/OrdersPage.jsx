@@ -1,14 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { io } from "socket.io-client";
 import {
     fetchOrdersThunk,
     acceptOrderThunk,
     rejectOrderThunk,
     sendQrThunk,
     paymentConfirmedThunk,
+    orderReceived,
+    orderUpdated,
 } from "../store/ordersSlice";
-import { CheckCircle, XCircle, Clock, Package, QrCode, Truck, CreditCard, Ban } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Package, QrCode, Truck, CreditCard, Ban, RefreshCw } from "lucide-react";
 import OrderCardSkeleton from "../components/skeletonLoader/OrderCardSkeleton";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const filters = [
     { id: "all", label: "ALL ORDERS" },
@@ -23,6 +28,7 @@ const filters = [
 const OrdersPage = () => {
     const dispatch = useDispatch();
     const { items: orders, loading } = useSelector((state) => state.orders);
+    const workspaces = useSelector((state) => state.workspace.items);
     const activeWorkspaceId = useSelector((state) => state.user.selectedWorkspaceId);
     const [activeFilter, setActiveFilter] = useState("pending");
     const [qrInputs, setQrInputs] = useState({});
@@ -32,6 +38,17 @@ const OrdersPage = () => {
             dispatch(fetchOrdersThunk());
         }
     }, [dispatch, activeWorkspaceId]);
+
+    useEffect(() => {
+        const socket = io(API_BASE_URL, { transports: ["websocket"] });
+
+        socket.on("new-order-received", (order) => dispatch(orderReceived(order)));
+        socket.on("order-updated", (order) => dispatch(orderUpdated(order)));
+
+        return () => socket.disconnect();
+    }, [dispatch]);
+
+    const handleRefresh = () => dispatch(fetchOrdersThunk());
 
     const filteredOrders = useMemo(() => {
         if (activeFilter === "all") return orders;
@@ -65,6 +82,12 @@ const OrdersPage = () => {
         }
     };
 
+    const getItemBrandName = (order, item) => {
+        const orderItem = order.items?.find((oi) => oi.code === item.code);
+        if (!orderItem?.workspaceId) return null;
+        return workspaces.find((workspace) => workspace.id === orderItem.workspaceId)?.name || null;
+    };
+
     const getStatusBadge = (status) => {
         const map = {
             pending: { bg: "bg-[#fff8e1]", text: "text-[#d49000]", icon: <Clock size={12} />, label: "PENDING" },
@@ -90,6 +113,14 @@ const OrdersPage = () => {
                 <h1 className="text-xl md:text-4xl text-[#0E2A4A] tracking-[2px] font-['Bebas_Neue',_sans-serif] leading-none">
                     MANAGE ORDERS
                 </h1>
+                <button
+                    onClick={handleRefresh}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black tracking-wider text-[#0E2A4A] border border-[#0E2A4A] hover:bg-[#0E2A4A] hover:text-white transition-colors disabled:opacity-50"
+                >
+                    <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                    REFRESH
+                </button>
             </div>
 
             {/* Tabs */}
@@ -175,6 +206,7 @@ const OrdersPage = () => {
                                                                 <tr>
                                                                     <th className="text-left px-3 py-2 text-xs font-black text-gray-500 uppercase">Item</th>
                                                                     <th className="text-left px-3 py-2 text-xs font-black text-gray-500 uppercase">Code</th>
+                                                                    <th className="text-left px-3 py-2 text-xs font-black text-gray-500 uppercase">Brand</th>
                                                                     <th className="text-right px-3 py-2 text-xs font-black text-gray-500 uppercase">Qty</th>
                                                                 </tr>
                                                             </thead>
@@ -183,6 +215,7 @@ const OrdersPage = () => {
                                                                     <tr key={i} className="border-t border-gray-100">
                                                                         <td className="px-3 py-2 font-bold text-gray-800">{item.name}</td>
                                                                         <td className="px-3 py-2 font-mono text-gray-600">{item.code}</td>
+                                                                        <td className="px-3 py-2 font-bold text-gray-600 uppercase">{getItemBrandName(order, item) || "—"}</td>
                                                                         <td className="px-3 py-2 font-black text-right text-[#0E2A4A]">{item.qty}</td>
                                                                     </tr>
                                                                 ))}

@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../../config/database.config';
 import { WhatsappClientService } from './whatsapp-client.service';
+import { EventsGateway } from '../../events/events.gateway';
 
 @Injectable()
 export class WhatsappService {
 
   constructor(
     private readonly whatsappClient: WhatsappClientService,
+    private readonly eventsGateway: EventsGateway,
   ) { }
 
   private parseOrderMessage(text: string) {
@@ -71,7 +73,24 @@ export class WhatsappService {
     const { rows } = await pool.query(
       `SELECT * FROM whatsapp_orders ORDER BY "createdAt" DESC`,
     );
-    return rows;
+
+    if (!rows.length) {
+      return rows;
+    }
+
+    const { rows: itemRows } = await pool.query(
+      `SELECT * FROM whatsapp_order_items WHERE "whatsappOrderId" = ANY($1::uuid[]) ORDER BY "createdAt" ASC`,
+      [rows.map((row) => row.id)],
+    );
+
+    const itemsByOrderId = new Map<string, any[]>();
+    for (const item of itemRows) {
+      const existing = itemsByOrderId.get(item.whatsappOrderId) || [];
+      existing.push(item);
+      itemsByOrderId.set(item.whatsappOrderId, existing);
+    }
+
+    return rows.map((row) => ({ ...row, items: itemsByOrderId.get(row.id) || [] }));
   }
 
   async createOrder(data: any) {
@@ -92,6 +111,10 @@ export class WhatsappService {
 
     if (order && parsedOrder.items.length > 0) {
       await this.insertOrderItems(order.id, parsedOrder.items);
+    }
+
+    if (order) {
+      this.eventsGateway.emitNewOrder(await this.getOrder(order.id));
     }
 
     return order;
@@ -268,6 +291,8 @@ export class WhatsappService {
       order.lastCustomerMessageAt,
     );
 
+    this.eventsGateway.emitOrderUpdated(rows[0]);
+
     return rows[0];
   }
 
@@ -294,6 +319,8 @@ export class WhatsappService {
       order.lastCustomerMessageAt,
     );
 
+    this.eventsGateway.emitOrderUpdated(rows[0]);
+
     return rows[0];
   }
 
@@ -316,6 +343,8 @@ export class WhatsappService {
       [orderId],
     );
 
+    this.eventsGateway.emitOrderUpdated(await this.getOrder(orderId));
+
     return { success: true };
   }
 
@@ -336,6 +365,8 @@ export class WhatsappService {
       `,
       [orderId],
     );
+
+    this.eventsGateway.emitOrderUpdated(await this.getOrder(orderId));
 
     return { success: true };
   }

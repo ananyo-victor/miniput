@@ -62,7 +62,16 @@ const ordersSlice = createSlice({
     loading: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    orderReceived: (state, action) => {
+      const exists = state.items.some((o) => o.id === action.payload.id);
+      if (!exists) state.items.unshift(action.payload);
+    },
+    orderUpdated: (state, action) => {
+      const idx = state.items.findIndex((o) => o.id === action.payload.id);
+      if (idx !== -1) state.items[idx] = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(fetchOrdersThunk.pending, (state) => {
@@ -96,5 +105,7 @@ const ordersSlice = createSlice({
       });
   },
 });
+
+export const { orderReceived, orderUpdated } = ordersSlice.actions;
 
 export default ordersSlice.reducer;
