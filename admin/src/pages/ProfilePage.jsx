@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { clearAdminToken } from "../utils/adminToken";
 import { setAdminField } from "../store/authSlice";
-import { fetchUserProfileThunk, updateUserProfileThunk } from "../store/userSlice";
+import { fetchUserProfileThunk, updateUserProfileThunk, uploadProfilePictureThunk } from "../store/userSlice";
 import { createBillingProfileThunk, fetchDefaultBillingProfileThunk, updateBillingProfileThunk } from "../store/billingSlice";
 
 const InputCard = ({ icon: Icon, label, required, placeholder, value, onChange, iconColor = "text-gray-400", labelExtra }) => (
@@ -44,6 +44,7 @@ const ProfilePage = () => {
     fullName: auth?.userFullName || "Admin",
     phone: "+91 ",
     email: "",
+    profilePic: "",
 
     // Billing Details
     billingName: "",
@@ -58,8 +59,32 @@ const ProfilePage = () => {
     specialInstructions: ""
   });
 
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+
   const handleChange = (field) => (e) => {
     setFormData(prev => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64Data = reader.result;
+        setFormData((prev) => ({ ...prev, profilePic: base64Data }));
+        setIsUploadingImage(true);
+        try {
+          const uploadedUrl = await dispatch(uploadProfilePictureThunk(base64Data)).unwrap();
+          setFormData((prev) => ({ ...prev, profilePic: uploadedUrl }));
+        } catch (error) {
+          console.error("Failed to upload image:", error);
+        } finally {
+          setIsUploadingImage(false);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleLogout = () => {
@@ -84,6 +109,7 @@ const ProfilePage = () => {
       fullName: userProfile.full_name || "",
       phone: userProfile.phone || "",
       email: userProfile.email || "",
+      profilePic: userProfile.profile_picture_url || "",
     }));
   }, [userProfile]);
 
@@ -105,6 +131,7 @@ const ProfilePage = () => {
       city: billingProfile.city || "",
       taluka: billingProfile.taluka || "",
       state: billingProfile.state || "",
+      pin: billingProfile.pincode || "",
       gstNumber: billingProfile.gst_number || "",
       specialInstructions: billingProfile.special_instructions || "",
     }));
@@ -119,9 +146,12 @@ const ProfilePage = () => {
       await dispatch(
         updateUserProfileThunk({
           id: userProfile.id,
-          full_name: formData.fullName,
-          phone: formData.phone,
-          email: formData.email,
+          payload: {
+            full_name: formData.fullName,
+            phone: formData.phone,
+            email: formData.email,
+            profilePictureUrl: formData.profilePic,
+          },
         })
       ).unwrap();
 
@@ -134,7 +164,7 @@ const ProfilePage = () => {
         city: formData.city,
         taluka: formData.taluka,
         state: formData.state,
-        pin: formData.pin,
+        pincode: formData.pin,
         specialInstructions: formData.specialInstructions,
         isDefault: true,
       };
@@ -193,9 +223,32 @@ const ProfilePage = () => {
           <h2 className="text-sm font-black tracking-widest text-[#0E2A4A] uppercase mb-8">Personal Information</h2>
 
           <div className="flex justify-center mb-8">
-            <div className="relative w-32 h-32 rounded-full border-4 border-gray-50 bg-gray-100 flex items-center justify-center text-gray-400">
-              <Camera size={32} strokeWidth={2} />
+            <div
+              className={`relative w-32 h-32 rounded-full border-4 border-gray-50 bg-gray-100 flex items-center justify-center overflow-hidden text-gray-400 cursor-pointer group ${isUploadingImage ? 'pointer-events-none' : ''}`}
+              onClick={() => !isUploadingImage && fileInputRef.current?.click()}
+            >
+              {formData.profilePic ? (
+                <img src={formData.profilePic} alt="Profile" className="w-full h-full object-cover" />
+              ) : (
+                <Camera size={32} strokeWidth={2} className="group-hover:text-gray-600 transition-colors" />
+              )}
+              {isUploadingImage ? (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                  <span className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></span>
+                </div>
+              ) : (
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-full z-10">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">Upload</span>
+                </div>
+              )}
             </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
           </div>
 
           <div className="space-y-5">

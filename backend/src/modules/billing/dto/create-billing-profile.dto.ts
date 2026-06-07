@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsString,
   Length,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateBillingProfileDto {
@@ -14,11 +15,12 @@ export class CreateBillingProfileDto {
   @IsString()
   billingName: string;
 
+  @ValidateIf((o) => !!o.billingPhone)
   @IsString()
   @Length(10, 20)
   billingPhone: string;
 
-  @IsOptional()
+  @ValidateIf((o) => !!o.billingEmail)
   @IsEmail()
   billingEmail?: string;
 
@@ -51,6 +53,7 @@ export class CreateBillingProfileDto {
   @IsString()
   country?: string;
 
+  @ValidateIf((o) => !!o.pincode)
   @IsString()
   pincode: string;
 

@@ -132,7 +132,7 @@ export class UsersService {
         dto.email || null,
         dto.phone || null,
         passwordHash,
-        dto.fullName,
+        dto.full_name,
         dto.role || 'admin',
         dto.activeWorkspaceId || null,
       ],
@@ -239,13 +239,12 @@ export class UsersService {
         dto.email,
         dto.phone,
         passwordHash,
-        dto.fullName,
+        dto.full_name,
         dto.role,
         dto.activeWorkspaceId,
         dto.profilePictureUrl,
       ],
     );
-
     return rows[0];
   }
 

@@ -51,7 +51,7 @@ export class BillingService {
         updated_at
       )
       VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,
         NOW(),
         NOW()
       )
@@ -167,7 +167,7 @@ export class BillingService {
         country = COALESCE($13, country),
         pincode = COALESCE($14, pincode),
         special_instructions = COALESCE($15, special_instructions),
-        is_default = COALESCE($16, is_default)
+        is_default = COALESCE($16, is_default),
         updated_at = NOW()
       WHERE id = $1
       RETURNING *

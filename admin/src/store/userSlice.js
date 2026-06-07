@@ -93,6 +93,24 @@ export const updateUserProfileThunk = createAsyncThunk(
   }
 );
 
+export const uploadProfilePictureThunk = createAsyncThunk(
+  "user/uploadProfilePicture",
+  async (imageData, { rejectWithValue }) => {
+    try {
+      const { data } = await axios.post(`${API_BASE_URL}/api/uploads/product-image`, {
+        imageData,
+      });
+
+      if (data.success) {
+        return data.imageUrl;
+      }
+      return rejectWithValue("Upload was not successful");
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to upload image to S3");
+    }
+  }
+);
+
 const initialState = {
   profile: null,
   loading: false,

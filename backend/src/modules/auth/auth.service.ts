@@ -163,7 +163,7 @@ export class AuthService {
         username: `user_${phone}`,
         phone: phone,
         password: Math.random().toString(36).slice(-8),
-        fullName: 'Customer',
+        full_name: 'Customer',
         role: 'CUSTOMER',
       });
     }

@@ -116,7 +116,7 @@ const ProfilePage = () => {
     e.preventDefault();
     const userPayload = {
       id: userId,
-      fullName: localName,
+      full_name: localName,
       profilePictureUrl: localPic,
       email: localEmail
     };
