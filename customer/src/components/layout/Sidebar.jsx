@@ -5,8 +5,8 @@ import { X, ShoppingCart, Info, Flame, Star, Zap, User, UserCircle, FileText, Lo
 import { setActiveBrand, setActiveCategory } from "../../store/homeSlice";
 import { setActiveWorkspaceBySlug } from "../../store/workspaceSlice";
 import { logoutCustomer, openAuthModal } from "../../store/authSlice";
-import MiniputSign from "../../assests/MINIPUT_SIGN.png";
-import KwinkSign from "../../assests/kwink_SIGN.png";
+import MiniputSign from "../../assets/MINIPUT_SIGN.png";
+import KwinkSign from "../../assets/kwink_SIGN.png";
 
 const Sidebar = ({ isOpen, onClose }) => {
   const location = useLocation();

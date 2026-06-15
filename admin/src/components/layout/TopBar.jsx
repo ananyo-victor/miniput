@@ -9,8 +9,8 @@ import { toggleSidebar } from "../../store/userSlice";
 import { isHomeRoute } from "../../utils/workspaceRouting";
 
 // Import brand icons
-import MiniputSign from "../../assests/MINIPUT_SIGN.png";
-import KwinkSign from "../../assests/kwink_SIGN.png";
+import MiniputSign from "../../assets/MINIPUT_SIGN.png";
+import KwinkSign from "../../assets/kwink_SIGN.png";
 
 const categoryOptions = [
   { value: "all", label: "All Categories" },

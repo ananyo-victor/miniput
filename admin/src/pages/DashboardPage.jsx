@@ -12,8 +12,8 @@ import {
 } from 'lucide-react';
 import DashboardPageSkeleton from '../components/skeletonLoader/DashboardPageSkeleton';
 import DateRangePicker from '../components/dashboard/DateRangePicker';
-import MiniputSign from '../assests/MINIPUT_SIGN.png';
-import KwinkSign from '../assests/kwink_SIGN.png';
+import MiniputSign from '../assets/MINIPUT_SIGN.png';
+import KwinkSign from '../assets/kwink_SIGN.png';
 
 // Premium 2026 Fashion Palette matching index.css variables
 const FASHION_COLORS = {

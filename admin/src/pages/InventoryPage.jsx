@@ -113,11 +113,18 @@ const InventoryPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const maxImages = 9;
 
   useEffect(() => {
     dispatch(fetchProducts({ includeHidden: true, workspaceId: activeWorkspaceId }));
   }, [dispatch, activeWorkspaceId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const counts = useMemo(() => {
     const map = { all: products.length, "in-stock": 0, limited: 0, low: 0, discounted: 0, hidden: 0 };
@@ -137,22 +144,30 @@ const InventoryPage = () => {
   }, [products]);
 
   const filteredProducts = useMemo(() => {
+    let result;
+
     if (activeFilter === "all") {
-      return products;
+      result = products;
+    } else if (activeFilter === "hidden") {
+      result = products.filter((item) => item.isHidden);
+    } else if (activeFilter === "discounted") {
+      result = products.filter((item) => !item.isHidden && hasActiveDiscount(item));
+    } else {
+      result = products.filter(
+        (item) => !item.isHidden && statusMeta(Number(item.stock || 0)).key === activeFilter
+      );
     }
 
-    if (activeFilter === "hidden") {
-      return products.filter((item) => item.isHidden);
-    }
+    const q = debouncedQuery.trim().toLowerCase();
+    if (!q) return result;
 
-    if (activeFilter === "discounted") {
-      return products.filter((item) => !item.isHidden && hasActiveDiscount(item));
-    }
-
-    return products.filter(
-      (item) => !item.isHidden && statusMeta(Number(item.stock || 0)).key === activeFilter
+    return result.filter(
+      (item) =>
+        (item.name || "").toLowerCase().includes(q) ||
+        (item.articleId || "").toLowerCase().includes(q) ||
+        (item.category || "").toLowerCase().includes(q)
     );
-  }, [activeFilter, products]);
+  }, [activeFilter, products, debouncedQuery]);
 
   const handleFilterChange = (filterId) => {
     setActiveFilter(filterId);
@@ -453,6 +468,24 @@ const InventoryPage = () => {
         })}
       </div>
 
+      <div className="px-4 pt-3 pb-1 md:px-8 bg-[#f5f5f5]">
+        <div className="max-w-7xl mx-auto relative">
+          <svg
+            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#aaa] pointer-events-none"
+            fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" /><path d="M21 21l-4.35-4.35" />
+          </svg>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, article ID or category…"
+            className="w-full rounded-xl border border-[#e0e0e0] bg-white pl-9 pr-4 py-2.5 text-[13px] font-bold text-[#1a1a1a] placeholder:text-[#bbb] placeholder:font-normal focus:outline-none focus:border-[#0E2A4A] transition-colors"
+          />
+        </div>
+      </div>
+
       <div className="inv-list flex-1 overflow-y-auto px-4 py-3 pb-[100px] md:px-8 md:py-4 scrollbar-hide">
         <div className="max-w-7xl mx-auto">
           {loading && (
@@ -469,7 +502,7 @@ const InventoryPage = () => {
           )}
           {!loading && !error && filteredProducts.length === 0 && (
             <div className="rounded-2xl bg-white p-6 text-center text-sm font-bold text-[#666] shadow-md">
-              No products found in this category.
+              {debouncedQuery.trim() ? `No products match "${debouncedQuery.trim()}".` : "No products found in this category."}
             </div>
           )}
 

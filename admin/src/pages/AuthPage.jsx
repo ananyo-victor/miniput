@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router";
-import BackgroundImage from "../assests/DecoBG.png";
-import MiniputLogo from "../assests/MINIPUT_LOGO.png";
-import KwinkLogo from "../assests/kwink_LOGO.png";
+import BackgroundImage from "../assets/DecoBG.png";
+import MiniputLogo from "../assets/MINIPUT_LOGO.png";
+import KwinkLogo from "../assets/kwink_LOGO.png";
 import { adminLoginThunk, setAdminField } from "../store/authSlice";
 import { fetchActiveWorkspaceThunk, setActiveWorkspaceLocal } from "../store/userSlice";
 import { fetchWorkspaces } from "../store/workspaceSlice";

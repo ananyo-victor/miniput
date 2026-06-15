@@ -1,6 +1,6 @@
 import React from "react";
 import { MapPinned, MessageCircle, PhoneCall } from "lucide-react";
-import AboutUsBG from "../../assests/AboutUsBG.jpg";
+import AboutUsBG from "../../assets/AboutUsBG.jpg";
 
 const AboutPageSkeleton = () => {
   return (

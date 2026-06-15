@@ -2,11 +2,11 @@
 import { useDispatch, useSelector } from "react-redux";
 import { MapPinned, MessageCircle, PhoneCall } from "lucide-react";
 import { fetchAboutThunk } from "../store/aboutSlice";
-import AboutUsBG from "../assests/AboutUsBG.jpg";
-import MiniputSign from "../assests/MINIPUT_SIGN.png";
-import KwinkSign from "../assests/kwink_SIGN.png";
-import MiniputLogo from "../assests/MINIPUT_LOGO.png";
-import KwinkLogo from "../assests/kwink_LOGO.png";
+import AboutUsBG from "../assets/AboutUsBG.jpg";
+import MiniputSign from "../assets/MINIPUT_SIGN.png";
+import KwinkSign from "../assets/kwink_SIGN.png";
+import MiniputLogo from "../assets/MINIPUT_LOGO.png";
+import KwinkLogo from "../assets/kwink_LOGO.png";
 import AboutPageSkeleton from "../components/skeletonLoader/AboutPageSkeleton";
 
 

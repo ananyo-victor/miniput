@@ -1,6 +1,6 @@
 import PDFDocument from 'pdfkit';
 import MiniputLogo from "../../assets/MINIPUT_LOGO.png";
-import KwinkLogo from "../../assests/kwink_LOGO.png";
+import KwinkLogo from "../../assets/kwink_LOGO.png";
 export interface InvoiceItem {
   name: string;
   qty: number;
