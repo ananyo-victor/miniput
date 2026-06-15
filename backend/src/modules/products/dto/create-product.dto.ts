@@ -1,11 +1,10 @@
 import { Type } from 'class-transformer';
 import {
-  ArrayMinSize,
-  IsArray,
   IsBoolean,
   IsNumber,
   IsOptional,
   IsString,
+  IsArray,
   IsUUID,
   Min,
   ValidateIf,
@@ -70,12 +69,15 @@ export class CreateProductDto {
   @IsBoolean()
   isHidden?: boolean;
 
+  @IsOptional()
+  @IsString()
+  sizeGroup?: string;
+
+  @IsOptional()
   @Type(() => Number)
-  @IsArray()
-  @ArrayMinSize(1)
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  size: number[];
+  @IsNumber()
+  @Min(1)
+  piecesPerPack?: number;
 
   @IsOptional()
   @IsBoolean()

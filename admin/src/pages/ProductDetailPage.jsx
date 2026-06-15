@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
-import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus, X } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Minus, Plus, Ruler, X } from "lucide-react";
 import { fetchProducts } from "../store/productsSlice";
 
 const ProductDetailPage = () => {
@@ -190,7 +190,11 @@ const ProductDetailPage = () => {
 
             <div className="text-[11px] font-bold text-[#888] mb-3 uppercase tracking-widest">Included Sizes</div>
             <div className="flex gap-2 mb-8 flex-wrap">
-              {availableSizes.map((size) => (
+              {currentProduct.sizeGroup ? (
+                <div className="px-4 py-2 rounded-full flex items-center justify-center text-sm font-black bg-gray-100 text-[#1a1a1a] shadow-sm">
+                  {currentProduct.sizeGroup}
+                </div>
+              ) : availableSizes.map((size) => (
                 <div
                   key={size}
                   className="size-8 md:min-w-10 md:h-10 px-3 rounded-full flex items-center justify-center text-sm font-black bg-gray-100 text-[#1a1a1a] shadow-sm"

@@ -39,17 +39,14 @@ const AddProductModal = ({
 
   const selectedWorkspaceId = activeWorkspaceId || "";
 
-  const currentSizes = Array.isArray(newProduct.sizes)
-    ? newProduct.sizes.map((s) => (typeof s === "object" ? String(s.size) : String(s)))
-    : [];
 
   const miniputOptions = [
-    { id: "group-1-10", label: "Sizes 1 to 8", values: ["1", "2", "3", "4", "5", "6", "7", "8"] }
+    { id: "group-1-8", label: "1 to 8 (20X28)", values: ["1", "2", "3", "4", "5", "6", "7", "8"] }
   ];
 
   const kwinkOptions = [
-    { id: "group-10-16", label: "Sizes 10 to 16", values: ["10", "11", "12", "13", "14", "15", "16"] },
-    { id: "group-6-16", label: "Sizes 6 to 16", values: ["6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16"] }
+    { id: "group-10-16", label: "10 to 16 (30X36)", values: ["10", "12", "14", "16"] },
+    { id: "group-6-16", label: "6 to 16 (26X36)", values: ["6", "8", "10", "12", "14", "16"] }
   ];
 
   const productCategoryOptions = [
@@ -76,11 +73,11 @@ const AddProductModal = ({
   useEffect(() => {
     if (!show) return;
 
-    const hasSizes = Array.isArray(newProduct.sizes) && newProduct.sizes.length > 0;
-    if (!hasSizes && sizeOptions.length > 0) {
-      onFieldChange("sizes", sizeOptions[0].values);
+    if (!newProduct.sizeGroup && sizeOptions.length > 0) {
+      onFieldChange("sizeGroup", sizeOptions[0].label);
+      onFieldChange("piecesPerPack", sizeOptions[0].values.length);
     }
-  }, [show, newProduct.sizes, sizeOptions, onFieldChange]);
+  }, [show, newProduct.sizeGroup, sizeOptions, onFieldChange]);
 
   useEffect(() => {
     if (!show) return;
@@ -90,14 +87,12 @@ const AddProductModal = ({
     }
   }, [show, newProduct.category, onFieldChange, defaultCategory]);
 
-  const handleGroupChange = (targetValues, isChecked) => {
-    onFieldChange("sizes", isChecked ? targetValues : []);
+  const handleGroupChange = (values, label, isChecked) => {
+    onFieldChange("sizeGroup", isChecked ? label : "");
+    onFieldChange("piecesPerPack", isChecked ? values.length : 0);
   };
 
-  const isGroupSelected = (targetValues) => {
-    if (!currentSizes.length) return false;
-    return targetValues.every((val) => currentSizes.includes(val)) && currentSizes.length === targetValues.length;
-  };
+  const isGroupSelected = (label) => newProduct.sizeGroup === label;
 
   const hasUploadingImages = imageUploads.some((item) => item.uploading);
 
@@ -253,7 +248,7 @@ const AddProductModal = ({
 
                 <div className="flex flex-col gap-2 mt-1">
                   {sizeOptions.map((opt) => {
-                    const isChecked = isGroupSelected(opt.values);
+                    const isChecked = isGroupSelected(opt.label);
 
                     return (
                       <label
@@ -269,6 +264,7 @@ const AddProductModal = ({
                           onChange={(e) =>
                             handleGroupChange(
                               opt.values,
+                              opt.label,
                               e.target.checked,
                             )
                           }

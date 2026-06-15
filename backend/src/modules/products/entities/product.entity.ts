@@ -1,10 +1,8 @@
 import {
-  IsArray,
   IsBoolean,
   IsDate,
   IsNumber,
   IsOptional,
-  ArrayMinSize,
   IsString,
   IsUUID,
   Min,
@@ -57,11 +55,9 @@ export class ProductEntity {
   @IsBoolean()
   isHidden: boolean;
 
-  @IsArray()
-  @ArrayMinSize(1)
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  size: number[];
+  @IsOptional()
+  @IsString()
+  sizeGroup?: string | null;
 
   @IsNumber()
   @Min(1)

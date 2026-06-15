@@ -1,11 +1,10 @@
 import { Type } from 'class-transformer';
 import {
-  ArrayMinSize,
-  IsArray,
   IsBoolean,
   IsNumber,
   IsOptional,
   IsString,
+  IsArray,
   IsUUID,
   Min,
   ValidateIf,
@@ -75,14 +74,16 @@ export class UpdateProductDto {
   isHidden?: boolean;
 
   @IsOptional()
-  @Type(() => Number)
-  @IsArray()
-  @ArrayMinSize(1)
-  @IsNumber({}, { each: true })
-  @Min(0, { each: true })
-  size?: number[];
+  @IsString()
+  sizeGroup?: string;
 
-    @IsOptional()
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  piecesPerPack?: number;
+
+  @IsOptional()
   @IsBoolean()
   isTrending?: boolean;
 

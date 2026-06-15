@@ -23,16 +23,6 @@ const normalizeImageUrls = (imageValue: any) => {
   return null;
 };
 
-const normalizeSize = (sizeValue: any): number[] => {
-  if (!Array.isArray(sizeValue)) {
-    return [];
-  }
-
-  return sizeValue
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value) && value >= 0);
-};
-
 const roundPrice = (value: number): number =>
   Math.round(Math.max(0, value) * 100) / 100;
 
@@ -62,16 +52,6 @@ const normalizeDiscountValue = (discountValue: any): number | null => {
   }
 
   return roundPrice(parsedValue);
-};
-
-const getSizeRange = (size: any): string | null => {
-  const normalizedSize = normalizeSize(size);
-
-  if (!normalizedSize.length) {
-    return null;
-  }
-
-  return `${normalizedSize[0]}-${normalizedSize[normalizedSize.length - 1]}`;
 };
 
 const buildDiscountMeta = (product: any) => {
@@ -140,7 +120,6 @@ const validateDiscountConfig = ({
 };
 
 const mapProductRow = (product: any) => {
-  const normalizedSize = normalizeSize(product?.size);
   const discountMeta = buildDiscountMeta(product);
 
   return {
@@ -148,11 +127,10 @@ const mapProductRow = (product: any) => {
     price: roundPrice(Number(product?.price) || 0),
     discountType: discountMeta.discountType,
     discountValue: discountMeta.discountValue,
-    size: normalizedSize,
     imageUrls: product?.imageUrl || [],
     imageUrl: product?.imageUrl?.[0] || null,
-    piecesPerPack: normalizedSize.length || product?.piecesPerPack,
-    sizeRange: getSizeRange(normalizedSize),
+    piecesPerPack: Number(product?.piecesPerPack) || 0,
+    sizeGroup: product?.sizeGroup || null,
     isTrending: !!product?.isTrending,
     isBestseller: !!product?.isBestseller,
     isNewRelease: !!product?.isNewRelease,
@@ -227,16 +205,14 @@ export class ProductsService {
       imageUrls,
       description,
       isHidden,
-      size,
+      sizeGroup,
+      piecesPerPack,
       isTrending,
       isBestseller,
       isNewRelease,
     } = productData;
 
-
     const normalizedImageUrls = normalizeImageUrls(imageUrls ?? imageUrl);
-    const normalizedSize = normalizeSize(size);
-    const piecesPerPack = normalizedSize.length;
     const normalizedDiscountType = normalizeDiscountType(discountType);
     const normalizedDiscountValue = normalizeDiscountValue(discountValue);
     await this.validateWorkspaceExists(workspaceId);
@@ -251,12 +227,12 @@ export class ProductsService {
 
     const query = `
       INSERT INTO products (
-        id, "workspaceId", "articleId", name, category, price, "discountType", "discountValue", stock, "imageUrl", description, "isHidden", "size", "piecesPerPack",
-        "isTrending", "isBestseller", "isNewRelease"
+        id, "workspaceId", "articleId", name, category, price, "discountType", "discountValue", stock, "imageUrl", description, "isHidden",
+        "sizeGroup", "piecesPerPack", "isTrending", "isBestseller", "isNewRelease"
       )
       VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13::integer[],$14,
-        $15,$16,$17
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,
+        $13,$14,$15,$16,$17
       )
       RETURNING * `;
     const values = [
@@ -272,8 +248,8 @@ export class ProductsService {
       normalizedImageUrls,
       description || '',
       !!isHidden,
-      normalizedSize,
-      piecesPerPack,
+      sizeGroup?.trim() || null,
+      Number(piecesPerPack) || 0,
       !!isTrending,
       !!isBestseller,
       !!isNewRelease,
@@ -308,7 +284,8 @@ export class ProductsService {
       workspaceId: productData.workspaceId ?? current.workspaceId,
       description: productData.description ?? current.description,
       isHidden: productData.isHidden === undefined ? current.isHidden : !!productData.isHidden,
-      size: normalizeSize(productData.size ?? current.size),
+      sizeGroup: productData.sizeGroup !== undefined ? (productData.sizeGroup?.trim() || null) : current.sizeGroup,
+      piecesPerPack: productData.piecesPerPack !== undefined ? Number(productData.piecesPerPack) : Number(current.piecesPerPack),
       isTrending: productData.isTrending === undefined ? current.isTrending : !!productData.isTrending,
       isBestseller: productData.isBestseller === undefined ? current.isBestseller : !!productData.isBestseller,
       isNewRelease: productData.isNewRelease === undefined ? current.isNewRelease : !!productData.isNewRelease,
@@ -324,8 +301,6 @@ export class ProductsService {
       discountValue: merged.discountValue,
     });
 
-    const piecesPerPack = merged.size.length;
-
     const query = `
       UPDATE products
       SET
@@ -340,7 +315,7 @@ export class ProductsService {
         "imageUrl" = $9,
         description = $10,
         "isHidden" = $11,
-        size = $12,
+        "sizeGroup" = $12,
         "piecesPerPack" = $13,
         "isTrending" = $14,
         "isBestseller" = $15,
@@ -362,8 +337,8 @@ export class ProductsService {
       merged.imageUrls,
       merged.description,
       merged.isHidden,
-      merged.size,
-      piecesPerPack,
+      merged.sizeGroup,
+      merged.piecesPerPack,
       merged.isTrending,
       merged.isBestseller,
       merged.isNewRelease,

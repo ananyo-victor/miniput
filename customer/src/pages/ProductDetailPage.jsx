@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Check, ChevronLeft, ChevronRight, Heart, Minus, Plus, Share2 } from "lucide-react";
+import { ArrowLeft, Check, ChevronLeft, ChevronRight, Heart, Minus, Plus, Ruler, Share2 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate, useParams } from "react-router";
 import { toggleFavorite } from "../store/favoriteSlice";
@@ -288,7 +288,11 @@ const ProductDetailPage = () => {
 
             <div className="text-xs font-bold text-gray-600 mb-2 uppercase tracking-wider">Included Sizes</div>
             <div className="flex gap-2 mb-5 flex-wrap">
-              {availableSizes.map((size) => (
+              {currentProduct.sizeGroup ? (
+                <div className="px-4 py-2 rounded-full flex items-center justify-center text-sm font-black bg-gray-100 text-[#1a1a1a] shadow-sm">
+                  {currentProduct.sizeGroup}
+                </div>
+              ) : availableSizes.map((size) => (
                 <div
                   key={size}
                   className="size-8 md:minw-10 md:h-10 px-3 rounded-full flex items-center justify-center text-sm font-black bg-gray-100 text-[#1a1a1a] shadow-sm"
