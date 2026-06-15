@@ -5,16 +5,13 @@ import { PersistGate } from "redux-persist/integration/react";
 import App from "./App";
 import "./index.css";
 import { persistor, store } from "./store/store";
-import { setupCustomerAxiosInterceptors } from "./utils/axiosInterceptor";
-
-setupCustomerAxiosInterceptors(store.dispatch);
 
 createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
+  <React.StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <App />
       </PersistGate>
     </Provider>
-  // </React.StrictMode>
+  </React.StrictMode>
 );

@@ -12,6 +12,8 @@ import { setupAxiosInterceptors } from "./utils/axiosInterceptor";
 import { fetchWorkspaces } from "./store/workspaceSlice";
 import OrdersPage from "./pages/OrdersPage";
 import DashboardPage from "./pages/DashboardPage";
+import NotFoundPage from "./pages/NotFoundPage";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -21,25 +23,27 @@ export default function App() {
   }, [dispatch]);
 
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<AuthPage />} />
-        <Route element={<PrivateRoute />}>
-          <Route path="/home" element={<Navigate to="/home/miniput" replace />} />
-          <Route path="/home/:workspaceSlug" element={<HomePage />} />
-          <Route path="/miniput" element={<Navigate to="/home/miniput" replace />} />
-          <Route path="/kwink" element={<Navigate to="/home/kwink" replace />} />
-          <Route path="/product/:productId" element={<ProductDetailPage />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/inventory" element={<InventoryPage />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/settings" element={<ProfilePage />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Route>
+    <ErrorBoundary>
+      <Router>
+        <Routes>
+          <Route path="/" element={<AuthPage />} />
+          <Route element={<PrivateRoute />}>
+            <Route path="/home" element={<Navigate to="/home/miniput" replace />} />
+            <Route path="/home/:workspaceSlug" element={<HomePage />} />
+            <Route path="/miniput" element={<Navigate to="/home/miniput" replace />} />
+            <Route path="/kwink" element={<Navigate to="/home/kwink" replace />} />
+            <Route path="/product/:productId" element={<ProductDetailPage />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/settings" element={<ProfilePage />} />
+            <Route path="*" element={<NotFoundPage />} />
+          </Route>
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </ErrorBoundary>
   );
 }

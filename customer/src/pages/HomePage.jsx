@@ -109,6 +109,7 @@ const HomePage = () => {
   const { items: products, loading, error } = useSelector((state) => state.products);
   const { activeBrand, activeCategory, searchQuery, heroImageUrls: brandHeroImages, promoTags: brandPromoTags, loadingHomeContent } = useSelector((state) => state.home);
   const workspaces = useSelector((state) => state.workspace.items);
+  const authed = useSelector((state) => state.auth.authed);
 
   const [activePromoTagByBrand, setActivePromoTagByBrand] = useState({
     Miniput: "all",
@@ -120,8 +121,10 @@ const HomePage = () => {
   });
 
   useEffect(() => {
-    dispatch(fetchFavorites());
-  }, [dispatch]);
+    if (authed) {
+      dispatch(fetchFavorites());
+    }
+  }, [authed, dispatch]);
 
   const urlBrand = useMemo(() => {
     const pathParts = location.pathname.split("/").filter(Boolean);

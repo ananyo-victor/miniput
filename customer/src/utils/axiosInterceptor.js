@@ -54,6 +54,14 @@ export const setupCustomerAxiosInterceptors = (dispatch) => {
       }
 
       if (error.response?.status === 401 && !originalRequest._retry) {
+        if (originalRequest.url?.includes('/auth/customer/refresh')) {
+          clearCustomerToken();
+          if (dispatch) dispatch(logoutCustomer());
+          processQueue(error, null);
+          isRefreshing = false;
+          return Promise.reject(error);
+        }
+
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
@@ -85,7 +93,7 @@ export const setupCustomerAxiosInterceptors = (dispatch) => {
             setCustomerTokens(data.accessToken, data.refreshToken);
             originalRequest.headers = originalRequest.headers || {};
             originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-            
+
             processQueue(null, data.accessToken);
             return axios(originalRequest);
           }
