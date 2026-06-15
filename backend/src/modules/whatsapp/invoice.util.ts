@@ -1,6 +1,9 @@
 import PDFDocument from 'pdfkit';
-import MiniputLogo from "../../assets/MINIPUT_LOGO.png";
-import KwinkLogo from "../../assets/kwink_LOGO.png";
+import path from 'path';
+
+const MiniputLogo = path.join(__dirname, '../../assets/MINIPUT_LOGO.png');
+const KwinkLogo = path.join(__dirname, '../../assets/kwink_LOGO.png');
+
 export interface InvoiceItem {
   name: string;
   qty: number;
@@ -9,10 +12,11 @@ export interface InvoiceItem {
 export interface InvoiceData {
   orderId: string;
   customerName: string;
+  customerPhone?: string;
   customerAddress?: string;
   createdAt: string | Date;
   items: InvoiceItem[];
-  taxRate?: number; // e.g., 10 for 10%
+  taxRate?: number;
 }
 
 export function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
