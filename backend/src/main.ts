@@ -3,8 +3,6 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { json, urlencoded } from 'express';
-import * as express from 'express';
-import * as path from 'path';
 import { AppModule } from './app.module';
 import { HttpErrorFilter } from './common/filters/http-error.filter';
 
@@ -29,13 +27,6 @@ async function bootstrap() {
   );
   app.useGlobalFilters(new HttpErrorFilter());
   app.setGlobalPrefix('api');
-
-  const clientDistPath = path.join(__dirname, '../client/dist');
-  const expressApp = app.getHttpAdapter().getInstance();
-  app.use(express.static(clientDistPath));
-  expressApp.get(['/', '/admin', '/customer'], (_req, res) => {
-    res.sendFile(path.join(clientDistPath, 'index.html'));
-  });
 
   const port = process.env.PORT || 5000;
   await app.listen(port);
