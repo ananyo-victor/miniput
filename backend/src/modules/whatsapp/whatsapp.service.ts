@@ -248,12 +248,18 @@ export class WhatsappService {
 
       const ownerPhone = await this.getWhatsappReceiverPhone();
 
-      await this.whatsappClient.sendTemplate(ownerPhone, 'hello_world');
+      await this.whatsappClient.sendTemplate(ownerPhone, 'new_order_alert', 'en', [
+        customerName || 'Customer',
+        customerPhone,
+        message.text.body,
+      ]);
 
       await this.whatsappClient.sendText(
         customerPhone,
         `Hi ${customerName || 'there'}! We have received your order and will confirm shortly.`,
         order.lastCustomerMessageAt,
+        'order_received',
+        [customerName || 'there'],
       );
     }
 
@@ -284,7 +290,10 @@ export class WhatsappService {
         await this.touchCustomerWindow(order.id);
 
         const ownerPhone = await this.getWhatsappReceiverPhone();
-        await this.whatsappClient.sendTemplate(ownerPhone, 'hello_world');
+        await this.whatsappClient.sendTemplate(ownerPhone, 'payment_screenshot_received', 'en', [
+          customerName || 'Customer',
+          customerPhone,
+        ]);
       }
     }
 
@@ -312,6 +321,8 @@ export class WhatsappService {
       order.customerPhone,
       `Hi ${order.customerName || 'there'}! Your order has been accepted. We will send you a payment QR code shortly.`,
       order.lastCustomerMessageAt,
+      'order_accepted',
+      [order.customerName || 'there'],
     );
 
     this.eventsGateway.emitOrderUpdated(rows[0]);
@@ -340,6 +351,8 @@ export class WhatsappService {
       order.customerPhone,
       `Hi ${order.customerName || 'there'}, unfortunately your order has been rejected. Please contact us for more details.`,
       order.lastCustomerMessageAt,
+      'order_rejected',
+      [order.customerName || 'there'],
     );
 
     this.eventsGateway.emitOrderUpdated(rows[0]);
@@ -391,6 +404,7 @@ export class WhatsappService {
       qrImageUrl,
       'Please scan this QR to complete your payment.',
       order.lastCustomerMessageAt,
+      'payment_qr',
     );
 
     await pool.query(
@@ -414,6 +428,8 @@ export class WhatsappService {
       order.customerPhone,
       'Payment received! Your order is confirmed and will be dispatched soon. Thank you! 🚚',
       order.lastCustomerMessageAt,
+      'order_shipped',
+      [order.customerName || 'there'],
     );
 
     await this.sendInvoice(order);
@@ -439,6 +455,8 @@ export class WhatsappService {
       order.customerPhone,
       `Hi ${order.customerName || 'there'}! We've received your payment. Your order is being processed and will be shipped soon. Thank you! 🚚`,
       order.lastCustomerMessageAt,
+      'order_shipped',
+      [order.customerName || 'there'],
     );
 
     await pool.query(

@@ -1,3 +1,9 @@
+customer_otp
+
+Your Miniput login OTP is {{1}}. It is valid for 5 minutes.
+
+
+
 order_received
 
 Hi {{1}}! We have received your order and will confirm it shortly. Thank you for shopping with us!

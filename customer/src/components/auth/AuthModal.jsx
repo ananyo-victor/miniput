@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, ArrowRight } from "lucide-react";
 import {
@@ -8,10 +8,38 @@ import {
   verifyCustomerThunk
 } from "../../store/authSlice";
 
+const RESEND_COOLDOWN = 60;
+
 const AuthModal = () => {
   const dispatch = useDispatch();
   const { isAuthModalOpen, authStep, phone, otp, authError } = useSelector((state) => state.auth);
   const [loading, setLoading] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    if (authStep === "otp") {
+      startResendTimer();
+    } else {
+      clearInterval(timerRef.current);
+      setResendTimer(0);
+    }
+    return () => clearInterval(timerRef.current);
+  }, [authStep]);
+
+  const startResendTimer = () => {
+    clearInterval(timerRef.current);
+    setResendTimer(RESEND_COOLDOWN);
+    timerRef.current = setInterval(() => {
+      setResendTimer((prev) => {
+        if (prev <= 1) {
+          clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   if (!isAuthModalOpen) return null;
 
@@ -21,6 +49,16 @@ const AuthModal = () => {
       setLoading(true);
       await dispatch(checkCustomerThunk(phone));
       setLoading(false);
+    }
+  };
+
+  const handleResend = async (e) => {
+    e.preventDefault();
+    if (phone.length === 10 && resendTimer === 0) {
+      setLoading(true);
+      await dispatch(checkCustomerThunk(phone));
+      setLoading(false);
+      startResendTimer();
     }
   };
 
@@ -124,21 +162,14 @@ const AuthModal = () => {
 
                 <button
                   type="button"
-                  onClick={handlePhoneSubmit}
-                  disabled={loading}
+                  onClick={handleResend}
+                  disabled={loading || resendTimer > 0}
                   className="text-[11px] font-bold text-[var(--mk-navy)] hover:text-blue-800 uppercase tracking-wider transition-colors disabled:opacity-50"
                 >
-                  Resend OTP
+                  {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend OTP"}
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => dispatch(setAuthField({ key: "authStep", value: "mobile" }))}
-                className="text-[11px] font-bold text-gray-400 hover:text-gray-600 text-center uppercase tracking-wider"
-              >
-                ← Change Number
-              </button>
             </form>
           )}
         </div>

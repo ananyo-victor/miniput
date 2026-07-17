@@ -9,8 +9,6 @@ import { UsersService } from '../users/users.service';
 @Injectable()
 export class AuthService {
 
-  private otpStore = new Map<string, { otp: string, expiresAt: number }>();
-
   constructor(
     private readonly whatsappClient: WhatsappClientService,
     private readonly usersService: UsersService
@@ -127,14 +125,19 @@ export class AuthService {
   async sendCustomerOtp(phone: string) {
     const otp = Math.floor(1000 + Math.random() * 9000).toString();
 
-    this.otpStore.set(phone, { otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+    await pool.query(
+      `INSERT INTO otp_verifications (phone, otp, expires_at)
+       VALUES ($1, $2, NOW() + INTERVAL '5 minutes')
+       ON CONFLICT (phone) DO UPDATE SET otp = $2, expires_at = NOW() + INTERVAL '5 minutes', created_at = NOW()`,
+      [phone, otp],
+    );
 
     const message = `Your Miniput login OTP is ${otp}. It is valid for 5 minutes.`;
 
     if (this.isLocalEnv()) {
       console.log(`[LOCAL DEV] WhatsApp bypassed. OTP for ${phone} is: ${otp} (You can also use 1111)`);
     } else {
-      await this.whatsappClient.sendText(phone, message, null, 'hello_world');
+      await this.whatsappClient.sendTemplate(phone, 'customer_otp', 'en', [otp], [{ index: 0, text: otp }]);
     }
 
     const { rows } = await pool.query('SELECT id FROM users WHERE phone = $1', [phone]);
@@ -143,17 +146,20 @@ export class AuthService {
   }
 
   async verifyCustomerOtp(phone: string, otp: string) {
-    const record = this.otpStore.get(phone);
-
     const isLocalBypass = this.isLocalEnv() && otp === '1111';
 
     if (!isLocalBypass) {
-      if (!record || record.otp !== otp || record.expiresAt < Date.now()) {
+      const { rows } = await pool.query(
+        `SELECT otp FROM otp_verifications WHERE phone = $1 AND expires_at > NOW()`,
+        [phone],
+      );
+
+      if (!rows.length || rows[0].otp !== otp) {
         throw new BadRequestException('Invalid or expired OTP');
       }
     }
 
-    this.otpStore.delete(phone);
+    await pool.query(`DELETE FROM otp_verifications WHERE phone = $1 OR expires_at <= NOW()`, [phone]);
 
     let { rows } = await pool.query('SELECT * FROM users WHERE phone = $1', [phone]);
     let user = rows[0];

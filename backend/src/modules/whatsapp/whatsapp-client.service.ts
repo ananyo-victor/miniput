@@ -34,6 +34,7 @@ export class WhatsappClientService {
     message: string,
     lastCustomerMessageAt: Date | string | null,
     fallbackTemplate: string = 'hello_world',
+    fallbackTemplateVars: string[] = [],
   ) {
     if (this.isWithinWindow(lastCustomerMessageAt)) {
       return axios.post(
@@ -48,7 +49,7 @@ export class WhatsappClientService {
       );
     }
 
-    return this.sendTemplate(phone, fallbackTemplate);
+    return this.sendTemplate(phone, fallbackTemplate, 'en', fallbackTemplateVars);
   }
 
   // Uploads a base64 data URL to WhatsApp media and returns the media ID
@@ -89,6 +90,7 @@ export class WhatsappClientService {
     caption: string,
     lastCustomerMessageAt: Date | string | null,
     fallbackTemplate: string = 'hello_world',
+    fallbackTemplateVars: string[] = [],
   ) {
     if (this.isWithinWindow(lastCustomerMessageAt)) {
       let imagePayload: Record<string, string>;
@@ -112,7 +114,7 @@ export class WhatsappClientService {
       );
     }
 
-    return this.sendTemplate(phone, fallbackTemplate);
+    return this.sendTemplate(phone, fallbackTemplate, 'en', fallbackTemplateVars);
   }
 
   // Sends a document (e.g. PDF) if within 24h window, falls back to template
@@ -123,6 +125,7 @@ export class WhatsappClientService {
     caption: string,
     lastCustomerMessageAt: Date | string | null,
     fallbackTemplate: string = 'hello_world',
+    fallbackTemplateVars: string[] = [],
   ) {
     if (this.isWithinWindow(lastCustomerMessageAt)) {
       return axios.post(
@@ -137,14 +140,31 @@ export class WhatsappClientService {
       );
     }
 
-    return this.sendTemplate(phone, fallbackTemplate);
+    return this.sendTemplate(phone, fallbackTemplate, 'en', fallbackTemplateVars);
   }
 
   async sendTemplate(
     phone: string,
     templateName: string,
-    languageCode: string = 'en_US',
+    languageCode: string = 'en',
+    bodyVars: string[] = [],
+    buttonVars: { index: number; text: string }[] = [],
   ) {
+    const components: any[] = [];
+
+    if (bodyVars.length) {
+      components.push({ type: 'body', parameters: bodyVars.map((text) => ({ type: 'text', text })) });
+    }
+
+    for (const btn of buttonVars) {
+      components.push({
+        type: 'button',
+        sub_type: 'url',
+        index: String(btn.index),
+        parameters: [{ type: 'text', text: btn.text }],
+      });
+    }
+
     return axios.post(
       this.baseUrl,
       {
@@ -154,6 +174,7 @@ export class WhatsappClientService {
         template: {
           name: templateName,
           language: { code: languageCode },
+          ...(components.length && { components }),
         },
       },
       { headers: this.headers },
