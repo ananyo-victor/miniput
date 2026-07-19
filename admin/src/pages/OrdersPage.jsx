@@ -13,9 +13,10 @@ import {
     orderReceived,
     orderUpdated,
 } from "../store/ordersSlice";
-import { CheckCircle, XCircle, Clock, Package, QrCode, Truck, CreditCard, Ban, RefreshCw, Search } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Package, QrCode, Truck, CreditCard, Ban, RefreshCw, Search, X } from "lucide-react";
 import OrderCardSkeleton from "../components/skeletonLoader/OrderCardSkeleton";
 import ConfirmActionModal from "../components/orders/ConfirmActionModal";
+import AuthenticatedImage from "../components/common/AuthenticatedImage";
 
 const confirmActions = {
     accept: {
@@ -84,6 +85,7 @@ const OrdersPage = () => {
     const [isProcessingAction, setIsProcessingAction] = useState(false);
     const [searchInput, setSearchInput] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
+    const [previewScreenshot, setPreviewScreenshot] = useState(null);
 
     useEffect(() => {
         if (activeWorkspaceId) {
@@ -229,7 +231,7 @@ const OrdersPage = () => {
                                             {getStatusBadge(order.status)}
                                         </div>
                                         <p className="text-xs text-gray-500 font-bold">
-                                            {new Date(order.createdAt).toLocaleString()}
+                                            {new Date(order.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
                                         </p>
                                     </div>
                                     <div className="text-left md:text-right">
@@ -297,13 +299,13 @@ const OrdersPage = () => {
                                 {order.paymentScreenshotUrl && (
                                     <div className="mb-4">
                                         <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Payment Screenshot</p>
-                                        <a href={`/api/whatsapp/media/${order.paymentScreenshotUrl}`} target="_blank" rel="noreferrer">
-                                            <img
-                                                src={`/api/whatsapp/media/${order.paymentScreenshotUrl}`}
-                                                alt="Payment screenshot"
-                                                className="max-h-48 rounded-xl border border-gray-200 object-contain cursor-pointer hover:opacity-90 transition"
-                                            />
-                                        </a>
+                                        <AuthenticatedImage
+                                            src={`/api/whatsapp/media/${order.paymentScreenshotUrl}`}
+                                            alt="Payment screenshot"
+                                            containerClassName="w-20 h-20 rounded-xl border border-gray-200"
+                                            className="w-20 h-20 rounded-xl border border-gray-200 object-cover cursor-pointer hover:opacity-90 transition"
+                                            onClick={() => setPreviewScreenshot(`/api/whatsapp/media/${order.paymentScreenshotUrl}`)}
+                                        />
                                     </div>
                                 )}
 
@@ -382,6 +384,28 @@ const OrdersPage = () => {
                 onConfirm={handleConfirmAction}
                 onCancel={handleCancelAction}
             />
+
+            {previewScreenshot && (
+                <div
+                    className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center backdrop-blur-sm"
+                    onClick={() => setPreviewScreenshot(null)}
+                >
+                    <button
+                        onClick={() => setPreviewScreenshot(null)}
+                        className="absolute top-6 right-6 w-10 h-10 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center transition-colors z-50"
+                    >
+                        <X size={20} />
+                    </button>
+
+                    <AuthenticatedImage
+                        src={previewScreenshot}
+                        alt="Payment screenshot"
+                        containerClassName="w-[90%] h-[90vh]"
+                        className="w-auto h-auto max-w-[90%] max-h-[90vh] object-contain"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                </div>
+            )}
         </div>
     );
 };

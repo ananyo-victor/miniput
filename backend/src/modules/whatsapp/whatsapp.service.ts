@@ -324,10 +324,14 @@ export class WhatsappService {
         await this.touchCustomerWindow(order.id);
 
         const ownerPhone = await this.getWhatsappReceiverPhone();
-        await this.whatsappClient.sendTemplate(ownerPhone, 'payment_screenshot_received', 'en', [
-          customerName || 'Customer',
-          customerPhone,
-        ]);
+        await this.whatsappClient.sendImageByMediaId(
+          ownerPhone,
+          mediaId,
+          `Payment screenshot received for order from ${customerName || 'Customer'} (${customerPhone}). Please review and confirm.`,
+          new Date(),
+          'payment_screenshot_received',
+          [customerName || 'Customer', customerPhone],
+        );
       }
     }
 
@@ -394,7 +398,7 @@ export class WhatsappService {
     return rows[0];
   }
 
-  private async sendInvoice(order: any) {
+  private async buildInvoicePdf(order: any) {
     const priceByArticleId = await this.resolvePrices(order.items.map((item: any) => item.code));
 
     const invoiceItems = order.items.map((item: any) => ({
@@ -404,13 +408,21 @@ export class WhatsappService {
       price: priceByArticleId.get(item.code) || 0,
     }));
 
-    const pdfBuffer = await generateInvoicePdf({
+    const aboutContent = await this.contentService.getAboutContent();
+
+    return generateInvoicePdf({
       orderNumber: order.orderNumber,
       customerName: order.customerName,
       customerPhone: order.customerPhone,
       createdAt: order.createdAt,
       items: invoiceItems,
+      businessPhone: aboutContent.phoneNumber,
+      businessAddress: aboutContent.address,
     });
+  }
+
+  private async sendInvoice(order: any) {
+    const pdfBuffer = await this.buildInvoicePdf(order);
 
     const filename = `Invoice-${order.orderNumber}.pdf`;
     const mediaId = await this.whatsappClient.uploadMedia(pdfBuffer, 'application/pdf', filename);
@@ -422,6 +434,16 @@ export class WhatsappService {
       'Here is your invoice. Thank you for shopping with us!',
       order.lastCustomerMessageAt,
     );
+  }
+
+  /**
+   * Dev-only: generates the invoice PDF for an order without sending it via
+   * WhatsApp or mutating any order state. Used to preview invoice changes.
+   */
+  async previewInvoice(orderId: string): Promise<{ buffer: Buffer; filename: string }> {
+    const order = await this.getOrder(orderId);
+    const buffer = await this.buildInvoicePdf(order);
+    return { buffer, filename: `Invoice-${order.orderNumber}.pdf` };
   }
 
   async sendQr(orderId: string) {

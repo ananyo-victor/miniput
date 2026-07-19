@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Get,
+  NotFoundException,
   Param,
   Patch,
   Post,
@@ -64,6 +65,18 @@ export class WhatsappController {
   @UseGuards(AuthGuard)
   async getMyOrders(@Req() req: any) {
     return this.whatsappService.getMyOrders(req.user.id);
+  }
+
+  @Get('dev/orders/:id/invoice-preview')
+  async previewInvoice(@Param('id') id: string, @Res() res: Response) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new NotFoundException();
+    }
+
+    const { buffer, filename } = await this.whatsappService.previewInvoice(id);
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${filename}"`);
+    res.end(buffer);
   }
 
   @Get('media/:mediaId')

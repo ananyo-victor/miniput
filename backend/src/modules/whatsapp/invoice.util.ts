@@ -17,6 +17,8 @@ export interface InvoiceData {
   createdAt: string | Date;
   items: InvoiceItem[];
   taxRate?: number;
+  businessPhone?: string;
+  businessAddress?: string;
 }
 
 export function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
@@ -49,6 +51,7 @@ export function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
       doc.image(KwinkLogo, 420, 65, { width: 80 });
     } catch (error) {
       // Fallback if images are not found during generation
+      console.error('generateInvoicePdf: failed to load logo images', error);
       doc.fontSize(10).text('Miniput Logo', 420, 40);
       doc.text('Kwink Logo', 420, 70);
     }
@@ -71,8 +74,7 @@ export function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
     // Right side
     doc.font(fontBold).text('Payment Method', 380, topBoxY + 15);
     doc.font(fontRegular)
-       .text('Bank Number:', 380, topBoxY + 30)
-       .text('0123 4567 8901 2345', 380, topBoxY + 45);
+       .text('UPI / Bank Transfer', 380, topBoxY + 30);
 
     // --- MAIN TABLE BOX ---
     const tableTop = 230;
@@ -113,8 +115,8 @@ export function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
       doc.text((index + 1).toString(), colNo, currentY);
       doc.text(item.name, colName, currentY, { width: 160 });
       doc.text(item.qty.toString(), colQty, currentY);
-      doc.text(`$${item.price.toFixed(0)}`, colPrice, currentY);
-      doc.text(`$${total.toFixed(0)}`, colTotal, currentY);
+      doc.text(`Rs. ${item.price.toFixed(0)}`, colPrice, currentY);
+      doc.text(`Rs. ${total.toFixed(0)}`, colTotal, currentY);
 
       currentY += itemSpacing;
     });
@@ -137,13 +139,13 @@ export function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
 
     doc.fontSize(10).fillColor(primaryColor);
     doc.font(fontBold).text('Sub Total', 350, currentY);
-    doc.font(fontRegular).text(`$${subTotal.toFixed(0)}`, colTotal, currentY);
+    doc.font(fontRegular).text(`Rs. ${subTotal.toFixed(0)}`, colTotal, currentY);
 
     doc.font(fontRegular).text(`Tax (${taxRate}%)`, 350, currentY + 20);
-    doc.text(`$${taxAmount.toFixed(0)}`, colTotal, currentY + 20);
+    doc.text(`Rs. ${taxAmount.toFixed(0)}`, colTotal, currentY + 20);
 
     doc.font(fontBold).text('Total', 350, currentY + 45);
-    doc.text(`$${grandTotal.toFixed(0)}`, colTotal, currentY + 45);
+    doc.text(`Rs. ${grandTotal.toFixed(0)}`, colTotal, currentY + 45);
 
     // --- FOOTER ---
     const footerY = tableTop + tableBoxHeight + 40;
@@ -151,31 +153,8 @@ export function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
     // Contact Us (Left)
     doc.font(fontBold).fontSize(11).text('Contact Us:', 50, footerY);
     doc.font(fontRegular).fontSize(9).fillColor(secondaryColor)
-       .text('+123-456-7890', 50, footerY + 15)
-       .text('hello@reallygreatsite.com', 50, footerY + 30)
-       .text('123 Anywhere St., Any City', 50, footerY + 45);
-
-    // Payment Details (Left, below contact)
-    const paymentY = footerY + 70;
-    doc.font(fontBold).fontSize(11).fillColor(primaryColor).text('Payment details', 50, paymentY);
-    doc.font(fontRegular).fontSize(9).fillColor(secondaryColor)
-       .text('account name\naccount no.\nifsc code\nupi id\nphone no.\nscanner', 50, paymentY + 15, { lineGap: 2 });
-
-    // Signature (Right)
-    // Note: If you have an actual signature image, use doc.image(). Here we draw a placeholder line.
-    const sigX = 380;
-    const sigY = footerY + 80;
-    
-    // Draw a mock scribble/signature
-    doc.moveTo(sigX + 20, sigY + 10)
-       .bezierCurveTo(sigX + 40, sigY - 20, sigX + 60, sigY + 40, sigX + 80, sigY)
-       .bezierCurveTo(sigX + 90, sigY - 10, sigX + 100, sigY + 10, sigX + 120, sigY - 5)
-       .lineWidth(1).strokeColor('#000000').stroke();
-
-    // Signature Line
-    doc.moveTo(sigX, sigY + 25).lineTo(sigX + 150, sigY + 25).lineWidth(1).strokeColor('#000000').stroke();
-    doc.font(fontRegular).fontSize(10).fillColor(primaryColor)
-       .text('Rosa Maria Aguado', sigX, sigY + 35, { width: 150, align: 'center' });
+       .text(`Phone Number - ${data.businessPhone || 'N/A'}`, 50, footerY + 15)
+       .text(`Address - ${data.businessAddress || 'N/A'}`, 50, footerY + 30, { width: 300 });
 
     doc.end();
   });

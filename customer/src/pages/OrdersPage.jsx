@@ -4,6 +4,7 @@ import { useNavigate } from "react-router";
 import { Package, Clock, CheckCircle, QrCode, CreditCard, Truck, Ban, Copy, Check } from "lucide-react";
 import { fetchMyOrdersThunk } from "../store/orderSlice";
 import { openAuthModal } from "../store/authSlice";
+import OrdersPageSkeleton from "../components/skeletonLoader/OrdersPageSkeleton";
 
 const STAGES = [
   { id: "pending", label: "Order Placed", icon: Clock },
@@ -169,9 +170,7 @@ const OrdersPage = () => {
           </div>
         </main>
       ) : loading ? (
-        <main className="flex-1 flex items-center justify-center p-10">
-          <p className="text-sm text-gray-500">Loading your orders...</p>
-        </main>
+        <OrdersPageSkeleton />
       ) : error ? (
         <main className="flex-1 flex items-center justify-center p-10">
           <p className="text-sm text-[#D63031]">{error}</p>

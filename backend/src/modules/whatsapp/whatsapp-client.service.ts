@@ -117,6 +117,31 @@ export class WhatsappClientService {
     return this.sendTemplate(phone, fallbackTemplate, 'en', fallbackTemplateVars);
   }
 
+  // Sends an already-uploaded WhatsApp media ID as an image if within 24h window, falls back to template
+  async sendImageByMediaId(
+    phone: string,
+    mediaId: string,
+    caption: string,
+    lastCustomerMessageAt: Date | string | null,
+    fallbackTemplate: string = 'hello_world',
+    fallbackTemplateVars: string[] = [],
+  ) {
+    if (this.isWithinWindow(lastCustomerMessageAt)) {
+      return axios.post(
+        this.baseUrl,
+        {
+          messaging_product: 'whatsapp',
+          to: phone,
+          type: 'image',
+          image: { id: mediaId, caption },
+        },
+        { headers: this.headers },
+      );
+    }
+
+    return this.sendTemplate(phone, fallbackTemplate, 'en', fallbackTemplateVars);
+  }
+
   // Sends a document (e.g. PDF) if within 24h window, falls back to template
   async sendDocument(
     phone: string,
@@ -149,8 +174,16 @@ export class WhatsappClientService {
     languageCode: string = 'en',
     bodyVars: string[] = [],
     buttonVars: { index: number; text: string }[] = [],
+    headerImageUrl?: string,
   ) {
     const components: any[] = [];
+
+    if (headerImageUrl) {
+      const imageParam = headerImageUrl.startsWith('data:')
+        ? { id: await this.uploadMediaFromDataUrl(headerImageUrl) }
+        : { link: headerImageUrl };
+      components.push({ type: 'header', parameters: [{ type: 'image', image: imageParam }] });
+    }
 
     if (bodyVars.length) {
       components.push({ type: 'body', parameters: bodyVars.map((text) => ({ type: 'text', text })) });
