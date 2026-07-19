@@ -236,7 +236,7 @@ export class UsersService {
       [
         id,
         dto.username,
-        dto.email,
+        dto.email || null,
         dto.phone,
         passwordHash,
         dto.full_name,

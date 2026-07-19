@@ -92,18 +92,6 @@ const OrderFormPage = () => {
     ].join("\n");
   };
 
-  function formatWhatsAppNumber(number) {
-    if (!number) return '';
-    const cleanNumber = String(number).replace(/\D/g, '');
-    if (cleanNumber.length === 10) {
-      return `+91${cleanNumber}`;
-    }
-    if (cleanNumber.length === 12 && cleanNumber.startsWith('91')) {
-      return `+${cleanNumber}`;
-    }
-    return String(number);
-  }
-
   useEffect(() => {
     dispatch(fetchAboutThunk());
     if (userId) dispatch(fetchDefaultBusinessThunk(userId));
@@ -123,7 +111,7 @@ const OrderFormPage = () => {
     }));
   }, [defaultBusiness]);
 
-  const whatsappNumber = formatWhatsAppNumber(about.whatsappNumber);
+  const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER;
 
   const sendOrderOnWhatsApp = () => {
     if (!whatsappNumber) return;

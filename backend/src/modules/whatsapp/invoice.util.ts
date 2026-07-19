@@ -10,7 +10,7 @@ export interface InvoiceItem {
   price: number;
 }
 export interface InvoiceData {
-  orderId: string;
+  orderNumber: string;
   customerName: string;
   customerPhone?: string;
   customerAddress?: string;
@@ -40,7 +40,7 @@ export function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
     doc.fontSize(45).text('INVOICE', 47, 65, { characterSpacing: 2 });
     
     doc.fontSize(10).font(fontBold).text('Invoice ID: ', 50, 115, { continued: true })
-       .font(fontRegular).text(data.orderId);
+       .font(fontRegular).text(data.orderNumber);
 
     // Logos (Positioned on the top right)
     // Note: ensure the path/bundler resolves these properly in your Node environment.

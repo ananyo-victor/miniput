@@ -5,8 +5,10 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const fetchOrdersThunk = createAsyncThunk(
   "orders/fetch",
-  async () => {
-    const { data } = await axios.get(`${API_BASE_URL}/api/whatsapp/orders`);
+  async (search) => {
+    const { data } = await axios.get(`${API_BASE_URL}/api/whatsapp/orders`, {
+      params: search ? { search } : {},
+    });
     return data;
   }
 );

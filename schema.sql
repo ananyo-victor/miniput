@@ -157,6 +157,7 @@ CREATE TABLE IF NOT EXISTS billing_profiles (
 -- =============================================================
 CREATE TABLE IF NOT EXISTS whatsapp_orders (
     id                      UUID        NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
+    "orderNumber"           VARCHAR     NOT NULL,
     "customerPhone"         VARCHAR     NOT NULL,
     "customerName"          VARCHAR,
     "orderMessage"          TEXT        NOT NULL,
@@ -172,6 +173,7 @@ CREATE TABLE IF NOT EXISTS whatsapp_orders (
     "createdAt"             TIMESTAMP   NOT NULL DEFAULT NOW(),
     "updatedAt"             TIMESTAMP   NOT NULL DEFAULT NOW(),
     CONSTRAINT whatsapp_orders_message_id_unique UNIQUE ("messageId"),
+    CONSTRAINT whatsapp_orders_order_number_unique UNIQUE ("orderNumber"),
     CONSTRAINT whatsapp_orders_user_fk
         FOREIGN KEY ("userId") REFERENCES users (id) ON DELETE SET NULL
 );

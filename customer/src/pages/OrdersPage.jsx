@@ -1,7 +1,7 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router";
-import { Package, Clock, CheckCircle, QrCode, CreditCard, Truck, Ban } from "lucide-react";
+import { Package, Clock, CheckCircle, QrCode, CreditCard, Truck, Ban, Copy, Check } from "lucide-react";
 import { fetchMyOrdersThunk } from "../store/orderSlice";
 import { openAuthModal } from "../store/authSlice";
 
@@ -80,14 +80,36 @@ const OrderProgress = ({ status }) => {
 
 const OrderCard = ({ order }) => {
   const items = order?.parsedOrder?.items || [];
+  const orderLabel = order.orderNumber || `ORDER #${String(order.id).slice(0, 8).toUpperCase()}`;
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(orderLabel);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (_error) {
+      // ignore clipboard failures
+    }
+  };
 
   return (
     <div className="mk-card border border-gray-100 shadow-sm p-5">
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <p className="text-[11px] font-bold text-gray-400 tracking-wide">
-            ORDER #{String(order.id).slice(0, 8).toUpperCase()}
-          </p>
+          <div className="flex items-center gap-1.5">
+            <p className="text-[11px] font-bold text-gray-400 tracking-wide">
+              {orderLabel}
+            </p>
+            <button
+              type="button"
+              onClick={handleCopy}
+              aria-label="Copy order ID"
+              className="text-gray-400 hover:text-(--mk-navy) transition-colors cursor-pointer"
+            >
+              {copied ? <Check size={12} /> : <Copy size={12} />}
+            </button>
+          </div>
           <p className="text-sm text-gray-500 mt-0.5">{formatDate(order.createdAt)}</p>
         </div>
       </div>

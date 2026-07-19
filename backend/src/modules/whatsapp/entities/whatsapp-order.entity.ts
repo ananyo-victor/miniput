@@ -23,6 +23,9 @@ export class WhatsappOrderEntity {
   @IsUUID()
   id: string;
 
+  @IsString()
+  orderNumber: string;
+
   @IsOptional()
   @IsUUID()
   userId?: string;

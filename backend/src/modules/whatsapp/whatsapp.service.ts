@@ -56,6 +56,17 @@ export class WhatsappService {
     };
   }
 
+  // WhatsApp template body parameters reject newlines/tabs and 4+ consecutive spaces
+  private sanitizeTemplateText(text: string): string {
+    return text.replace(/[\n\t]+/g, ' ').replace(/ {4,}/g, '   ').trim();
+  }
+
+  private generateOrderNumber(): string {
+    const datePart = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const randomPart = Math.random().toString(36).slice(2, 6).toUpperCase();
+    return `ORD-${datePart}-${randomPart}`;
+  }
+
   private async getWhatsappReceiverPhone(): Promise<string> {
     const { rows } = await pool.query(
       `SELECT phone FROM users WHERE "isWhatsappReceiver" = TRUE LIMIT 1`,
@@ -72,10 +83,20 @@ export class WhatsappService {
     return this.whatsappClient.downloadMedia(mediaId);
   }
 
-  async getAllOrders() {
-    const { rows } = await pool.query(
-      `SELECT * FROM whatsapp_orders ORDER BY "createdAt" DESC`,
-    );
+  async getAllOrders(search?: string) {
+    const trimmed = search?.trim();
+    const { rows } = trimmed
+      ? await pool.query(
+          `
+          SELECT * FROM whatsapp_orders
+          WHERE "orderNumber" ILIKE $1 OR id::text ILIKE $1 OR "customerPhone" ILIKE $1 OR "customerName" ILIKE $1
+          ORDER BY "createdAt" DESC
+          `,
+          [`%${trimmed}%`],
+        )
+      : await pool.query(
+          `SELECT * FROM whatsapp_orders ORDER BY "createdAt" DESC`,
+        );
 
     if (!rows.length) {
       return rows;
@@ -100,15 +121,28 @@ export class WhatsappService {
     const parsedOrder = this.parseOrderMessage(data.orderMessage);
     const orderId = uuidv4();
     const userId = parsedOrder.userId || null;
-    const { rows } = await pool.query(
-      `
-      INSERT INTO whatsapp_orders (id, "customerPhone", "customerName", "orderMessage", "parsedOrder", "messageId", "userId", "lastCustomerMessageAt")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
-      ON CONFLICT ("messageId") DO NOTHING
-      RETURNING *
-      `,
-      [orderId, data.customerPhone, data.customerName, data.orderMessage, JSON.stringify(parsedOrder), data.messageId, userId],
-    );
+
+    let rows: any[] = [];
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const orderNumber = this.generateOrderNumber();
+      try {
+        ({ rows } = await pool.query(
+          `
+          INSERT INTO whatsapp_orders (id, "orderNumber", "customerPhone", "customerName", "orderMessage", "parsedOrder", "messageId", "userId", "lastCustomerMessageAt")
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
+          ON CONFLICT ("messageId") DO NOTHING
+          RETURNING *
+          `,
+          [orderId, orderNumber, data.customerPhone, data.customerName, data.orderMessage, JSON.stringify(parsedOrder), data.messageId, userId],
+        ));
+        break;
+      } catch (err: any) {
+        if (err?.code === '23505' && err?.constraint === 'whatsapp_orders_order_number_unique') {
+          continue;
+        }
+        throw err;
+      }
+    }
 
     const order = rows[0] ?? null;
 
@@ -248,10 +282,10 @@ export class WhatsappService {
 
       const ownerPhone = await this.getWhatsappReceiverPhone();
 
-      await this.whatsappClient.sendTemplate(ownerPhone, 'new_order_alert', 'en', [
+      await this.whatsappClient.sendTemplate(ownerPhone, 'new_order_alert_1', 'en', [
         customerName || 'Customer',
         customerPhone,
-        message.text.body,
+        this.sanitizeTemplateText(message.text.body),
       ]);
 
       await this.whatsappClient.sendText(
@@ -321,7 +355,7 @@ export class WhatsappService {
       order.customerPhone,
       `Hi ${order.customerName || 'there'}! Your order has been accepted. We will send you a payment QR code shortly.`,
       order.lastCustomerMessageAt,
-      'order_accepted',
+      'order_accepted_1',
       [order.customerName || 'there'],
     );
 
@@ -351,7 +385,7 @@ export class WhatsappService {
       order.customerPhone,
       `Hi ${order.customerName || 'there'}, unfortunately your order has been rejected. Please contact us for more details.`,
       order.lastCustomerMessageAt,
-      'order_rejected',
+      'order_rejected_1',
       [order.customerName || 'there'],
     );
 
@@ -371,14 +405,14 @@ export class WhatsappService {
     }));
 
     const pdfBuffer = await generateInvoicePdf({
-      orderId: order.id,
+      orderNumber: order.orderNumber,
       customerName: order.customerName,
       customerPhone: order.customerPhone,
       createdAt: order.createdAt,
       items: invoiceItems,
     });
 
-    const filename = `Invoice-${order.id}.pdf`;
+    const filename = `Invoice-${order.orderNumber}.pdf`;
     const mediaId = await this.whatsappClient.uploadMedia(pdfBuffer, 'application/pdf', filename);
 
     await this.whatsappClient.sendDocument(

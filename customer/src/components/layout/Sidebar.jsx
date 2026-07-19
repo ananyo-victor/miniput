@@ -226,6 +226,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 onClick={() => {
                   dispatch(logoutCustomer());
                   onClose();
+                  navigate("/home");
                 }}
                 className="flex items-center gap-4 px-6 py-3.5 font-bold text-[var(--mk-red)] hover:bg-red-50 text-left w-full transition-colors"
               >

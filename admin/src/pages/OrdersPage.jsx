@@ -13,7 +13,7 @@ import {
     orderReceived,
     orderUpdated,
 } from "../store/ordersSlice";
-import { CheckCircle, XCircle, Clock, Package, QrCode, Truck, CreditCard, Ban, RefreshCw } from "lucide-react";
+import { CheckCircle, XCircle, Clock, Package, QrCode, Truck, CreditCard, Ban, RefreshCw, Search } from "lucide-react";
 import OrderCardSkeleton from "../components/skeletonLoader/OrderCardSkeleton";
 import ConfirmActionModal from "../components/orders/ConfirmActionModal";
 
@@ -82,12 +82,19 @@ const OrdersPage = () => {
     );
     const [pendingAction, setPendingAction] = useState(null);
     const [isProcessingAction, setIsProcessingAction] = useState(false);
+    const [searchInput, setSearchInput] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
 
     useEffect(() => {
         if (activeWorkspaceId) {
-            dispatch(fetchOrdersThunk());
+            dispatch(fetchOrdersThunk(searchTerm));
         }
-    }, [dispatch, activeWorkspaceId]);
+    }, [dispatch, activeWorkspaceId, searchTerm]);
+
+    useEffect(() => {
+        const handle = setTimeout(() => setSearchTerm(searchInput.trim()), 400);
+        return () => clearTimeout(handle);
+    }, [searchInput]);
 
     useEffect(() => {
         const socket = io(API_BASE_URL, { transports: ["websocket"] });
@@ -98,7 +105,7 @@ const OrdersPage = () => {
         return () => socket.disconnect();
     }, [dispatch]);
 
-    const handleRefresh = () => dispatch(fetchOrdersThunk());
+    const handleRefresh = () => dispatch(fetchOrdersThunk(searchTerm));
 
     const filteredOrders = useMemo(() => {
         if (activeFilter === "all") return orders;
@@ -153,18 +160,30 @@ const OrdersPage = () => {
     return (
         <div className="flex flex-col min-h-screen bg-[#f5f5f5] font-['Nunito',_sans-serif]">
             {/* Header */}
-            <div className="sticky top-0 z-10 flex items-center justify-between bg-white border-b border-[#f0f0f0] px-5 py-4 md:px-8">
+            <div className="sticky top-0 z-10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-white border-b border-[#f0f0f0] px-5 py-4 md:px-8">
                 <h1 className="text-xl md:text-4xl text-[#0E2A4A] tracking-[2px] font-['Bebas_Neue',_sans-serif] leading-none">
                     MANAGE ORDERS
                 </h1>
-                <button
-                    onClick={handleRefresh}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black tracking-wider text-[#0E2A4A] border border-[#0E2A4A] hover:bg-[#0E2A4A] hover:text-white transition-colors disabled:opacity-50"
-                >
-                    <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
-                    REFRESH
-                </button>
+                <div className="flex items-center gap-3">
+                    <div className="relative flex-1 md:flex-initial">
+                        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                            type="text"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            placeholder="Search by order #, phone, or name"
+                            className="w-full md:w-72 pl-9 pr-3 py-2 rounded-full text-xs font-bold text-[#0E2A4A] border border-gray-200 focus:outline-none focus:border-[#0E2A4A] transition-colors"
+                        />
+                    </div>
+                    <button
+                        onClick={handleRefresh}
+                        disabled={loading}
+                        className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-black tracking-wider text-[#0E2A4A] border border-[#0E2A4A] hover:bg-[#0E2A4A] hover:text-white transition-colors disabled:opacity-50 whitespace-nowrap"
+                    >
+                        <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+                        REFRESH
+                    </button>
+                </div>
             </div>
 
             {/* Tabs */}
@@ -206,7 +225,7 @@ const OrdersPage = () => {
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-gray-100 pb-4 mb-4">
                                     <div>
                                         <div className="flex items-center gap-3 mb-1 flex-wrap">
-                                            <span className="font-black text-lg text-[#1a1a1a] font-mono">{order.id}</span>
+                                            <span className="font-black text-lg text-[#1a1a1a] font-mono">{order.orderNumber || order.id}</span>
                                             {getStatusBadge(order.status)}
                                         </div>
                                         <p className="text-xs text-gray-500 font-bold">

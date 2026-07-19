@@ -20,6 +20,9 @@ import ProfilePage from "./pages/ProfilePage";
 import { setupCustomerAxiosInterceptors } from "./utils/axiosInterceptor";
 import NotFoundPage from "./pages/NotFoundPage";
 import ErrorBoundary from "./components/ErrorBoundary";
+import { store } from "./store/store";
+
+setupCustomerAxiosInterceptors(store.dispatch);
 
 const Layout = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -59,10 +62,6 @@ export default function App() {
       dispatch(fetchCart());
     }
   }, [authed, dispatch]);
-
-  useEffect(() => {
-    setupCustomerAxiosInterceptors(dispatch);
-  }, [dispatch]);
 
   return (
     <ErrorBoundary>

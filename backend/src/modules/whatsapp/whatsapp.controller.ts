@@ -49,15 +49,15 @@ export class WhatsappController {
     console.log('Webhook event received:', JSON.stringify(body, null, 2));
     // Return 200 immediately — Meta retries the webhook if response is slow
     this.whatsappService.processWebhook(body).catch((err) =>
-      console.error('processWebhook error:', err),
+      console.error('processWebhook error:', err?.response?.data ?? err),
     );
     return { received: true };
   }
 
   @Get('orders')
   // @UseGuards(AuthGuard)
-  async getAllOrders() {
-    return this.whatsappService.getAllOrders();
+  async getAllOrders(@Query('search') search?: string) {
+    return this.whatsappService.getAllOrders(search);
   }
 
   @Get('orders/my-orders')
