@@ -51,14 +51,14 @@ const ProfilePage = () => {
   const [localPic, setLocalPic] = useState(profilePic || "");
   const [isUploadingImage, setIsUploadingImage] = useState(false);
 
-  const [localPartyName, setLocalPartyName] = useState(existingBusiness?.business_name || "");
-  const [localBusinessPhone, setLocalBusinessPhone] = useState(existingBusiness?.business_phone || "");
-  const [localAddress, setLocalAddress] = useState(existingBusiness?.delivery_address || "");
-  const [localGst, setLocalGst] = useState(existingBusiness?.gst_number || "");
-  const [localTransport, setLocalTransport] = useState(existingBusiness?.transport_courier || "");
-  const [localAgent, setLocalAgent] = useState(existingBusiness?.agent_name || "");
-  const [localFilledBy, setLocalFilledBy] = useState(existingBusiness?.filled_by || "");
-  const [localRemarks, setLocalRemarks] = useState(existingBusiness?.special_instructions || "");
+  const [localPartyName, setLocalPartyName] = useState(existingBusiness?.businessName || "");
+  const [localBusinessPhone, setLocalBusinessPhone] = useState(existingBusiness?.businessPhone || "");
+  const [localAddress, setLocalAddress] = useState(existingBusiness?.deliveryAddress || "");
+  const [localGst, setLocalGst] = useState(existingBusiness?.gstNumber || "");
+  const [localTransport, setLocalTransport] = useState(existingBusiness?.transportCourier || "");
+  const [localAgent, setLocalAgent] = useState(existingBusiness?.agentName || "");
+  const [localFilledBy, setLocalFilledBy] = useState(existingBusiness?.filledBy || "");
+  const [localRemarks, setLocalRemarks] = useState(existingBusiness?.specialInstructions || "");
 
   const fileInputRef = useRef(null);
 
@@ -75,14 +75,14 @@ const ProfilePage = () => {
 
   useEffect(() => {
     if (existingBusiness) {
-      setLocalPartyName(existingBusiness?.business_name || "");
-      setLocalBusinessPhone(existingBusiness?.business_phone || "");
-      setLocalAddress(existingBusiness.delivery_address || "");
-      setLocalGst(existingBusiness.gst_number || "");
-      setLocalTransport(existingBusiness.transport_courier || "");
-      setLocalAgent(existingBusiness.agent_name || "");
-      setLocalFilledBy(existingBusiness.filled_by || "");
-      setLocalRemarks(existingBusiness.special_instructions || "");
+      setLocalPartyName(existingBusiness?.businessName || "");
+      setLocalBusinessPhone(existingBusiness?.businessPhone || "");
+      setLocalAddress(existingBusiness.deliveryAddress || "");
+      setLocalGst(existingBusiness.gstNumber || "");
+      setLocalTransport(existingBusiness.transportCourier || "");
+      setLocalAgent(existingBusiness.agentName || "");
+      setLocalFilledBy(existingBusiness.filledBy || "");
+      setLocalRemarks(existingBusiness.specialInstructions || "");
     }
     if(userId || name || profilePic || phone || email) {
       setLocalName(name || "");
